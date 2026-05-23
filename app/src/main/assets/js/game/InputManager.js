@@ -1,8 +1,7 @@
 export default class InputManager {
-  constructor(gameState, renderer, dragOverlay, soundManager, applySettings, requestImmediateRender) {
+  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender) {
     this.gameState = gameState;
     this.renderer = renderer;
-    this.dragOverlay = dragOverlay;
     this.soundManager = soundManager;
     this.applySettings = applySettings;
     this.requestImmediateRender = requestImmediateRender || (() => {});
@@ -71,12 +70,14 @@ export default class InputManager {
     if (this.isPointInRect(point, this.renderer.settingsButtonRect)) {
       this.soundManager.playClick();
       this.gameState.openSettings();
+      this.requestImmediateRender();
       return;
     }
 
     if (this.isPointInRect(point, this.renderer.pauseButtonRect)) {
       this.soundManager.playClick();
       this.gameState.openPause();
+      this.requestImmediateRender();
       return;
     }
 
@@ -93,21 +94,13 @@ export default class InputManager {
       } else {
         this.gameState.cancelClearMode();
       }
+      this.requestImmediateRender();
       return;
     }
 
     const hitArea = this.renderer.getRackHitArea(point.x, point.y);
     if (hitArea) {
       if (this.gameState.startDrag(hitArea.index, point.x, point.y, hitArea)) {
-        const piece = this.gameState.rackPieces[hitArea.index];
-        const dragState = this.gameState.dragState;
-        this.dragOverlay.show(
-          piece,
-          dragState.displayCellSize,
-          dragState.pointerX,
-          dragState.pointerY,
-          dragState.dragFingerOffsetY
-        );
         this.requestImmediateRender();
       }
     }
@@ -129,11 +122,7 @@ export default class InputManager {
     }
 
     this.gameState.moveDrag(touch.clientX, touch.clientY);
-    this.dragOverlay.moveTo(
-      this.gameState.dragState.pointerX,
-      this.gameState.dragState.pointerY,
-      this.gameState.dragState.dragFingerOffsetY
-    );
+    this.requestImmediateRender();
   }
 
   handleTouchEnd(event) {
@@ -155,15 +144,9 @@ export default class InputManager {
 
     if (touch && this.gameState.dragState.isDragging) {
       this.gameState.moveDrag(touch.clientX, touch.clientY);
-      this.dragOverlay.moveTo(
-        this.gameState.dragState.pointerX,
-        this.gameState.dragState.pointerY,
-        this.gameState.dragState.dragFingerOffsetY
-      );
     }
 
     this.gameState.endDrag();
-    this.dragOverlay.hide();
     this.requestImmediateRender();
   }
 
@@ -186,21 +169,25 @@ export default class InputManager {
         ...this.gameState.settings,
         difficulty: nextDifficulty
       });
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'start') {
       this.gameState.startNewGame();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'help') {
       this.gameState.openHelp();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'settings') {
       this.gameState.openSettings();
+      this.requestImmediateRender();
     }
   }
 
@@ -227,6 +214,7 @@ export default class InputManager {
     if (action === 'close') {
       this.soundManager.playClick();
       this.gameState.closeHelp();
+      this.requestImmediateRender();
     }
   }
 
@@ -234,6 +222,7 @@ export default class InputManager {
     if (this.isPointInRect(point, this.renderer.restartButtonRect)) {
       this.soundManager.playClick();
       this.gameState.startNewGame();
+      this.requestImmediateRender();
     }
   }
 
@@ -251,27 +240,32 @@ export default class InputManager {
       } else {
         this.gameState.closePause();
       }
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'restart') {
       this.gameState.closePause();
       this.gameState.startNewGame();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'home') {
       this.gameState.requestReturnHome();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'cancelHome') {
       this.gameState.cancelReturnHome();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'confirmHome') {
       this.gameState.confirmReturnHome();
+      this.requestImmediateRender();
     }
   }
 
@@ -285,11 +279,13 @@ export default class InputManager {
 
     if (action === 'use') {
       this.gameState.acceptRevive();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'giveUp') {
       this.gameState.declineRevive();
+      this.requestImmediateRender();
     }
   }
 
@@ -303,11 +299,13 @@ export default class InputManager {
 
     if (action === 'cancel') {
       this.gameState.closeAdminPanel();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'confirm') {
       this.gameState.submitAdminCode();
+      this.requestImmediateRender();
     }
   }
 
@@ -326,11 +324,13 @@ export default class InputManager {
 
     if (action === 'cancel') {
       this.gameState.closeMembershipPanel();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'confirm') {
       this.gameState.submitMembershipCode();
+      this.requestImmediateRender();
     }
   }
 
@@ -338,6 +338,7 @@ export default class InputManager {
     if (action === 'refresh') {
       if (this.gameState.useRefreshTool()) {
         this.soundManager.playClick();
+        this.requestImmediateRender();
       }
       return;
     }
@@ -346,12 +347,14 @@ export default class InputManager {
       const result = this.gameState.toggleClearTool();
       if (result !== 'failed') {
         this.soundManager.playClick();
+        this.requestImmediateRender();
       }
       return;
     }
 
     if (action === 'undo' && this.gameState.useUndoTool()) {
       this.soundManager.playClick();
+      this.requestImmediateRender();
     }
   }
 
@@ -364,24 +367,28 @@ export default class InputManager {
     if (action === 'continue') {
       this.soundManager.playClick();
       this.gameState.closeSettings();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'reset') {
       this.soundManager.playClick();
       this.gameState.requestResetBestScore();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'cancelReset') {
       this.soundManager.playClick();
       this.gameState.cancelResetBestScore();
+      this.requestImmediateRender();
       return;
     }
 
     if (action === 'confirmReset') {
       this.soundManager.playClick();
       this.gameState.confirmResetBestScore();
+      this.requestImmediateRender();
       return;
     }
 
@@ -400,15 +407,18 @@ export default class InputManager {
     } else if (action === 'openMembership') {
       this.soundManager.playClick();
       this.gameState.openMembershipPanel();
+      this.requestImmediateRender();
       return;
     } else if (action === 'disableMembership') {
       this.soundManager.playClick();
       this.gameState.disableLocalMembership();
       this.gameState.showNotice('本地会员已关闭');
+      this.requestImmediateRender();
       return;
     } else if (action === 'disableAdmin') {
       this.soundManager.playClick();
       this.gameState.disableAdminMode();
+      this.requestImmediateRender();
       return;
     } else {
       return;
@@ -416,6 +426,7 @@ export default class InputManager {
 
     this.soundManager.playClick();
     this.applySettings(nextSettings);
+    this.requestImmediateRender();
   }
 
   isPointInRect(point, rect) {

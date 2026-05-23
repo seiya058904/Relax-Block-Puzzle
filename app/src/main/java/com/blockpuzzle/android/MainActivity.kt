@@ -12,6 +12,7 @@ import com.blockpuzzle.android.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
+  private var timersPaused = false
 
   private val webView: WebView
     get() = binding.webView
@@ -49,23 +50,33 @@ class MainActivity : AppCompatActivity() {
   }
 
   override fun onPause() {
-    super.onPause()
     webView.evaluateJavascript(
-      "window.ANDROID_APP_PAUSE && window.ANDROID_APP_PAUSE();",
+      "window.ANDROID_APP_BACKGROUND && window.ANDROID_APP_BACKGROUND();",
       null
     )
     webView.onPause()
-    webView.pauseTimers()
+    super.onPause()
+  }
+
+  override fun onStop() {
+    super.onStop()
+    if (!timersPaused) {
+      webView.pauseTimers()
+      timersPaused = true
+    }
   }
 
   override fun onResume() {
-    super.onResume()
     webView.onResume()
-    webView.resumeTimers()
+    if (timersPaused) {
+      webView.resumeTimers()
+      timersPaused = false
+    }
     webView.evaluateJavascript(
-      "window.ANDROID_APP_RESUME && window.ANDROID_APP_RESUME();",
+      "window.ANDROID_APP_FOREGROUND && window.ANDROID_APP_FOREGROUND();",
       null
     )
+    super.onResume()
   }
 
   override fun onBackPressed() {

@@ -269,7 +269,7 @@ export default class SoundManager {
   }
 
   playPickup() {
-    this.playEffect('pickup');
+    return;
   }
 
   playPlace() {

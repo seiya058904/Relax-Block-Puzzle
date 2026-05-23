@@ -37,22 +37,6 @@
         user-select: none;
       }
 
-      #dragOverlay {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: auto;
-        height: auto;
-        display: none;
-        pointer-events: none;
-        touch-action: none;
-        -webkit-user-select: none;
-        user-select: none;
-        will-change: transform;
-        z-index: 30;
-        transform: translate3d(-9999px, -9999px, 0);
-      }
-
       #wxKeyboard {
         position: fixed;
         left: -9999px;
@@ -80,7 +64,6 @@
   </head>
   <body>
     <canvas id="gameCanvas"></canvas>
-    <canvas id="dragOverlay"></canvas>
     <div id="bootError"></div>
     <input id="wxKeyboard" type="text" autocomplete="off" />
     <script>

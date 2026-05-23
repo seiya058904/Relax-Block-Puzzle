@@ -1,14 +1,12 @@
 import './render.js';
 import { DEVICE_PIXEL_RATIO, MENU_BUTTON, SCREEN_HEIGHT, SCREEN_WIDTH, SAFE_AREA } from './render.js';
 import GameState from './game/GameState.js';
-import DragOverlay from './game/DragOverlay.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
 const ctx = canvas.getContext('2d');
-const dragOverlay = new DragOverlay(document.getElementById('dragOverlay'));
 ctx.setTransform(DEVICE_PIXEL_RATIO, 0, 0, DEVICE_PIXEL_RATIO, 0, 0);
 ctx.imageSmoothingEnabled = true;
 
@@ -19,6 +17,7 @@ export default class Main {
     this.appLifecycleBound = false;
     this.isPaused = false;
     this.isRendering = false;
+    this.needsRender = true;
     this.gameState = new GameState();
     this.settings = loadSettings();
     this.gameState.setSettings(this.settings);
@@ -38,14 +37,12 @@ export default class Main {
     this.inputManager = new InputManager(
       this.gameState,
       this.renderer,
-      dragOverlay,
       this.soundManager,
       this.applySettings.bind(this),
       this.requestImmediateRender.bind(this)
     );
 
     this.bindAppLifecycle();
-    this.renderer.render(this.gameState);
     this.start();
   }
 
@@ -54,9 +51,7 @@ export default class Main {
       return;
     }
 
-    cancelAnimationFrame(this.aniId);
-    this.lastTimestamp = 0;
-    this.aniId = requestAnimationFrame(this.loop.bind(this));
+    this.ensureFrame();
   }
 
   applySettings(nextSettings) {
@@ -67,6 +62,7 @@ export default class Main {
     this.gameState.setSettings(this.settings);
     saveSettings(this.settings);
     this.soundManager.setSettings(this.settings);
+    this.markDirty();
   }
 
   bindAppLifecycle() {
@@ -78,21 +74,21 @@ export default class Main {
 
     if (wx.onHide) {
       wx.onHide(() => {
-        this.handleAppPause();
+        this.handleAppBackground();
       });
     }
 
     if (wx.onShow) {
       wx.onShow(() => {
-        this.handleAppResume();
+        this.handleAppForeground();
       });
     }
 
-    window.ANDROID_APP_PAUSE = () => {
-      this.handleAppPause();
+    window.ANDROID_APP_BACKGROUND = () => {
+      this.handleAppBackground();
     };
-    window.ANDROID_APP_RESUME = () => {
-      this.handleAppResume();
+    window.ANDROID_APP_FOREGROUND = () => {
+      this.handleAppForeground();
     };
   }
 
@@ -163,12 +159,40 @@ export default class Main {
     this.isRendering = false;
   }
 
+  markDirty() {
+    this.needsRender = true;
+  }
+
+  hasActiveAnimation() {
+    return !!(
+      this.gameState.dragState.isDragging ||
+      this.gameState.pendingClear ||
+      (this.gameState.placementPulse && this.gameState.placementPulse.length > 0) ||
+      (this.gameState.notice && this.gameState.screen === 'playing')
+    );
+  }
+
   requestImmediateRender() {
     if (this.isPaused) {
       return;
     }
 
+    this.markDirty();
     this.render();
+    this.needsRender = false;
+
+    if (this.hasActiveAnimation()) {
+      this.ensureFrame();
+    }
+  }
+
+  ensureFrame() {
+    if (this.isPaused || this.aniId) {
+      return;
+    }
+
+    this.lastTimestamp = 0;
+    this.aniId = requestAnimationFrame(this.loop.bind(this));
   }
 
   stopLoop() {
@@ -178,28 +202,29 @@ export default class Main {
     }
   }
 
-  handleAppPause() {
+  handleAppBackground() {
     if (this.isPaused) {
       return;
     }
 
     this.isPaused = true;
     this.gameState.clearDrag();
-    dragOverlay.hide();
+    this.needsRender = false;
     this.stopLoop();
     this.soundManager.handleAppHide();
   }
 
-  handleAppResume() {
+  handleAppForeground() {
     if (!this.isPaused) {
       this.requestImmediateRender();
       return;
     }
 
     this.isPaused = false;
-    dragOverlay.hide();
     this.soundManager.handleAppShow();
+    this.markDirty();
     this.render();
+    this.needsRender = false;
     this.start();
   }
 
@@ -213,13 +238,20 @@ export default class Main {
       this.lastTimestamp = timestamp;
     }
 
+    const animating = this.hasActiveAnimation();
     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
     this.lastTimestamp = timestamp;
 
-    this.update(deltaTime);
-    this.render();
+    if (animating) {
+      this.update(deltaTime);
+    }
 
-    if (!this.isPaused) {
+    if (this.needsRender || animating) {
+      this.render();
+      this.needsRender = false;
+    }
+
+    if (!this.isPaused && (this.hasActiveAnimation() || this.needsRender)) {
       this.aniId = requestAnimationFrame(this.loop.bind(this));
     }
   }
