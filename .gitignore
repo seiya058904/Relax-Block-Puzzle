@@ -1,0 +1,38 @@
+# Android / Gradle
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Signing / secrets
+*.jks
+*.keystore
+key.properties
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.crt
+
+# APK / local duplicate assets / toolchains
+*.apk
+*.aab
+toolchain/
+app/src/main/assets/js/js/
+
+# Node / misc
+node_modules/
+dist/
+tmp/
+.cache/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
