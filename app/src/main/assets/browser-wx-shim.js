@@ -242,13 +242,51 @@ syncCanvasSize();
 window.addEventListener('resize', syncCanvasSize);
 
 function resetKeyboardInput() {
-  keyboardInput.style.left = '-9999px';
-  keyboardInput.style.top = '0';
-  keyboardInput.style.width = '1px';
-  keyboardInput.style.height = '1px';
-  keyboardInput.style.opacity = '0';
-  keyboardInput.style.pointerEvents = 'none';
+  keyboardInput.removeAttribute('style');
 }
+
+var currentTapHandler = null;
+
+globalThis.__syncKeyboardInputPosition = function (rect) {
+  if (!rect) {
+    if (currentTapHandler) {
+      keyboardInput.removeEventListener('touchstart', currentTapHandler);
+      keyboardInput.removeEventListener('mousedown', currentTapHandler);
+      currentTapHandler = null;
+    }
+    resetKeyboardInput();
+    return;
+  }
+  keyboardInput.style.position = 'fixed';
+  keyboardInput.style.left = rect.x + 'px';
+  keyboardInput.style.top = rect.y + 'px';
+  keyboardInput.style.width = rect.width + 'px';
+  keyboardInput.style.height = rect.height + 'px';
+  keyboardInput.style.background = 'rgba(11, 28, 52, 0.92)';
+  keyboardInput.style.border = '1px solid rgba(120,202,255,0.28)';
+  keyboardInput.style.borderRadius = '14px';
+  keyboardInput.style.color = '#F5FBFF';
+  keyboardInput.style.font = '17px sans-serif';
+  keyboardInput.style.padding = '0 16px';
+  keyboardInput.style.outline = 'none';
+  keyboardInput.style.boxSizing = 'border-box';
+  keyboardInput.style.zIndex = '10';
+
+  if (!currentTapHandler) {
+    currentTapHandler = function () {
+      if (wx.showKeyboard) {
+        wx.showKeyboard({
+          defaultValue: keyboardInput.value || '',
+          maxLength: 32,
+          confirmHold: true,
+          confirmType: 'done'
+        });
+      }
+    };
+    keyboardInput.addEventListener('touchstart', currentTapHandler);
+    keyboardInput.addEventListener('mousedown', currentTapHandler);
+  }
+};
 
 keyboardInput.addEventListener('input', () => {
   emitKeyboard('input', keyboardInput.value);
@@ -352,17 +390,6 @@ globalThis.wx = {
   showKeyboard(options = {}) {
     keyboardInput.value = options.defaultValue || '';
     keyboardInput.maxLength = Number(options.maxLength) > 0 ? Number(options.maxLength) : 32;
-
-    if (options.inputRect) {
-      const r = options.inputRect;
-      keyboardInput.style.left = r.x + 'px';
-      keyboardInput.style.top = r.y + 'px';
-      keyboardInput.style.width = r.width + 'px';
-      keyboardInput.style.height = r.height + 'px';
-      keyboardInput.style.opacity = '0';
-      keyboardInput.style.pointerEvents = 'auto';
-    }
-
     keyboardInput.focus();
   },
   hideKeyboard() {

@@ -461,7 +461,7 @@ export default class GameState {
   }
 
   openAdminPanel() {
-    if (!DEBUG_CODE_ENABLED || this.screen !== 'home' || this.ui.isSettingsOpen) {
+    if (!DEBUG_CODE_ENABLED || this.screen !== 'home' || this.ui.isSettingsOpen || this.ui.isAdminPanelOpen) {
       return false;
     }
 

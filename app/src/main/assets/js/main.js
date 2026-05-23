@@ -155,8 +155,11 @@ export default class Main {
     }
 
     this.isRendering = true;
-    this.renderer.render(this.gameState);
-    this.isRendering = false;
+    try {
+      this.renderer.render(this.gameState);
+    } finally {
+      this.isRendering = false;
+    }
   }
 
   markDirty() {

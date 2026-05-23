@@ -205,6 +205,7 @@ export default class InputManager {
       this.homeTitleTapStartTime = 0;
       if (this.gameState.openAdminPanel()) {
         this.soundManager.playClick();
+        this.requestImmediateRender();
       }
     }
   }
@@ -310,6 +311,13 @@ export default class InputManager {
   }
 
   handleMembershipTouch(point) {
+    const key = this.renderer.getMembershipKeyHit(point.x, point.y);
+    if (key) {
+      this.handleMembershipKey(key);
+      this.requestImmediateRender();
+      return;
+    }
+
     const action = this.renderer.getMembershipAction(point.x, point.y);
     if (!action) {
       return;
@@ -333,6 +341,19 @@ export default class InputManager {
       this.gameState.submitMembershipCode();
       if (wx.hideKeyboard) { wx.hideKeyboard(); }
       this.requestImmediateRender();
+    }
+  }
+
+  handleMembershipKey(key) {
+    this.soundManager.playClick();
+    if (key === 'DEL') {
+      const v = this.gameState.membershipInput || '';
+      this.gameState.setMembershipInput(v.slice(0, -1));
+    } else {
+      const v = this.gameState.membershipInput || '';
+      if (v.length < 32) {
+        this.gameState.setMembershipInput(v + key);
+      }
     }
   }
 

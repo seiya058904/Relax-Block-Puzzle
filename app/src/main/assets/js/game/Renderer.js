@@ -112,6 +112,7 @@ export default class Renderer {
     this.pauseActionRects = {};
     this.adminActionRects = {};
     this.membershipActionRects = {};
+    this.membershipKeyboardKeyRects = {};
     this.reviveActionRects = {};
     this.restartButtonRect = null;
     this.settingsButtonRect = null;
@@ -188,7 +189,7 @@ export default class Renderer {
     }));
     const settingsButtonRect = {
       x: headerRect.x,
-      y: headerRect.y + 8,
+      y: headerRect.y + 4,
       width: 64,
       height: 28
     };
@@ -267,6 +268,8 @@ export default class Renderer {
 
     if (state.ui.isMembershipPanelOpen) {
       this.drawMembershipPanel(state);
+    } else if (typeof globalThis.__syncKeyboardInputPosition === 'function') {
+      globalThis.__syncKeyboardInputPosition(null);
     }
   }
 
@@ -319,7 +322,10 @@ export default class Renderer {
     ctx.shadowBlur = 18;
     ctx.shadowOffsetY = 10;
     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
-    ctx.fillStyle = 'rgba(10, 28, 53, 0.58)';
+    const panelGrad = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+    panelGrad.addColorStop(0, 'rgba(16, 42, 78, 0.72)');
+    panelGrad.addColorStop(1, 'rgba(8, 22, 48, 0.82)');
+    ctx.fillStyle = panelGrad;
     ctx.fill();
     ctx.restore();
 
@@ -341,6 +347,20 @@ export default class Renderer {
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = `bold ${titleFontSize}px sans-serif`;
     ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, cursorY + titleFontSize);
+
+    const decoLineY = cursorY + titleFontSize + 8;
+    const decoLineWidth = (panel.width - titleWidthPadding * 2) * 0.4;
+    const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
+    const decoGrad = ctx.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
+    decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
+    decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.5)');
+    decoGrad.addColorStop(1, 'rgba(120, 214, 255, 0)');
+    ctx.strokeStyle = decoGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(decoLineX, decoLineY);
+    ctx.lineTo(decoLineX + decoLineWidth, decoLineY);
+    ctx.stroke();
 
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = `${subtitleFontSize}px sans-serif`;
@@ -369,12 +389,28 @@ export default class Renderer {
     this.drawSecondaryChip(difficultyRect, `难度：${difficultyLabel}`);
     cursorY = difficultyRect.y + difficultyRect.height + (compact ? 26 : 30);
 
+    const scoreCardHeight = compact ? 34 : 38;
+    const scoreCardWidth = panel.width - difficultyPaddingX * 2;
+    const scoreCardX = panel.x + difficultyPaddingX;
+    const scoreCardY = cursorY - scoreCardHeight / 2 + 4;
+    roundedRect(ctx, scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight, 14);
+    ctx.fillStyle = 'rgba(11, 28, 52, 0.65)';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(120, 202, 255, 0.18)';
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '18px sans-serif';
-    ctx.fillText(`${difficultyLabel}最高分：${difficultyBestScore}`, layout.screenWidth / 2, cursorY);
+    ctx.font = '16px sans-serif';
+    ctx.fillText(`★ ${difficultyLabel}最高分`, layout.screenWidth / 2, scoreCardY + scoreCardHeight / 2 - 2);
+    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCardY + scoreCardHeight / 2 + 16);
+    cursorY = scoreCardY + scoreCardHeight;
 
     const buttonBlockHeight = startHeight + secondaryHeight * 2 + buttonGap * 2;
-    const desiredButtonTop = cursorY + (compact ? 16 : 18);
+    const desiredButtonTop = cursorY + (compact ? 18 : 22);
     const maxButtonTop = panel.y + panel.height - bottomPadding - buttonBlockHeight;
     const buttonTop = Math.min(desiredButtonTop, maxButtonTop);
 
@@ -422,16 +458,16 @@ export default class Renderer {
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = 'bold 46px sans-serif';
-    ctx.fillText(String(state.score), centerX, layout.headerRect.y + 42);
+    ctx.fillText(String(state.score), centerX, layout.headerRect.y + 46);
 
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '16px sans-serif';
-    ctx.fillText(`${difficultyLabel}最高分：${state.bestScore}`, centerX, layout.headerRect.y + 76);
+    ctx.fillText(`${difficultyLabel}最高分：${state.bestScore}`, centerX, layout.headerRect.y + 80);
 
     if (state.isAdminModeActive()) {
       const tagRect = {
         x: layout.headerRect.x + layout.headerRect.width - 96,
-        y: layout.headerRect.y + 52,
+        y: layout.headerRect.y + 56,
         width: 88,
         height: 24
       };
@@ -1016,9 +1052,9 @@ export default class Renderer {
     ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
 
     const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 24;
-    const panelHeight = 256;
+    const panelHeight = 370;
     const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = (layout.screenHeight - panelHeight) / 2;
+    const panelY = Math.max(20, (layout.screenHeight - panelHeight) / 2);
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
@@ -1041,9 +1077,9 @@ export default class Renderer {
 
     const inputRect = {
       x: panelX + 24,
-      y: panelY + 80,
+      y: panelY + 58,
       width: panelWidth - 48,
-      height: 50
+      height: 46
     };
     this.membershipActionRects.input = inputRect;
 
@@ -1058,24 +1094,26 @@ export default class Renderer {
     ctx.font = '17px sans-serif';
     if (state.membershipInput) {
       ctx.fillStyle = TEXT_PRIMARY;
-      ctx.fillText(state.membershipInput, inputRect.x + 16, inputRect.y + 31);
+      ctx.fillText(state.membershipInput, inputRect.x + 16, inputRect.y + 30);
     } else {
       ctx.fillStyle = 'rgba(185, 210, 255, 0.6)';
-      ctx.fillText('请输入福利码', inputRect.x + 16, inputRect.y + 31);
+      ctx.fillText('请输入福利码', inputRect.x + 16, inputRect.y + 30);
     }
 
     if (state.membershipError) {
       ctx.fillStyle = '#FFB4A4';
       ctx.textAlign = 'left';
       ctx.font = '15px sans-serif';
-      ctx.fillText(state.membershipError, inputRect.x + 2, inputRect.y + 74);
+      ctx.fillText(state.membershipError, inputRect.x + 2, inputRect.y + 62);
     }
+
+    this.drawMembershipKeyboard(panelX, panelY, panelWidth, panelY + 118);
 
     const cancelRect = {
       x: panelX + 24,
-      y: panelY + panelHeight - 72,
+      y: panelY + panelHeight - 58,
       width: (panelWidth - 64) / 2,
-      height: 48
+      height: 44
     };
     const confirmRect = {
       x: cancelRect.x + cancelRect.width + 16,
@@ -1087,6 +1125,65 @@ export default class Renderer {
     this.membershipActionRects.confirm = confirmRect;
     this.drawActionButton(cancelRect, '取消', 'secondary');
     this.drawActionButton(confirmRect, '确认', 'primary');
+  }
+
+  drawMembershipKeyboard(panelX, panelY, panelWidth, keyboardTopY) {
+    const { ctx } = this;
+    this.membershipKeyboardKeyRects = {};
+
+    const rows = [
+      ['1','2','3','4','5','6','7','8','9','0'],
+      ['Q','W','E','R','T','Y','U','I','O','P'],
+      ['A','S','D','F','G','H','J','K','L'],
+      ['Z','X','C','V','B','N','M','DEL']
+    ];
+
+    const keyH = 36;
+    const gap = 3;
+    const contentX = panelX + 24;
+    const contentW = panelWidth - 48;
+
+    rows.forEach((row, rowIdx) => {
+      const n = row.length;
+      const totalGap = (n - 1) * gap;
+      const keyW = (contentW - totalGap) / n;
+      const y = keyboardTopY + rowIdx * (keyH + gap);
+
+      row.forEach((label, colIdx) => {
+        const x = contentX + colIdx * (keyW + gap);
+        const isDel = label === 'DEL';
+
+        roundedRect(ctx, x, y, keyW, keyH, 8);
+        ctx.fillStyle = isDel ? 'rgba(180,60,60,0.35)' : 'rgba(30,60,110,0.65)';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = isDel ? 'rgba(255,120,120,0.35)' : 'rgba(120,200,255,0.2)';
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = isDel ? '#FFB0B0' : TEXT_PRIMARY;
+        ctx.font = isDel ? 'bold 13px sans-serif' : 'bold 16px sans-serif';
+        ctx.fillText(label, x + keyW / 2, y + keyH / 2 + 1);
+
+        this.membershipKeyboardKeyRects[label + '_' + rowIdx + '_' + colIdx] = {
+          x, y, width: keyW, height: keyH, key: label
+        };
+      });
+    });
+
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  getMembershipKeyHit(x, y) {
+    const keys = this.membershipKeyboardKeyRects;
+    for (const id in keys) {
+      const k = keys[id];
+      if (x >= k.x && x <= k.x + k.width && y >= k.y && y <= k.y + k.height) {
+        return k.key;
+      }
+    }
+    return null;
   }
 
   drawRevivePrompt(state) {
@@ -1252,6 +1349,21 @@ export default class Renderer {
       ctx.strokeStyle = 'rgba(120,202,255,0.28)';
     }
     ctx.stroke();
+
+    if (isPrimary) {
+      const hlPadX = 16;
+      const hlY = rect.y + 8;
+      const hlGrad = ctx.createLinearGradient(rect.x + hlPadX, hlY, rect.x + rect.width - hlPadX, hlY);
+      hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
+      hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+      hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = hlGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(rect.x + hlPadX, hlY);
+      ctx.lineTo(rect.x + rect.width - hlPadX, hlY);
+      ctx.stroke();
+    }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = isDangerOutline ? '#F1B2A4' : '#FFFFFF';
