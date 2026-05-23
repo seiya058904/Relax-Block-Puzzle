@@ -241,6 +241,15 @@ registerVisibilityHandlers();
 syncCanvasSize();
 window.addEventListener('resize', syncCanvasSize);
 
+function resetKeyboardInput() {
+  keyboardInput.style.left = '-9999px';
+  keyboardInput.style.top = '0';
+  keyboardInput.style.width = '1px';
+  keyboardInput.style.height = '1px';
+  keyboardInput.style.opacity = '0';
+  keyboardInput.style.pointerEvents = 'none';
+}
+
 keyboardInput.addEventListener('input', () => {
   emitKeyboard('input', keyboardInput.value);
 });
@@ -254,6 +263,7 @@ keyboardInput.addEventListener('keydown', (event) => {
 });
 
 keyboardInput.addEventListener('blur', () => {
+  resetKeyboardInput();
   emitKeyboard('complete', keyboardInput.value);
 });
 
@@ -342,7 +352,22 @@ globalThis.wx = {
   showKeyboard(options = {}) {
     keyboardInput.value = options.defaultValue || '';
     keyboardInput.maxLength = Number(options.maxLength) > 0 ? Number(options.maxLength) : 32;
+
+    if (options.inputRect) {
+      const r = options.inputRect;
+      keyboardInput.style.left = r.x + 'px';
+      keyboardInput.style.top = r.y + 'px';
+      keyboardInput.style.width = r.width + 'px';
+      keyboardInput.style.height = r.height + 'px';
+      keyboardInput.style.opacity = '0';
+      keyboardInput.style.pointerEvents = 'auto';
+    }
+
     keyboardInput.focus();
+  },
+  hideKeyboard() {
+    keyboardInput.blur();
+    resetKeyboardInput();
   },
   request(options = {}) {
     const method = options.method || 'GET';

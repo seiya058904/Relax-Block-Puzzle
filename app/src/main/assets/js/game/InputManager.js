@@ -324,12 +324,14 @@ export default class InputManager {
 
     if (action === 'cancel') {
       this.gameState.closeMembershipPanel();
+      if (wx.hideKeyboard) { wx.hideKeyboard(); }
       this.requestImmediateRender();
       return;
     }
 
     if (action === 'confirm') {
       this.gameState.submitMembershipCode();
+      if (wx.hideKeyboard) { wx.hideKeyboard(); }
       this.requestImmediateRender();
     }
   }
@@ -477,11 +479,13 @@ export default class InputManager {
     }
 
     try {
+      const inputRect = this.renderer.membershipActionRects && this.renderer.membershipActionRects.input;
       wx.showKeyboard({
         defaultValue: this.gameState.membershipInput || '',
         maxLength: 32,
         confirmHold: true,
-        confirmType: 'done'
+        confirmType: 'done',
+        inputRect: inputRect || undefined
       });
     } catch (error) {
       // Ignore environments without keyboard support.
