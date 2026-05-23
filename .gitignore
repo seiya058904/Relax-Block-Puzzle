@@ -23,6 +23,7 @@ key.properties
 *.aab
 toolchain/
 app/src/main/assets/js/js/
+release-assets/
 
 # Node / misc
 node_modules/
