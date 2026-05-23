@@ -29,8 +29,8 @@ Source code and project files are stored in this repository. APK files should be
 
 Suggested release:
 
-- Tag: `v1.0.1`
-- Title: `Relax Block Puzzle Android v1.0.1`
+- Tag: `v1.0.2`
+- Title: `Relax Block Puzzle Android v1.0.2`
 
 ## Installation
 
@@ -55,7 +55,7 @@ Screenshot placeholders can be added here later:
 
 ## Version
 
-- Current public repository baseline: `v1.0.1`
+- Current public repository baseline: `v1.0.2`
 
 `v1.0.1`
 
@@ -64,6 +64,10 @@ Screenshot placeholders can be added here later:
 - Stabilized Android WebView canvas rendering
 - Limited Android canvas DPR for better performance
 - Kept APK as an offline debug/preview build
+
+`v1.0.2`
+
+- Slightly adjusted Android drag offset for better finger visibility
 
 ## Security Note
 
