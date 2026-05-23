@@ -156,7 +156,7 @@ export default class SoundManager {
   }
 
   playEffect(key) {
-    if (!this.settings.soundEnabled) {
+    if (!this.settings.soundEnabled || this.appHidden) {
       return;
     }
 
@@ -221,6 +221,20 @@ export default class SoundManager {
     }
   }
 
+  stopAllEffects() {
+    Object.values(this.effectContexts).forEach((audio) => {
+      if (!audio) {
+        return;
+      }
+
+      try {
+        audio.stop();
+      } catch (error) {
+        this.warnOnce('effect_stop', 'effect stop failed');
+      }
+    });
+  }
+
   switchBgmTrack(trackId) {
     const normalizedTrack = normalizeTrackId(trackId);
     this.settings.bgmTrack = normalizedTrack;
@@ -243,6 +257,7 @@ export default class SoundManager {
 
   handleAppHide() {
     this.appHidden = true;
+    this.stopAllEffects();
     this.stopBgm();
   }
 

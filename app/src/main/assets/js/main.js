@@ -15,6 +15,8 @@ export default class Main {
     this.aniId = 0;
     this.lastTimestamp = 0;
     this.appLifecycleBound = false;
+    this.isPaused = false;
+    this.isRendering = false;
     this.gameState = new GameState();
     this.settings = loadSettings();
     this.gameState.setSettings(this.settings);
@@ -35,7 +37,8 @@ export default class Main {
       this.gameState,
       this.renderer,
       this.soundManager,
-      this.applySettings.bind(this)
+      this.applySettings.bind(this),
+      this.requestImmediateRender.bind(this)
     );
 
     this.bindAppLifecycle();
@@ -44,6 +47,10 @@ export default class Main {
   }
 
   start() {
+    if (this.isPaused) {
+      return;
+    }
+
     cancelAnimationFrame(this.aniId);
     this.lastTimestamp = 0;
     this.aniId = requestAnimationFrame(this.loop.bind(this));
@@ -68,15 +75,22 @@ export default class Main {
 
     if (wx.onHide) {
       wx.onHide(() => {
-        this.soundManager.handleAppHide();
+        this.handleAppPause();
       });
     }
 
     if (wx.onShow) {
       wx.onShow(() => {
-        this.soundManager.handleAppShow();
+        this.handleAppResume();
       });
     }
+
+    window.ANDROID_APP_PAUSE = () => {
+      this.handleAppPause();
+    };
+    window.ANDROID_APP_RESUME = () => {
+      this.handleAppResume();
+    };
   }
 
   triggerVibration() {
@@ -96,6 +110,10 @@ export default class Main {
   }
 
   update(deltaTime) {
+    if (this.isPaused) {
+      return;
+    }
+
     this.gameState.update(deltaTime);
     const events = this.gameState.consumeEvents();
     events.forEach((event) => {
@@ -133,10 +151,59 @@ export default class Main {
   }
 
   render() {
+    if (this.isRendering) {
+      return;
+    }
+
+    this.isRendering = true;
     this.renderer.render(this.gameState);
+    this.isRendering = false;
+  }
+
+  requestImmediateRender() {
+    if (this.isPaused) {
+      return;
+    }
+
+    this.render();
+  }
+
+  stopLoop() {
+    if (this.aniId) {
+      cancelAnimationFrame(this.aniId);
+      this.aniId = 0;
+    }
+  }
+
+  handleAppPause() {
+    if (this.isPaused) {
+      return;
+    }
+
+    this.isPaused = true;
+    this.gameState.clearDrag();
+    this.stopLoop();
+    this.soundManager.handleAppHide();
+  }
+
+  handleAppResume() {
+    if (!this.isPaused) {
+      this.requestImmediateRender();
+      return;
+    }
+
+    this.isPaused = false;
+    this.soundManager.handleAppShow();
+    this.render();
+    this.start();
   }
 
   loop(timestamp) {
+    this.aniId = 0;
+    if (this.isPaused) {
+      return;
+    }
+
     if (!this.lastTimestamp) {
       this.lastTimestamp = timestamp;
     }
@@ -147,6 +214,8 @@ export default class Main {
     this.update(deltaTime);
     this.render();
 
-    this.aniId = requestAnimationFrame(this.loop.bind(this));
+    if (!this.isPaused) {
+      this.aniId = requestAnimationFrame(this.loop.bind(this));
+    }
   }
 }

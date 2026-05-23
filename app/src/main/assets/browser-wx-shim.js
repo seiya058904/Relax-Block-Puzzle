@@ -100,8 +100,17 @@ function registerTouchHandlers() {
 }
 
 function registerVisibilityHandlers() {
-  document.addEventListener('visibilitychange', () => {
-    const type = document.hidden ? 'hide' : 'show';
+  let visible = !document.hidden;
+
+  const emitVisibility = (type) => {
+    if (type === 'hide' && !visible) {
+      return;
+    }
+    if (type === 'show' && visible) {
+      return;
+    }
+
+    visible = type === 'show';
     visibilityHandlers[type].forEach((handler) => {
       try {
         handler();
@@ -109,6 +118,26 @@ function registerVisibilityHandlers() {
         console.error(`visibility handler failed: ${type}`, error);
       }
     });
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    emitVisibility(document.hidden ? 'hide' : 'show');
+  });
+
+  window.addEventListener('blur', () => {
+    emitVisibility('hide');
+  });
+
+  window.addEventListener('focus', () => {
+    emitVisibility('show');
+  });
+
+  window.addEventListener('pagehide', () => {
+    emitVisibility('hide');
+  });
+
+  window.addEventListener('pageshow', () => {
+    emitVisibility('show');
   });
 }
 

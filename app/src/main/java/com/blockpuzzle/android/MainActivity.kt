@@ -13,6 +13,9 @@ import com.blockpuzzle.android.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
 
+  private val webView: WebView
+    get() = binding.webView
+
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -24,7 +27,6 @@ class MainActivity : AppCompatActivity() {
       .addPathHandler("/assets/", AssetsPathHandler(this))
       .build()
 
-    val webView = binding.webView
     webView.settings.javaScriptEnabled = true
     webView.settings.domStorageEnabled = true
     webView.settings.allowFileAccess = false
@@ -46,8 +48,27 @@ class MainActivity : AppCompatActivity() {
     webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")
   }
 
+  override fun onPause() {
+    super.onPause()
+    webView.evaluateJavascript(
+      "window.ANDROID_APP_PAUSE && window.ANDROID_APP_PAUSE();",
+      null
+    )
+    webView.onPause()
+    webView.pauseTimers()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    webView.onResume()
+    webView.resumeTimers()
+    webView.evaluateJavascript(
+      "window.ANDROID_APP_RESUME && window.ANDROID_APP_RESUME();",
+      null
+    )
+  }
+
   override fun onBackPressed() {
-    val webView = binding.webView
     if (webView.canGoBack()) {
       webView.goBack()
       return

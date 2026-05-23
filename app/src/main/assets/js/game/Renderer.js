@@ -283,7 +283,7 @@ export default class Renderer {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
 
-    const stars = isDragging ? this.stars.slice(0, 2) : this.stars;
+    const stars = isDragging ? [] : this.stars;
     stars.forEach((star) => {
       ctx.save();
       ctx.globalAlpha = isDragging ? star.alpha * 0.45 : star.alpha;
@@ -630,18 +630,18 @@ export default class Renderer {
     }
 
     const piece = state.rackPieces[state.dragState.activePieceIndex];
-    const { drawX, drawY, displayCellSize } = state.dragState;
+    const { visualX, visualY, displayCellSize } = state.dragState;
 
     piece.cells.forEach((cell) => {
       this.drawBlockCell(
-        drawX + cell.x * displayCellSize,
-        drawY + cell.y * displayCellSize,
+        visualX + cell.x * displayCellSize,
+        visualY + cell.y * displayCellSize,
         displayCellSize,
         piece.color,
         {
-          glow: 0.03,
-          borderBoost: 0.04,
-          shadowAlpha: 0.015
+          glow: 0,
+          borderBoost: 0.02,
+          shadowAlpha: 0
         }
       );
     });

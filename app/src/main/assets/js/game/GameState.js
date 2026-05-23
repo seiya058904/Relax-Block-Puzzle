@@ -37,8 +37,10 @@ function createEmptyDragState() {
     activePieceIndex: -1,
     pointerX: 0,
     pointerY: 0,
-    drawX: 0,
-    drawY: 0,
+    visualX: 0,
+    visualY: 0,
+    pieceWidth: 0,
+    pieceHeight: 0,
     displayCellSize: 0,
     dragFingerOffsetY: 0,
     isDragging: false
@@ -570,14 +572,17 @@ export default class GameState {
 
     const displayCellSize = this.layout ? this.layout.cellSize * 0.96 : hitArea.cellSize;
     const dragFingerOffsetY = this.getDragFingerOffsetY();
-    const visualPosition = this.getDraggedPieceVisualPosition(touchX, touchY, piece, displayCellSize, dragFingerOffsetY);
+    const pieceWidth = (piece && piece.bounds ? piece.bounds.width : 0) * displayCellSize;
+    const pieceHeight = (piece && piece.bounds ? piece.bounds.height : 0) * displayCellSize;
 
     this.dragState = {
       activePieceIndex: pieceIndex,
       pointerX: touchX,
       pointerY: touchY,
-      drawX: visualPosition.x,
-      drawY: visualPosition.y,
+      visualX: touchX - pieceWidth / 2,
+      visualY: touchY - dragFingerOffsetY - pieceHeight,
+      pieceWidth,
+      pieceHeight,
       displayCellSize,
       dragFingerOffsetY,
       isDragging: true
@@ -598,26 +603,11 @@ export default class GameState {
       return;
     }
 
-    const visualPosition = this.getDraggedPieceVisualPosition(
-      touchX,
-      touchY,
-      piece,
-      this.dragState.displayCellSize,
-      this.dragState.dragFingerOffsetY
-    );
-    const placement = this.getDraggedPieceBoardPlacement(visualPosition.x, visualPosition.y, piece);
-
     this.dragState.pointerX = touchX;
     this.dragState.pointerY = touchY;
-    this.dragState.drawX = visualPosition.x;
-    this.dragState.drawY = visualPosition.y;
-
-    this.previewState = {
-      row: placement.row,
-      col: placement.col,
-      canPlace: placement.canPlace,
-      visible: true
-    };
+    this.dragState.visualX = touchX - this.dragState.pieceWidth / 2;
+    this.dragState.visualY = touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
+    this.updatePreviewStateFromVisual(piece);
   }
 
   endDrag() {
@@ -1097,10 +1087,12 @@ export default class GameState {
   getDraggedPieceVisualPosition(pointerX, pointerY, piece, displayCellSize, dragFingerOffsetY) {
     const pieceWidth = (piece && piece.bounds ? piece.bounds.width : 0) * displayCellSize;
     const pieceHeight = (piece && piece.bounds ? piece.bounds.height : 0) * displayCellSize;
+    const visualCenterX = pointerX;
+    const visualBottomY = pointerY - dragFingerOffsetY;
 
     return {
-      x: pointerX - pieceWidth / 2,
-      y: pointerY - pieceHeight - dragFingerOffsetY
+      x: visualCenterX - pieceWidth / 2,
+      y: visualBottomY - pieceHeight
     };
   }
 
@@ -1115,6 +1107,19 @@ export default class GameState {
       col,
       canPlace: this.board.canPlace(piece.cells, row, col)
     };
+  }
+
+  updatePreviewStateFromVisual(piece) {
+    const placement = this.getDraggedPieceBoardPlacement(
+      this.dragState.visualX,
+      this.dragState.visualY,
+      piece
+    );
+
+    this.previewState.row = placement.row;
+    this.previewState.col = placement.col;
+    this.previewState.canPlace = placement.canPlace;
+    this.previewState.visible = true;
   }
 
   buildCurrentToolState(preserveClearMode) {

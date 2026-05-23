@@ -1,9 +1,10 @@
 export default class InputManager {
-  constructor(gameState, renderer, soundManager, applySettings) {
+  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender) {
     this.gameState = gameState;
     this.renderer = renderer;
     this.soundManager = soundManager;
     this.applySettings = applySettings;
+    this.requestImmediateRender = requestImmediateRender || (() => {});
     this.homeTitleTapCount = 0;
     this.homeTitleTapStartTime = 0;
 
@@ -96,7 +97,9 @@ export default class InputManager {
 
     const hitArea = this.renderer.getRackHitArea(point.x, point.y);
     if (hitArea) {
-      this.gameState.startDrag(hitArea.index, point.x, point.y, hitArea);
+      if (this.gameState.startDrag(hitArea.index, point.x, point.y, hitArea)) {
+        this.requestImmediateRender();
+      }
     }
   }
 
@@ -116,6 +119,7 @@ export default class InputManager {
     }
 
     this.gameState.moveDrag(touch.clientX, touch.clientY);
+    this.requestImmediateRender();
   }
 
   handleTouchEnd(event) {
@@ -137,9 +141,11 @@ export default class InputManager {
 
     if (touch && this.gameState.dragState.isDragging) {
       this.gameState.moveDrag(touch.clientX, touch.clientY);
+      this.requestImmediateRender();
     }
 
     this.gameState.endDrag();
+    this.requestImmediateRender();
   }
 
   handleHomeTouch(point) {
