@@ -1,12 +1,14 @@
 import './render.js';
 import { DEVICE_PIXEL_RATIO, MENU_BUTTON, SCREEN_HEIGHT, SCREEN_WIDTH, SAFE_AREA } from './render.js';
 import GameState from './game/GameState.js';
+import DragOverlay from './game/DragOverlay.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
 const ctx = canvas.getContext('2d');
+const dragOverlay = new DragOverlay(document.getElementById('dragOverlay'));
 ctx.setTransform(DEVICE_PIXEL_RATIO, 0, 0, DEVICE_PIXEL_RATIO, 0, 0);
 ctx.imageSmoothingEnabled = true;
 
@@ -36,6 +38,7 @@ export default class Main {
     this.inputManager = new InputManager(
       this.gameState,
       this.renderer,
+      dragOverlay,
       this.soundManager,
       this.applySettings.bind(this),
       this.requestImmediateRender.bind(this)
@@ -182,6 +185,7 @@ export default class Main {
 
     this.isPaused = true;
     this.gameState.clearDrag();
+    dragOverlay.hide();
     this.stopLoop();
     this.soundManager.handleAppHide();
   }
@@ -193,6 +197,7 @@ export default class Main {
     }
 
     this.isPaused = false;
+    dragOverlay.hide();
     this.soundManager.handleAppShow();
     this.render();
     this.start();

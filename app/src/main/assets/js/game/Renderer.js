@@ -625,26 +625,7 @@ export default class Renderer {
   }
 
   drawDraggingPiece(state) {
-    if (!state.dragState.isDragging || state.toolState.clearMode) {
-      return;
-    }
-
-    const piece = state.rackPieces[state.dragState.activePieceIndex];
-    const { visualX, visualY, displayCellSize } = state.dragState;
-
-    piece.cells.forEach((cell) => {
-      this.drawBlockCell(
-        visualX + cell.x * displayCellSize,
-        visualY + cell.y * displayCellSize,
-        displayCellSize,
-        piece.color,
-        {
-          glow: 0,
-          borderBoost: 0.02,
-          shadowAlpha: 0
-        }
-      );
-    });
+    return;
   }
 
   drawHelpModal() {

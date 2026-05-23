@@ -1,7 +1,8 @@
 export default class InputManager {
-  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender) {
+  constructor(gameState, renderer, dragOverlay, soundManager, applySettings, requestImmediateRender) {
     this.gameState = gameState;
     this.renderer = renderer;
+    this.dragOverlay = dragOverlay;
     this.soundManager = soundManager;
     this.applySettings = applySettings;
     this.requestImmediateRender = requestImmediateRender || (() => {});
@@ -98,6 +99,15 @@ export default class InputManager {
     const hitArea = this.renderer.getRackHitArea(point.x, point.y);
     if (hitArea) {
       if (this.gameState.startDrag(hitArea.index, point.x, point.y, hitArea)) {
+        const piece = this.gameState.rackPieces[hitArea.index];
+        const dragState = this.gameState.dragState;
+        this.dragOverlay.show(
+          piece,
+          dragState.displayCellSize,
+          dragState.pointerX,
+          dragState.pointerY,
+          dragState.dragFingerOffsetY
+        );
         this.requestImmediateRender();
       }
     }
@@ -119,7 +129,11 @@ export default class InputManager {
     }
 
     this.gameState.moveDrag(touch.clientX, touch.clientY);
-    this.requestImmediateRender();
+    this.dragOverlay.moveTo(
+      this.gameState.dragState.pointerX,
+      this.gameState.dragState.pointerY,
+      this.gameState.dragState.dragFingerOffsetY
+    );
   }
 
   handleTouchEnd(event) {
@@ -141,10 +155,15 @@ export default class InputManager {
 
     if (touch && this.gameState.dragState.isDragging) {
       this.gameState.moveDrag(touch.clientX, touch.clientY);
-      this.requestImmediateRender();
+      this.dragOverlay.moveTo(
+        this.gameState.dragState.pointerX,
+        this.gameState.dragState.pointerY,
+        this.gameState.dragState.dragFingerOffsetY
+      );
     }
 
     this.gameState.endDrag();
+    this.dragOverlay.hide();
     this.requestImmediateRender();
   }
 
