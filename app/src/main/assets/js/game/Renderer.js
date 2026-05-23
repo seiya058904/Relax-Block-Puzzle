@@ -200,9 +200,9 @@ export default class Renderer {
     };
     const homePanelRect = {
       x: sideMargin + 8,
-      y: clamp(screenHeight * 0.14, topInset + 8, topInset + 36),
+      y: clamp(screenHeight * 0.112, topInset + 6, topInset + 24),
       width: screenWidth - (sideMargin + 8) * 2,
-      height: clamp(screenHeight * 0.56, 380, 460)
+      height: clamp(screenHeight * 0.53, 360, 438)
     };
 
     return {
@@ -299,6 +299,19 @@ export default class Renderer {
     const panel = layout.homePanelRect;
     const difficultyLabel = getDifficultyLabel(state.settings.difficulty);
     const difficultyBestScore = state.bestScores[state.settings.difficulty] || 0;
+    const compact = layout.screenHeight < 820;
+    const titleFontSize = compact ? 31 : 35;
+    const subtitleFontSize = compact ? 14 : 16;
+    const titleWidthPadding = compact ? 30 : 40;
+    const difficultyHeight = compact ? 40 : 42;
+    const difficultyPaddingX = compact ? 30 : 34;
+    const buttonWidth = panel.width - (compact ? 60 : 72);
+    const buttonX = panel.x + (panel.width - buttonWidth) / 2;
+    const startHeight = compact ? 54 : 58;
+    const secondaryHeight = compact ? 46 : 48;
+    const buttonGap = compact ? 12 : 14;
+    const topPadding = compact ? 22 : 26;
+    const bottomPadding = compact ? 22 : 26;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
@@ -315,49 +328,68 @@ export default class Renderer {
     ctx.stroke();
 
     this.homeTitleRect = {
-      x: panel.x + 40,
-      y: panel.y + 20,
-      width: panel.width - 80,
-      height: 68
+      x: panel.x + titleWidthPadding,
+      y: panel.y + topPadding - 6,
+      width: panel.width - titleWidthPadding * 2,
+      height: compact ? 60 : 66
     };
+
+    let cursorY = panel.y + topPadding;
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 36px sans-serif';
-    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, panel.y + 64);
+    ctx.font = `bold ${titleFontSize}px sans-serif`;
+    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, cursorY + titleFontSize);
 
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText('拖动方块，填满整行或整列即可消除', layout.screenWidth / 2, panel.y + 96);
+    ctx.font = `${subtitleFontSize}px sans-serif`;
+    const subtitleY = cursorY + titleFontSize + (compact ? 24 : 28);
+    ctx.fillText('拖动方块，填满整行或整列即可消除', layout.screenWidth / 2, subtitleY);
+    cursorY = subtitleY + (compact ? 18 : 20);
 
     if (state.isAdminModeActive()) {
       const adminRect = {
         x: panel.x + panel.width / 2 - 54,
-        y: panel.y + 108,
+        y: cursorY,
         width: 108,
         height: 28
       };
       this.drawSecondaryChip(adminRect, '管理员模式');
+      cursorY = adminRect.y + adminRect.height + 14;
     }
 
     const difficultyRect = {
-      x: panel.x + 34,
-      y: panel.y + 146,
-      width: panel.width - 68,
-      height: 42
+      x: panel.x + difficultyPaddingX,
+      y: cursorY,
+      width: panel.width - difficultyPaddingX * 2,
+      height: difficultyHeight
     };
     this.homeActionRects.difficulty = difficultyRect;
     this.drawSecondaryChip(difficultyRect, `难度：${difficultyLabel}`);
+    cursorY = difficultyRect.y + difficultyRect.height + (compact ? 26 : 30);
 
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '18px sans-serif';
-    ctx.fillText(`${difficultyLabel}最高分：${difficultyBestScore}`, layout.screenWidth / 2, panel.y + 220);
+    ctx.fillText(`${difficultyLabel}最高分：${difficultyBestScore}`, layout.screenWidth / 2, cursorY);
 
-    const buttonWidth = panel.width - 72;
-    const buttonX = panel.x + 36;
-    const startRect = { x: buttonX, y: panel.y + 252, width: buttonWidth, height: 58 };
-    const helpRect = { x: buttonX, y: startRect.y + 74, width: buttonWidth, height: 48 };
-    const settingsRect = { x: buttonX, y: helpRect.y + 58, width: buttonWidth, height: 48 };
+    const buttonBlockHeight = startHeight + secondaryHeight * 2 + buttonGap * 2;
+    const desiredButtonTop = cursorY + (compact ? 16 : 18);
+    const maxButtonTop = panel.y + panel.height - bottomPadding - buttonBlockHeight;
+    const buttonTop = Math.min(desiredButtonTop, maxButtonTop);
+
+    const startRect = { x: buttonX, y: buttonTop, width: buttonWidth, height: startHeight };
+    const helpRect = {
+      x: buttonX,
+      y: startRect.y + startRect.height + buttonGap,
+      width: buttonWidth,
+      height: secondaryHeight
+    };
+    const settingsRect = {
+      x: buttonX,
+      y: helpRect.y + helpRect.height + buttonGap,
+      width: buttonWidth,
+      height: secondaryHeight
+    };
 
     this.homeActionRects.start = startRect;
     this.homeActionRects.help = helpRect;
@@ -606,9 +638,9 @@ export default class Renderer {
         displayCellSize,
         piece.color,
         {
-          glow: 0.15,
-          borderBoost: 0.1,
-          shadowAlpha: 0.1
+          glow: 0.08,
+          borderBoost: 0.06,
+          shadowAlpha: 0.04
         }
       );
     });
@@ -720,7 +752,7 @@ export default class Renderer {
       ctx.textAlign = 'center';
       ctx.fillStyle = TEXT_PRIMARY;
       ctx.font = 'bold 28px sans-serif';
-      ctx.fillText('设置', layout.screenWidth / 2, panelY + 38);
+      ctx.fillText('游戏设置', layout.screenWidth / 2, panelY + 38);
 
       ctx.fillStyle = TEXT_SECONDARY;
       ctx.font = '18px sans-serif';
@@ -756,26 +788,26 @@ export default class Renderer {
     }
 
     const rows = [
-      { type: 'section', label: '????' },
-      { key: 'sound', label: '??', value: state.settings.soundEnabled ? '?' : '?' },
-      { key: 'bgm', label: '????', value: state.settings.bgmEnabled ? '?' : '?' },
-      { key: 'bgmTrack', label: '??????', value: this.getBgmLabel(state) },
-      { key: 'vibration', label: '????', value: state.settings.vibrationEnabled ? '?' : '?' },
-      { key: 'difficulty', label: '??', value: getDifficultyLabel(state.settings.difficulty) },
-      { type: 'section', label: '??' },
-      { key: 'memberStatus', label: '????', value: state.getMemberStatusLabel() },
-      { key: 'openMembership', label: '?????', value: '' },
-      { type: 'section', label: '??' },
-      { key: 'reset', label: '?????????', value: '' }
+      { type: 'section', label: '游戏设置' },
+      { key: 'sound', label: '音效', value: state.settings.soundEnabled ? '开启' : '关闭' },
+      { key: 'bgm', label: '背景音乐', value: state.settings.bgmEnabled ? '开启' : '关闭' },
+      { key: 'bgmTrack', label: '背景音乐选择', value: this.getBgmLabel(state) },
+      { key: 'vibration', label: '震动反馈', value: state.settings.vibrationEnabled ? '开启' : '关闭' },
+      { key: 'difficulty', label: '难度', value: getDifficultyLabel(state.settings.difficulty) },
+      { type: 'section', label: '福利状态' },
+      { key: 'memberStatus', label: '福利状态', value: state.getMemberStatusLabel() },
+      { key: 'openMembership', label: '输入福利码', value: '' },
+      { type: 'section', label: '数据' },
+      { key: 'reset', label: '重置当前难度最高分', value: '' }
     ];
     if (state.settings.localMembershipEnabled) {
-      rows.splice(8, 0, { key: 'memberBenefit', label: '????', value: state.getMembershipBenefitLabel() });
-      rows.splice(9, 0, { key: 'disableMembership', label: '??????', value: '' });
+      rows.splice(8, 0, { key: 'memberBenefit', label: '会员福利', value: state.getMembershipBenefitLabel() });
+      rows.splice(9, 0, { key: 'disableMembership', label: '关闭福利', value: '' });
     }
     if (state.isAdminModeActive()) {
-      rows.push({ type: 'section', label: '?????' });
-      rows.push({ key: 'adminStatus', label: '?????', value: state.getAdminStatusLabel() });
-      rows.push({ key: 'disableAdmin', label: '???????', value: '' });
+      rows.push({ type: 'section', label: '管理员模式' });
+      rows.push({ key: 'adminStatus', label: '管理员状态', value: state.getAdminStatusLabel() });
+      rows.push({ key: 'disableAdmin', label: '关闭管理员模式', value: '' });
     }
     const panelHeight = Math.min(
       panelMaxHeight,
@@ -802,7 +834,7 @@ export default class Renderer {
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('设置', layout.screenWidth / 2, panelY + 38);
+    ctx.fillText('游戏设置', layout.screenWidth / 2, panelY + 38);
 
     rows.forEach((row, index) => {
       const rect = {
@@ -949,11 +981,11 @@ export default class Renderer {
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('?????', layout.screenWidth / 2, panelY + 42);
+    ctx.fillText('管理员模式', layout.screenWidth / 2, panelY + 42);
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '16px sans-serif';
-    ctx.fillText('????????????????', layout.screenWidth / 2, panelY + 88);
-    ctx.fillText('??????????????????', layout.screenWidth / 2, panelY + 116);
+    ctx.fillText('此入口仅用于本机测试。', layout.screenWidth / 2, panelY + 88);
+    ctx.fillText('开启后本局分数不会写入正式最高分。', layout.screenWidth / 2, panelY + 116);
     const cancelRect = {
       x: panelX + 24,
       y: panelY + panelHeight - 72,

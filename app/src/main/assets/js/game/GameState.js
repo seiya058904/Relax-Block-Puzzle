@@ -593,6 +593,10 @@ export default class GameState {
       return;
     }
 
+    if (touchX === this.dragState.dragX && touchY === this.dragState.dragY) {
+      return;
+    }
+
     const piece = this.rackPieces[this.dragState.activePieceIndex];
     if (!piece) {
       return;
@@ -1170,13 +1174,13 @@ export default class GameState {
     const hasMatch = MEMBERSHIP_CODES.some((code) => normalizeMembershipCode(code) === normalizedInput);
 
     if (!normalizedInput || !hasMatch) {
-      this.membershipError = '会员码无效';
+      this.membershipError = '福利码无效';
       return false;
     }
 
     this.enableLocalMembership();
     this.closeMembershipPanel();
-    this.showNotice('会员已开启');
+    this.showNotice('福利已开启');
     return true;
   }
 

@@ -15,11 +15,16 @@
         overflow: hidden;
         background: #09111d;
         touch-action: none;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
       }
 
       body {
         position: fixed;
         inset: 0;
+        -webkit-tap-highlight-color: transparent;
       }
 
       #gameCanvas {
@@ -27,6 +32,8 @@
         width: 100vw;
         height: 100vh;
         touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
       #wxKeyboard {
