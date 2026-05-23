@@ -118,7 +118,7 @@ export default class InputManager {
     this.gameState.moveDrag(touch.clientX, touch.clientY);
   }
 
-  handleTouchEnd() {
+  handleTouchEnd(event) {
     if (
       this.gameState.inputLocked ||
       this.gameState.screen !== 'playing' ||
@@ -129,6 +129,14 @@ export default class InputManager {
       this.gameState.toolState.clearMode
     ) {
       return;
+    }
+
+    const touch =
+      (event && event.changedTouches && event.changedTouches[0]) ||
+      (event && event.touches && event.touches[0]);
+
+    if (touch && this.gameState.dragState.isDragging) {
+      this.gameState.moveDrag(touch.clientX, touch.clientY);
     }
 
     this.gameState.endDrag();

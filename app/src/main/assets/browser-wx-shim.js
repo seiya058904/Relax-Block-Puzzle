@@ -19,9 +19,6 @@ const visibilityHandlers = {
   show: []
 };
 
-let pendingMoveEvent = null;
-let moveFrameRequested = false;
-
 function safeParseStorage(value) {
   if (value == null) {
     return '';
@@ -58,30 +55,6 @@ function emitTouch(type, event) {
   });
 }
 
-function flushPendingMoveEvent() {
-  if (!pendingMoveEvent) {
-    moveFrameRequested = false;
-    return;
-  }
-
-  const event = pendingMoveEvent;
-  pendingMoveEvent = null;
-  moveFrameRequested = false;
-  emitTouch('move', event);
-}
-
-function scheduleMoveEvent(event) {
-  pendingMoveEvent = event;
-  if (moveFrameRequested) {
-    return;
-  }
-
-  moveFrameRequested = true;
-  requestAnimationFrame(() => {
-    flushPendingMoveEvent();
-  });
-}
-
 function registerTouchHandlers() {
   canvas.addEventListener('touchstart', (event) => {
     event.preventDefault();
@@ -90,18 +63,16 @@ function registerTouchHandlers() {
 
   canvas.addEventListener('touchmove', (event) => {
     event.preventDefault();
-    scheduleMoveEvent(event);
+    emitTouch('move', event);
   }, { passive: false });
 
   canvas.addEventListener('touchend', (event) => {
     event.preventDefault();
-    flushPendingMoveEvent();
     emitTouch('end', event);
   }, { passive: false });
 
   canvas.addEventListener('touchcancel', (event) => {
     event.preventDefault();
-    flushPendingMoveEvent();
     emitTouch('cancel', event);
   }, { passive: false });
 
@@ -116,7 +87,7 @@ function registerTouchHandlers() {
     if (!mouseDown) {
       return;
     }
-    scheduleMoveEvent(event);
+    emitTouch('move', event);
   });
 
   window.addEventListener('mouseup', (event) => {
@@ -124,7 +95,6 @@ function registerTouchHandlers() {
       return;
     }
     mouseDown = false;
-    flushPendingMoveEvent();
     emitTouch('end', event);
   });
 }

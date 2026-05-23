@@ -229,7 +229,7 @@ export default class Renderer {
     this.resetHitAreas();
 
     this.clearCanvas();
-    this.drawBackground();
+    this.drawBackground(state.dragState.isDragging);
 
     if (state.screen === 'home' || state.screen === 'help') {
       this.drawHome(state);
@@ -274,7 +274,7 @@ export default class Renderer {
     this.ctx.clearRect(0, 0, this.layout.screenWidth, this.layout.screenHeight);
   }
 
-  drawBackground() {
+  drawBackground(isDragging = false) {
     const { ctx, layout } = this;
     const gradient = ctx.createLinearGradient(0, 0, 0, layout.screenHeight);
     gradient.addColorStop(0, BACKGROUND_TOP);
@@ -283,9 +283,10 @@ export default class Renderer {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
 
-    this.stars.forEach((star) => {
+    const stars = isDragging ? this.stars.slice(0, 2) : this.stars;
+    stars.forEach((star) => {
       ctx.save();
-      ctx.globalAlpha = star.alpha;
+      ctx.globalAlpha = isDragging ? star.alpha * 0.45 : star.alpha;
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -638,9 +639,9 @@ export default class Renderer {
         displayCellSize,
         piece.color,
         {
-          glow: 0.08,
-          borderBoost: 0.06,
-          shadowAlpha: 0.04
+          glow: 0.03,
+          borderBoost: 0.04,
+          shadowAlpha: 0.015
         }
       );
     });

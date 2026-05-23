@@ -35,8 +35,8 @@ const DIFFICULTY_LABELS = {
 function createEmptyDragState() {
   return {
     activePieceIndex: -1,
-    dragX: 0,
-    dragY: 0,
+    pointerX: 0,
+    pointerY: 0,
     drawX: 0,
     drawY: 0,
     displayCellSize: 0,
@@ -574,8 +574,8 @@ export default class GameState {
 
     this.dragState = {
       activePieceIndex: pieceIndex,
-      dragX: touchX,
-      dragY: touchY,
+      pointerX: touchX,
+      pointerY: touchY,
       drawX: visualPosition.x,
       drawY: visualPosition.y,
       displayCellSize,
@@ -593,10 +593,6 @@ export default class GameState {
       return;
     }
 
-    if (touchX === this.dragState.dragX && touchY === this.dragState.dragY) {
-      return;
-    }
-
     const piece = this.rackPieces[this.dragState.activePieceIndex];
     if (!piece) {
       return;
@@ -611,8 +607,8 @@ export default class GameState {
     );
     const placement = this.getDraggedPieceBoardPlacement(visualPosition.x, visualPosition.y, piece);
 
-    this.dragState.dragX = touchX;
-    this.dragState.dragY = touchY;
+    this.dragState.pointerX = touchX;
+    this.dragState.pointerY = touchY;
     this.dragState.drawX = visualPosition.x;
     this.dragState.drawY = visualPosition.y;
 
