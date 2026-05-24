@@ -1,5 +1,8 @@
 # Relax Block Puzzle / 轻松俄罗斯方块
 
+
+<img width="1254" height="1254" alt="ChatGPT Image 2026年5月22日 18_46_41" src="https://github.com/user-attachments/assets/1aa9e50e-9046-486d-8f23-768248b6235e" />
+
 Relax Block Puzzle is a lightweight casual block puzzle game for Android. Drag blocks onto a 10x10 board, fill complete rows or columns, and enjoy a clean, relaxing puzzle experience.
 
 轻松俄罗斯方块是一款轻量级休闲方块消除游戏。玩家拖动方块放入 10x10 棋盘，填满整行或整列即可消除，适合碎片时间轻松游玩。
