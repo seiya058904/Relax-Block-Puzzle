@@ -585,7 +585,11 @@ export default class GameState {
       pieceHeight,
       displayCellSize,
       dragFingerOffsetY,
-      isDragging: true
+      isDragging: true,
+      dragStartTime: performance.now(),
+      pickupAnim: true,
+      startX: hitArea.x,
+      startY: hitArea.y
     };
 
     this.moveDrag(touchX, touchY);
@@ -596,6 +600,10 @@ export default class GameState {
   moveDrag(touchX, touchY) {
     if (!this.dragState.isDragging || !this.layout || this.screen !== 'playing') {
       return;
+    }
+
+    if (this.dragState.pickupAnim && performance.now() - this.dragState.dragStartTime > 200) {
+      this.dragState.pickupAnim = false;
     }
 
     const piece = this.rackPieces[this.dragState.activePieceIndex];

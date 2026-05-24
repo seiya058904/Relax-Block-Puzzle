@@ -40,9 +40,9 @@ export const BUTTON_GLOW = 'rgba(80, 182, 255, 0.24)';
 
 export const CLEAR_ANIMATION_MS = 180;
 export const PLACEMENT_PULSE_MS = 140;
-export const DRAG_FINGER_OFFSET_MULTIPLIER = 0.82;
-export const DRAG_FINGER_OFFSET_MIN = 32;
-export const DRAG_FINGER_OFFSET_MAX = 50;
+export const DRAG_FINGER_OFFSET_MULTIPLIER = 1.2;
+export const DRAG_FINGER_OFFSET_MIN = 48;
+export const DRAG_FINGER_OFFSET_MAX = 72;
 
 export const MIN_SIDE_MARGIN = 14;
 export const MAX_SIDE_MARGIN = 18;

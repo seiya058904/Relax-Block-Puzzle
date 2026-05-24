@@ -593,7 +593,7 @@ export default class Renderer {
     for (let index = 0; index < state.rackPieces.length; index += 1) {
       const piece = state.rackPieces[index];
       const slot = this.layout.rackSlots[index];
-      if (!piece || piece.used || !slot) {
+      if (!piece || piece.used || !slot || (state.dragState.isDragging && index === state.dragState.activePieceIndex)) {
         continue;
       }
 
@@ -670,12 +670,37 @@ export default class Renderer {
       return;
     }
 
-    const { visualX, visualY, displayCellSize } = state.dragState;
+    const ds = state.dragState;
+    const { visualX, visualY, displayCellSize } = ds;
+
+    let drawX = visualX;
+    let drawY = visualY;
+    let scale = 1.08;
+
+    if (ds.pickupAnim) {
+      const elapsed = performance.now() - ds.dragStartTime;
+      const t = Math.min(1, elapsed / 200);
+      const eased = 1 - Math.pow(1 - t, 3);
+      drawX = ds.startX + (visualX - ds.startX) * eased;
+      drawY = ds.startY + (visualY - ds.startY) * eased;
+      scale = 1.0 + 0.08 * eased;
+    }
+
+    const { ctx } = this;
+    const pieceWidth = piece.bounds.width * displayCellSize;
+    const pieceHeight = piece.bounds.height * displayCellSize;
+    const cx = drawX + pieceWidth / 2;
+    const cy = drawY + pieceHeight / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -cy);
 
     piece.cells.forEach((cell) => {
       this.drawBlockCell(
-        visualX + cell.x * displayCellSize,
-        visualY + cell.y * displayCellSize,
+        drawX + cell.x * displayCellSize,
+        drawY + cell.y * displayCellSize,
         displayCellSize,
         piece.color,
         {
@@ -686,6 +711,8 @@ export default class Renderer {
         }
       );
     });
+
+    ctx.restore();
   }
 
   drawHelpModal() {
