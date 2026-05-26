@@ -1,6 +1,9 @@
 # Relax Block Puzzle / 轻松俄罗斯方块
 
 
+<img width="1536" height="1024" alt="project-relax-block-puzzle" src="https://github.com/user-attachments/assets/a2c22e51-04ae-422a-af33-3acfdc93524a" />
+
+
 <img width="1122" height="1402" alt="ChatGPT Image 2026年5月25日 19_44_24" src="https://github.com/user-attachments/assets/584afa67-758f-4137-b936-be52627965f9" />
 
 
