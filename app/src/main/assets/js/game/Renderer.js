@@ -23,6 +23,8 @@
   TEXT_SECONDARY
 } from './constants.js';
 import { getDifficultyLabel } from './GameState.js';
+import { getClearFeedbackLabel, getDragVisual } from './FeedbackState.js';
+import { calculateAndroidHomeLayout, calculateHudLayout } from './LayoutMetrics.js';
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -133,14 +135,48 @@ export default class Renderer {
     const toolGap = 10;
     const rackGap = 10;
     const boardOuterWidth = screenWidth - sideMargin * 2;
+    const headerRect = {
+      x: sideMargin,
+      y: topInset,
+      width: screenWidth - sideMargin * 2,
+      height: headerHeight
+    };
+    const settingsButtonRect = {
+      x: headerRect.x,
+      y: headerRect.y + 4,
+      width: 64,
+      height: 28
+    };
+    const pauseButtonRect = {
+      x: headerRect.x + headerRect.width - 64,
+      y: settingsButtonRect.y,
+      width: 64,
+      height: 28
+    };
+    const preliminaryBoardSize = Math.min(boardOuterWidth, screenHeight);
+    const preliminaryBoardPanelRect = {
+      x: Math.round((screenWidth - preliminaryBoardSize) / 2),
+      y: topInset,
+      width: preliminaryBoardSize,
+      height: preliminaryBoardSize
+    };
+    const hudLayout = calculateHudLayout({
+      platform: 'android',
+      viewportWidth: screenWidth,
+      headerRect,
+      settingsButtonRect,
+      pauseButtonRect,
+      boardPanelRect: preliminaryBoardPanelRect,
+      score: 2147483647,
+      bestScore: 2147483647
+    });
+    const boardTop = Math.max(topInset + headerHeight + HEADER_GAP, hudLayout.hudBottom + 8);
     const boardAvailableHeight =
       screenHeight -
-      topInset -
-      headerHeight -
+      boardTop -
       toolHeight -
       rackHeight -
       bottomInset -
-      HEADER_GAP -
       toolGap -
       rackGap -
       8;
@@ -153,7 +189,7 @@ export default class Renderer {
     const boardSizePx = cellSize * BOARD_SIZE + BOARD_PADDING * 2;
     const boardPanelRect = {
       x: Math.round((screenWidth - boardSizePx) / 2),
-      y: topInset + headerHeight + HEADER_GAP,
+      y: boardTop,
       width: boardSizePx,
       height: boardSizePx
     };
@@ -162,12 +198,6 @@ export default class Renderer {
       y: boardPanelRect.y + BOARD_PADDING,
       width: cellSize * BOARD_SIZE,
       height: cellSize * BOARD_SIZE
-    };
-    const headerRect = {
-      x: sideMargin,
-      y: topInset,
-      width: screenWidth - sideMargin * 2,
-      height: headerHeight
     };
     const toolRect = {
       x: sideMargin,
@@ -187,18 +217,6 @@ export default class Renderer {
       width: rackRect.width / 3,
       height: rackRect.height
     }));
-    const settingsButtonRect = {
-      x: headerRect.x,
-      y: headerRect.y + 4,
-      width: 64,
-      height: 28
-    };
-    const pauseButtonRect = {
-      x: settingsButtonRect.x + settingsButtonRect.width + 8,
-      y: settingsButtonRect.y,
-      width: 64,
-      height: 28
-    };
     const homePanelRect = {
       x: sideMargin + 8,
       y: clamp(screenHeight * 0.112, topInset + 6, topInset + 24),
@@ -277,6 +295,14 @@ export default class Renderer {
     this.ctx.clearRect(0, 0, this.layout.screenWidth, this.layout.screenHeight);
   }
 
+  measureCanvasText(text, size, fontFamily = 'sans-serif', fontWeight = '') {
+    const previousFont = this.ctx.font;
+    this.ctx.font = `${fontWeight ? `${fontWeight} ` : ''}${size}px ${fontFamily}`;
+    const width = this.ctx.measureText(String(text)).width;
+    this.ctx.font = previousFont;
+    return width;
+  }
+
   drawBackground(isDragging = false) {
     const { ctx, layout } = this;
     const gradient = ctx.createLinearGradient(0, 0, 0, layout.screenHeight);
@@ -300,22 +326,18 @@ export default class Renderer {
 
   drawHome(state) {
     const { ctx, layout } = this;
-    const panel = layout.homePanelRect;
     const difficultyLabel = getDifficultyLabel(state.settings.difficulty);
     const difficultyBestScore = state.bestScores[state.settings.difficulty] || 0;
-    const compact = layout.screenHeight < 820;
-    const titleFontSize = compact ? 31 : 35;
-    const subtitleFontSize = compact ? 14 : 16;
-    const titleWidthPadding = compact ? 30 : 40;
-    const difficultyHeight = compact ? 40 : 42;
-    const difficultyPaddingX = compact ? 30 : 34;
-    const buttonWidth = panel.width - (compact ? 60 : 72);
-    const buttonX = panel.x + (panel.width - buttonWidth) / 2;
-    const startHeight = compact ? 54 : 58;
-    const secondaryHeight = compact ? 46 : 48;
-    const buttonGap = compact ? 12 : 14;
-    const topPadding = compact ? 22 : 26;
-    const bottomPadding = compact ? 22 : 26;
+    const homeLayout = calculateAndroidHomeLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      safeInsets: {
+        top: layout.headerRect.y,
+        bottom: layout.bottomInset
+      },
+      adminVisible: state.isAdminModeActive()
+    });
+    const panel = homeLayout.panel;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
@@ -334,22 +356,15 @@ export default class Renderer {
     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
     ctx.stroke();
 
-    this.homeTitleRect = {
-      x: panel.x + titleWidthPadding,
-      y: panel.y + topPadding - 6,
-      width: panel.width - titleWidthPadding * 2,
-      height: compact ? 60 : 66
-    };
-
-    let cursorY = panel.y + topPadding;
+    this.homeTitleRect = homeLayout.title;
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = `bold ${titleFontSize}px sans-serif`;
-    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, cursorY + titleFontSize);
+    ctx.font = `bold ${homeLayout.titleFontSize}px sans-serif`;
+    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, homeLayout.title.y + homeLayout.title.height - 16);
 
-    const decoLineY = cursorY + titleFontSize + 8;
-    const decoLineWidth = (panel.width - titleWidthPadding * 2) * 0.4;
+    const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
+    const decoLineWidth = homeLayout.title.width * 0.4;
     const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
     const decoGrad = ctx.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
     decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
@@ -363,37 +378,22 @@ export default class Renderer {
     ctx.stroke();
 
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = `${subtitleFontSize}px sans-serif`;
-    const subtitleY = cursorY + titleFontSize + (compact ? 24 : 28);
-    ctx.fillText('拖动方块，填满整行或整列即可消除', layout.screenWidth / 2, subtitleY);
-    cursorY = subtitleY + (compact ? 18 : 20);
+    ctx.font = `${homeLayout.subtitleFontSize}px sans-serif`;
+    ctx.fillText(
+      '拖动方块，填满整行或整列即可消除',
+      layout.screenWidth / 2,
+      homeLayout.subtitle.y + homeLayout.subtitle.height - 5
+    );
 
-    if (state.isAdminModeActive()) {
-      const adminRect = {
-        x: panel.x + panel.width / 2 - 54,
-        y: cursorY,
-        width: 108,
-        height: 28
-      };
-      this.drawSecondaryChip(adminRect, '管理员模式');
-      cursorY = adminRect.y + adminRect.height + 14;
+    if (homeLayout.adminButton) {
+      this.drawSecondaryChip(homeLayout.adminButton, '管理员模式');
     }
 
-    const difficultyRect = {
-      x: panel.x + difficultyPaddingX,
-      y: cursorY,
-      width: panel.width - difficultyPaddingX * 2,
-      height: difficultyHeight
-    };
-    this.homeActionRects.difficulty = difficultyRect;
-    this.drawSecondaryChip(difficultyRect, `难度：${difficultyLabel}`);
-    cursorY = difficultyRect.y + difficultyRect.height + (compact ? 26 : 30);
+    this.homeActionRects.difficulty = homeLayout.difficultyButton;
+    this.drawSecondaryChip(homeLayout.difficultyButton, `难度：${difficultyLabel}`);
 
-    const scoreCardHeight = compact ? 34 : 38;
-    const scoreCardWidth = panel.width - difficultyPaddingX * 2;
-    const scoreCardX = panel.x + difficultyPaddingX;
-    const scoreCardY = cursorY - scoreCardHeight / 2 + 4;
-    roundedRect(ctx, scoreCardX, scoreCardY, scoreCardWidth, scoreCardHeight, 14);
+    const scoreCard = homeLayout.highScoreCard;
+    roundedRect(ctx, scoreCard.x, scoreCard.y, scoreCard.width, scoreCard.height, 14);
     ctx.fillStyle = 'rgba(11, 28, 52, 0.65)';
     ctx.fill();
     ctx.lineWidth = 1;
@@ -403,35 +403,18 @@ export default class Renderer {
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '16px sans-serif';
-    ctx.fillText(`★ ${difficultyLabel}最高分`, layout.screenWidth / 2, scoreCardY + scoreCardHeight / 2 - 2);
+    ctx.fillText(`★ ${difficultyLabel}最高分`, layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 - 4);
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = 'bold 18px sans-serif';
-    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCardY + scoreCardHeight / 2 + 16);
-    cursorY = scoreCardY + scoreCardHeight;
+    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 + 18);
 
-    const buttonBlockHeight = startHeight + secondaryHeight * 2 + buttonGap * 2;
-    const desiredButtonTop = cursorY + (compact ? 18 : 22);
-    const maxButtonTop = panel.y + panel.height - bottomPadding - buttonBlockHeight;
-    const buttonTop = Math.min(desiredButtonTop, maxButtonTop);
-
-    const startRect = { x: buttonX, y: buttonTop, width: buttonWidth, height: startHeight };
-    const helpRect = {
-      x: buttonX,
-      y: startRect.y + startRect.height + buttonGap,
-      width: buttonWidth,
-      height: secondaryHeight
-    };
-    const settingsRect = {
-      x: buttonX,
-      y: helpRect.y + helpRect.height + buttonGap,
-      width: buttonWidth,
-      height: secondaryHeight
-    };
+    const startRect = homeLayout.startButton;
+    const helpRect = homeLayout.helpButton;
+    const settingsRect = homeLayout.settingsButton;
 
     this.homeActionRects.start = startRect;
     this.homeActionRects.help = helpRect;
     this.homeActionRects.settings = settingsRect;
-
     this.drawActionButton(startRect, '开始游戏', 'primary');
     this.drawActionButton(helpRect, '怎么玩', 'secondary');
     this.drawActionButton(settingsRect, '设置', 'secondary');
@@ -452,17 +435,75 @@ export default class Renderer {
 
   drawHeader(state) {
     const { ctx, layout } = this;
-    const centerX = layout.headerRect.x + layout.headerRect.width / 2;
     const difficultyLabel = getDifficultyLabel(state.activeDifficulty);
+    const feedback = state.feedbackState || {};
+    const scorePulse = feedback.scorePulse || {};
+    const clearScore = feedback.clearScore || {};
+    const highScore = feedback.highScore || {};
+    const scorePulseProgress = scorePulse.duration
+      ? clamp(scorePulse.remaining / scorePulse.duration, 0, 1)
+      : 0;
+    const hudLayout = calculateHudLayout({
+      platform: 'android',
+      viewportWidth: layout.screenWidth,
+      headerRect: layout.headerRect,
+      settingsButtonRect: layout.settingsButtonRect,
+      pauseButtonRect: layout.pauseButtonRect,
+      score: state.score,
+      bestScore: state.bestScore,
+      boardPanelRect: layout.boardPanelRect,
+      measureText: this.measureCanvasText.bind(this)
+    });
+    const centerX = hudLayout.centerX;
 
+    ctx.save();
+    ctx.translate(centerX, hudLayout.scoreBaselineY);
+    ctx.scale(1 + scorePulseProgress * 0.08, 1 + scorePulseProgress * 0.08);
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 46px sans-serif';
-    ctx.fillText(String(state.score), centerX, layout.headerRect.y + 46);
+    ctx.font = `bold ${hudLayout.scoreFontSize}px sans-serif`;
+    if (scorePulseProgress > 0) {
+      ctx.shadowColor = 'rgba(255, 214, 10, 0.72)';
+      ctx.shadowBlur = 12 * scorePulseProgress;
+    }
+    ctx.fillText(String(state.score), 0, 0);
+    ctx.restore();
 
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText(`${difficultyLabel}最高分：${state.bestScore}`, centerX, layout.headerRect.y + 80);
+    const clearFeedbackVisible = clearScore.active && clearScore.clearedLines > 0;
+    ctx.save();
+    ctx.globalAlpha = clearFeedbackVisible ? clamp(clearScore.remaining / 200, 0, 1) : 1;
+    ctx.fillStyle = clearFeedbackVisible ? '#FFD60A' : TEXT_SECONDARY;
+    ctx.font = `${hudLayout.bestScoreFontSize}px sans-serif`;
+    ctx.fillText(
+      clearFeedbackVisible
+        ? `${getClearFeedbackLabel(clearScore.clearedLines)}  +${clearScore.totalAdded}`
+        : `${difficultyLabel}最高分：${state.bestScore}`,
+      centerX,
+      hudLayout.bestBaselineY
+    );
+    ctx.restore();
+
+    if (highScore.active && !state.isAdminModeActive()) {
+      const recordRect = {
+        x: Math.min(centerX + 58, layout.headerRect.x + layout.headerRect.width - 88),
+        y: layout.headerRect.y + 14,
+        width: 88,
+        height: 24
+      };
+      ctx.save();
+      ctx.globalAlpha = clamp(highScore.remaining / 200, 0, 1);
+      roundedRect(ctx, recordRect.x, recordRect.y, recordRect.width, recordRect.height, 12);
+      ctx.fillStyle = 'rgba(92, 70, 18, 0.88)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 214, 10, 0.72)';
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFF1A8';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('刷新最高分', recordRect.x + recordRect.width / 2, recordRect.y + 17);
+      ctx.restore();
+    }
 
     if (state.isAdminModeActive()) {
       const tagRect = {
@@ -593,7 +634,8 @@ export default class Renderer {
     for (let index = 0; index < state.rackPieces.length; index += 1) {
       const piece = state.rackPieces[index];
       const slot = this.layout.rackSlots[index];
-      if (!piece || piece.used || !slot || (state.dragState.isDragging && index === state.dragState.activePieceIndex)) {
+      const activeDrag = state.feedbackState && state.feedbackState.drag;
+      if (!piece || piece.used || !slot || (activeDrag && activeDrag.active && index === activeDrag.pieceIndex)) {
         continue;
       }
 
@@ -661,46 +703,34 @@ export default class Renderer {
   }
 
   drawDraggingPiece(state) {
-    if (!state.dragState.isDragging || state.toolState.clearMode) {
+    const drag = state.feedbackState && state.feedbackState.drag;
+    if (!drag || !drag.active || state.toolState.clearMode) {
       return;
     }
 
-    const piece = state.rackPieces[state.dragState.activePieceIndex];
-    if (!piece) {
+    const piece = drag.piece;
+    const visual = getDragVisual(drag);
+    if (!piece || !visual) {
       return;
-    }
-
-    const ds = state.dragState;
-    const { visualX, visualY, displayCellSize } = ds;
-
-    let drawX = visualX;
-    let drawY = visualY;
-    let scale = 1.08;
-
-    if (ds.pickupAnim) {
-      const elapsed = performance.now() - ds.dragStartTime;
-      const t = Math.min(1, elapsed / 200);
-      const eased = 1 - Math.pow(1 - t, 3);
-      drawX = ds.startX + (visualX - ds.startX) * eased;
-      drawY = ds.startY + (visualY - ds.startY) * eased;
-      scale = 1.0 + 0.08 * eased;
     }
 
     const { ctx } = this;
+    const displayCellSize = drag.displayCellSize;
     const pieceWidth = piece.bounds.width * displayCellSize;
     const pieceHeight = piece.bounds.height * displayCellSize;
-    const cx = drawX + pieceWidth / 2;
-    const cy = drawY + pieceHeight / 2;
+    const cx = visual.x + pieceWidth / 2;
+    const cy = visual.y + pieceHeight / 2;
 
     ctx.save();
+    ctx.globalAlpha = visual.alpha;
     ctx.translate(cx, cy);
-    ctx.scale(scale, scale);
+    ctx.scale(visual.scale, visual.scale);
     ctx.translate(-cx, -cy);
 
     piece.cells.forEach((cell) => {
       this.drawBlockCell(
-        drawX + cell.x * displayCellSize,
-        drawY + cell.y * displayCellSize,
+        visual.x + cell.x * displayCellSize,
+        visual.y + cell.y * displayCellSize,
         displayCellSize,
         piece.color,
         {

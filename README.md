@@ -53,6 +53,20 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.4`
+
+- Optimized block drag, placement, and invalid placement feedback / 优化方块拖动、放置和无效放置反馈
+- Added line-clear score prompts, score pulse, and new-record feedback / 新增清线得分、分数脉冲和新纪录提示
+- Improved Android home screen layout across different screen sizes / 优化 Android 首页在不同屏幕尺寸下的布局
+- Improved top HUD layout for controls, current score, and best score / 优化游戏顶部按钮、当前分数和最高分布局
+- Fixed undo count consumption and restored undo board, score, and rack state / 修复撤回次数消耗以及棋盘、分数、候选方块恢复
+- Cleared stale drag, candidate, and undo state after undo or revive flows / 清理撤回或复活后的旧拖动、候选方块和撤回状态
+
+`v1.0.3`
+
+- Improved drag pickup animation and placement feedback / 改善拖动抬升动画和放置反馈
+- Cleaned up unused code paths before the Android release cycle / 清理 Android 发布前不再使用的代码路径
+
 `v1.0.2`
 
 - Home screen visual upgrade: gradient panel background, decorative title line, best score card style, button highlight effect / 首页视觉升级：渐变面板背景、标题装饰线、最高分卡片化、按钮高光效果

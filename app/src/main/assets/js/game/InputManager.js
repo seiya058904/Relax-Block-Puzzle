@@ -11,7 +11,7 @@ export default class InputManager {
     wx.onTouchStart(this.handleTouchStart.bind(this));
     wx.onTouchMove(this.handleTouchMove.bind(this));
     wx.onTouchEnd(this.handleTouchEnd.bind(this));
-    wx.onTouchCancel(this.handleTouchEnd.bind(this));
+    wx.onTouchCancel(this.handleTouchCancel.bind(this));
     this.bindKeyboard();
   }
 
@@ -147,6 +147,11 @@ export default class InputManager {
     }
 
     this.gameState.endDrag();
+    this.requestImmediateRender();
+  }
+
+  handleTouchCancel() {
+    this.gameState.cancelDrag();
     this.requestImmediateRender();
   }
 

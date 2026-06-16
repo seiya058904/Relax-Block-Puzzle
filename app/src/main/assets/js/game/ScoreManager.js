@@ -14,21 +14,30 @@ export default class ScoreManager {
   }
 
   applyPlacement(state, cellCount) {
-    const points = this.getPlacementScore(cellCount);
-    state.score += points;
+    const placementScore = this.getPlacementScore(cellCount);
+    state.score += placementScore;
     this.syncBestScore(state);
-    return points;
+    return {
+      placementScore,
+      lineClearScore: 0,
+      bonusScore: 0,
+      totalAdded: placementScore,
+      clearedLines: 0
+    };
   }
 
   applyLineClear(state, lineCount) {
-    const lineScore = this.getLineScore(lineCount);
-    const comboBonus = this.getComboBonus(lineCount);
-    state.score += lineScore + comboBonus;
+    const lineClearScore = this.getLineScore(lineCount);
+    const bonusScore = this.getComboBonus(lineCount);
+    const totalAdded = lineClearScore + bonusScore;
+    state.score += totalAdded;
     this.syncBestScore(state);
     return {
-      lineScore,
-      comboBonus,
-      total: lineScore + comboBonus
+      placementScore: 0,
+      lineClearScore,
+      bonusScore,
+      totalAdded,
+      clearedLines: lineCount
     };
   }
 

@@ -4,6 +4,8 @@ import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
+import { hasActiveFeedback } from './game/FeedbackState.js';
+import { shouldScheduleFrame } from './RenderScheduler.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
 const ctx = canvas.getContext('2d');
@@ -171,7 +173,8 @@ export default class Main {
       this.gameState.dragState.isDragging ||
       this.gameState.pendingClear ||
       (this.gameState.placementPulse && this.gameState.placementPulse.length > 0) ||
-      (this.gameState.notice && this.gameState.screen === 'playing')
+      (this.gameState.notice && this.gameState.screen === 'playing') ||
+      hasActiveFeedback(this.gameState.feedbackState)
     );
   }
 
@@ -254,7 +257,11 @@ export default class Main {
       this.needsRender = false;
     }
 
-    if (!this.isPaused && (this.hasActiveAnimation() || this.needsRender)) {
+    if (shouldScheduleFrame({
+      isPaused: this.isPaused,
+      needsRender: this.needsRender,
+      hasActiveAnimation: this.hasActiveAnimation()
+    })) {
       this.aniId = requestAnimationFrame(this.loop.bind(this));
     }
   }

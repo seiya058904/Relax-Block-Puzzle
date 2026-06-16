@@ -1,6 +1,18 @@
 import Board from './Board.js';
 import ScoreManager from './ScoreManager.js';
 import {
+  FEEDBACK_EVENTS,
+  advanceFeedbackState,
+  clearDragFeedback,
+  clearFeedbackState,
+  createFeedbackState,
+  releaseDragFeedback,
+  startDragFeedback,
+  triggerClearScore,
+  triggerHighScore,
+  updateDragFeedback
+} from './FeedbackState.js';
+import {
   BOARD_SIZE,
   CLEAR_ANIMATION_MS,
   DEBUG_CODE_ENABLED,
@@ -179,6 +191,9 @@ export default class GameState {
     this.bestScores = loadBestScores();
     this.activeDifficulty = normalizeDifficulty(this.settings.difficulty);
     this.bestScore = this.bestScores[this.activeDifficulty] || 0;
+    this.startingHighScore = this.bestScore;
+    this.hasShownNewRecord = false;
+    this.feedbackState = createFeedbackState();
     this.rackPieces = [];
     this.dragState = createEmptyDragState();
     this.previewState = createEmptyPreviewState();
@@ -300,6 +315,9 @@ export default class GameState {
     this.bestScores = loadBestScores();
     this.activeDifficulty = selectedDifficulty;
     this.bestScore = this.bestScores[this.activeDifficulty] || 0;
+    this.startingHighScore = this.bestScore;
+    this.hasShownNewRecord = false;
+    this.feedbackState = createFeedbackState();
     this.rackPieces = [];
     this.dragState = createEmptyDragState();
     this.previewState = createEmptyPreviewState();
@@ -349,6 +367,8 @@ export default class GameState {
         }))
         .filter((pulse) => pulse.remainingTime > 0);
     }
+
+    advanceFeedbackState(this.feedbackState, deltaTime);
 
     if (this.pendingClear) {
       this.pendingClear.remainingTime -= deltaTime;
@@ -585,25 +605,34 @@ export default class GameState {
       pieceHeight,
       displayCellSize,
       dragFingerOffsetY,
-      isDragging: true,
-      dragStartTime: performance.now(),
-      pickupAnim: true,
-      startX: hitArea.x,
-      startY: hitArea.y
+      isDragging: true
     };
 
+    startDragFeedback(this.feedbackState, {
+      pieceIndex,
+      piece,
+      pointerX: touchX,
+      pointerY: touchY,
+      visualX: this.dragState.visualX,
+      visualY: this.dragState.visualY,
+      startX: hitArea.x,
+      startY: hitArea.y,
+      displayCellSize
+    });
     this.moveDrag(touchX, touchY);
     this.emitEvent('pickup');
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.piecePicked, {
+      pieceIndex,
+      piece: clonePiece(piece),
+      pointerX: touchX,
+      pointerY: touchY
+    });
     return true;
   }
 
   moveDrag(touchX, touchY) {
     if (!this.dragState.isDragging || !this.layout || this.screen !== 'playing') {
       return;
-    }
-
-    if (this.dragState.pickupAnim && performance.now() - this.dragState.dragStartTime > 200) {
-      this.dragState.pickupAnim = false;
     }
 
     const piece = this.rackPieces[this.dragState.activePieceIndex];
@@ -616,6 +645,12 @@ export default class GameState {
     this.dragState.visualX = touchX - this.dragState.pieceWidth / 2;
     this.dragState.visualY = touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
     this.updatePreviewStateFromVisual(piece);
+    updateDragFeedback(this.feedbackState, {
+      pointerX: touchX,
+      pointerY: touchY,
+      visualX: this.dragState.visualX,
+      visualY: this.dragState.visualY
+    });
   }
 
   endDrag() {
@@ -628,7 +663,16 @@ export default class GameState {
     }
 
     this.emitEvent('invalid');
-    this.clearDrag();
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.invalidPlacement, {
+      pieceIndex: this.dragState.activePieceIndex,
+      row: this.previewState.row,
+      col: this.previewState.col
+    });
+    releaseDragFeedback(this.feedbackState, 'invalid', {
+      targetX: this.feedbackState.drag.startX,
+      targetY: this.feedbackState.drag.startY
+    });
+    this.clearDrag(true);
     return false;
   }
 
@@ -643,8 +687,10 @@ export default class GameState {
 
     this.undoSnapshot = this.createUndoSnapshot();
 
+    const scoreBefore = this.score;
     const placedCount = this.board.place(piece, row, col);
-    this.scoreManager.applyPlacement(this, placedCount);
+    const placementScoreResult = this.scoreManager.applyPlacement(this, placedCount);
+    this.checkNewRecord();
     this.emitEvent('place');
     piece.used = true;
     this.toolState.clearMode = false;
@@ -657,13 +703,41 @@ export default class GameState {
     const completed = this.board.findCompletedLines();
     const lineCount = completed.rows.length + completed.cols.length;
 
-    this.clearDrag();
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.piecePlaced, {
+      pieceIndex: this.dragState.activePieceIndex,
+      piece: clonePiece(piece),
+      row,
+      col,
+      clearedLines: lineCount,
+      scoreResult: placementScoreResult
+    });
+
+    if (lineCount === 0) {
+      this.emitFeedbackEvent(FEEDBACK_EVENTS.scoreChanged, {
+        scoreBefore,
+        scoreAfter: this.score,
+        totalAdded: placementScoreResult.totalAdded
+      });
+    }
+
+    releaseDragFeedback(this.feedbackState, 'settling', this.layout
+      ? {
+          targetX: this.layout.boardRect.x + col * this.layout.cellSize,
+          targetY: this.layout.boardRect.y + row * this.layout.cellSize
+        }
+      : {
+          targetX: this.feedbackState.drag.visualX,
+          targetY: this.feedbackState.drag.visualY
+        });
+    this.clearDrag(true);
 
     if (lineCount > 0) {
       this.pendingClear = {
         rows: completed.rows,
         cols: completed.cols,
         lineCount,
+        scoreBefore,
+        placementScoreResult,
         remainingTime: CLEAR_ANIMATION_MS
       };
       this.inputLocked = true;
@@ -680,9 +754,27 @@ export default class GameState {
       return;
     }
 
-    const lineCount = this.pendingClear.lineCount;
-    this.board.clearLines(this.pendingClear.rows, this.pendingClear.cols);
-    this.scoreManager.applyLineClear(this, lineCount);
+    const pendingClear = this.pendingClear;
+    const lineCount = pendingClear.lineCount;
+    this.board.clearLines(pendingClear.rows, pendingClear.cols);
+    const scoreResult = this.scoreManager.applyLineClear(this, lineCount);
+    triggerClearScore(this.feedbackState, scoreResult);
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.linesCleared, {
+      rows: pendingClear.rows.slice(),
+      cols: pendingClear.cols.slice(),
+      scoreResult
+    });
+    const placementAdded = pendingClear.placementScoreResult
+      ? pendingClear.placementScoreResult.totalAdded
+      : 0;
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.scoreChanged, {
+      scoreBefore: Number.isFinite(pendingClear.scoreBefore)
+        ? pendingClear.scoreBefore
+        : this.score - scoreResult.totalAdded,
+      scoreAfter: this.score,
+      totalAdded: placementAdded + scoreResult.totalAdded
+    });
+    this.checkNewRecord();
     this.pendingClear = null;
     this.inputLocked = false;
     this.handleLineClear(lineCount);
@@ -832,16 +924,13 @@ export default class GameState {
     }
 
     const snapshot = this.undoSnapshot;
-    this.toolUsage.undo += 1;
 
     this.board.restoreSnapshot(snapshot.boardGrid);
     this.score = snapshot.score;
     this.rackPieces = cloneRackPieces(snapshot.rackPieces);
     this.pendingClear = clonePendingClear(snapshot.pendingClear);
     this.placementPulse = clonePulseList(snapshot.placementPulse);
-    this.dragState = { ...snapshot.dragState };
-    this.previewState = { ...snapshot.previewState };
-    this.inputLocked = snapshot.inputLocked;
+    this.inputLocked = false;
     this.activeDifficulty = snapshot.activeDifficulty;
     this.lastRackHadSnake = !!snapshot.lastRackHadSnake;
     this.toolState = {
@@ -849,7 +938,8 @@ export default class GameState {
       clearMode: false
     };
     this.toolUsage = {
-      ...snapshot.toolUsage
+      ...snapshot.toolUsage,
+      undo: snapshot.toolUsage.undo + 1
     };
     this.reviveCount = snapshot.reviveCount;
     this.reviveUsedCount = snapshot.reviveUsedCount;
@@ -863,6 +953,8 @@ export default class GameState {
         }
       : createComboState();
     this.notice = null;
+    this.clearScoreFeedback();
+    this.clearDrag();
     this.undoSnapshot = null;
     this.ui.isPauseOpen = false;
     this.ui.isPauseConfirmOpen = false;
@@ -946,6 +1038,7 @@ export default class GameState {
     this.clearDrag();
     this.toolState.clearMode = false;
     this.pendingClear = null;
+    this.undoSnapshot = null;
     this.inputLocked = false;
     this.comboState = createComboState();
 
@@ -1037,12 +1130,12 @@ export default class GameState {
       score: this.score,
       rackPieces: cloneRackPieces(this.rackPieces),
       pendingClear: clonePendingClear(this.pendingClear),
-      dragState: { ...this.dragState },
-      previewState: { ...this.previewState },
+      dragState: createEmptyDragState(),
+      previewState: createEmptyPreviewState(),
       placementPulse: clonePulseList(this.placementPulse),
       toolState: { ...this.toolState },
       toolUsage: { ...this.toolUsage },
-      inputLocked: this.inputLocked,
+      inputLocked: false,
       activeDifficulty: this.activeDifficulty,
       lastRackHadSnake: this.lastRackHadSnake,
       reviveCount: this.reviveCount,
@@ -1065,10 +1158,43 @@ export default class GameState {
     };
   }
 
+  checkNewRecord() {
+    if (
+      this.isAdminModeActive() ||
+      !this.bestScoreEligible ||
+      this.startingHighScore <= 0 ||
+      this.hasShownNewRecord ||
+      this.score <= this.startingHighScore
+    ) {
+      return false;
+    }
+
+    this.hasShownNewRecord = true;
+    triggerHighScore(this.feedbackState);
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.highScoreBroken, {
+      previous: this.startingHighScore,
+      current: this.score,
+      difficulty: this.activeDifficulty
+    });
+    return true;
+  }
+
+  clearScoreFeedback() {
+    clearFeedbackState(this.feedbackState);
+  }
+
   emitEvent(type, payload = {}) {
     this.events.push({
       type,
       ...payload
+    });
+  }
+
+  emitFeedbackEvent(type, payload = {}) {
+    this.events.push({
+      type,
+      timestamp: this.feedbackState.clock,
+      payload
     });
   }
 
@@ -1078,9 +1204,19 @@ export default class GameState {
     return items;
   }
 
-  clearDrag() {
+  clearDrag(preserveFeedback = false) {
     this.dragState = createEmptyDragState();
     this.previewState = createEmptyPreviewState();
+    if (!preserveFeedback) {
+      clearDragFeedback(this.feedbackState);
+    }
+  }
+
+  cancelDrag() {
+    const wasDragging = this.dragState.isDragging || this.feedbackState.drag.active;
+    clearFeedbackState(this.feedbackState);
+    this.clearDrag();
+    return wasDragging;
   }
 
   getDragFingerOffsetY() {
