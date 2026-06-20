@@ -23,7 +23,7 @@
   TEXT_SECONDARY
 } from './constants.js';
 import { getDifficultyLabel } from './GameState.js';
-import { getClearFeedbackLabel, getDragVisual } from './FeedbackState.js';
+import { getClearFeedbackLabel, getDragVisual, getLineClearEffectVisual } from './FeedbackState.js';
 import { calculateAndroidHomeLayout, calculateHudLayout } from './LayoutMetrics.js';
 
 function clamp(value, min, max) {
@@ -554,6 +554,8 @@ export default class Renderer {
       }
     }
 
+    this.drawLineClearEffects(state);
+
     if (state.toolState.clearMode) {
       ctx.save();
       roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, 14);
@@ -566,6 +568,161 @@ export default class Renderer {
       ctx.font = '15px sans-serif';
       ctx.fillText('点击棋盘位置，清除附近 3×3 区域', boardPanelRect.x + boardPanelRect.width / 2, boardPanelRect.y - 8);
     }
+  }
+
+  drawLineClearEffects(state) {
+    const effects = state.feedbackState && state.feedbackState.clearEffects;
+    if (!effects || effects.length === 0) {
+      return;
+    }
+
+    const { ctx, layout } = this;
+    const { boardRect, cellSize } = layout;
+    effects.forEach((effect) => {
+      const visual = getLineClearEffectVisual(effect);
+      if (!visual) {
+        return;
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(boardRect.x, boardRect.y, boardRect.width, boardRect.height);
+      ctx.clip();
+      const boardCenterX = boardRect.x + boardRect.width / 2;
+      const boardCenterY = boardRect.y + boardRect.height / 2;
+      ctx.translate(boardCenterX + visual.shakeX, boardCenterY + visual.shakeY);
+      ctx.scale(visual.boardScale, visual.boardScale);
+      ctx.translate(-boardCenterX, -boardCenterY);
+
+      this.drawLineClearLasers(effect, visual);
+      effect.cells.forEach((cell) => {
+        const centerX = boardRect.x + cell.col * cellSize + cellSize / 2;
+        const centerY = boardRect.y + cell.row * cellSize + cellSize / 2;
+        const size = (cellSize - 3) * visual.cellScale;
+        ctx.save();
+        ctx.globalAlpha = Math.max(visual.highlightAlpha, visual.fadeAlpha * 0.2);
+        ctx.shadowColor = 'rgba(255, 214, 10, 0.45)';
+        ctx.shadowBlur = 10 * visual.highlightAlpha;
+        roundedRect(ctx, centerX - size / 2, centerY - size / 2, size, size, 4);
+        ctx.fillStyle = 'rgba(255, 246, 196, 0.34)';
+        ctx.fill();
+        ctx.restore();
+      });
+
+      this.drawLineClearParticles(effect, visual);
+      ctx.restore();
+    });
+  }
+
+  drawLineClearLasers(effect, visual) {
+    if (!effect.lasers || effect.lasers.length === 0 || visual.laserProgress <= 0) {
+      return;
+    }
+
+    const { ctx, layout } = this;
+    const { boardRect, cellSize } = layout;
+    const centerX = boardRect.x + boardRect.width / 2;
+    const centerY = boardRect.y + boardRect.height / 2;
+    const alpha = Math.min(0.95, Math.max(0, visual.laserAlpha));
+    const spanX = boardRect.width * visual.laserProgress / 2;
+    const spanY = boardRect.height * visual.laserProgress / 2;
+    const beamWidth = Math.max(8, cellSize * 0.48);
+    const glowWidth = Math.max(cellSize * 1.15, beamWidth * 2.4);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    effect.lasers.forEach((laser) => {
+      if (laser.kind === 'row') {
+        const y = boardRect.y + (laser.index + 0.5) * cellSize;
+        const left = centerX - spanX;
+        const width = spanX * 2;
+        const trail = ctx.createLinearGradient(left, y, left + width, y);
+        trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+        trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+        trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+        ctx.fillStyle = trail;
+        ctx.fillRect(left, y - glowWidth / 2, width, glowWidth);
+
+        [-1, 1].forEach((side) => {
+          const edgeX = centerX + side * spanX;
+          const beam = ctx.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
+          beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+          beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+          beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+          ctx.fillStyle = beam;
+          ctx.fillRect(edgeX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
+        });
+
+        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.9})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + width, y);
+        ctx.stroke();
+        return;
+      }
+
+      const x = boardRect.x + (laser.index + 0.5) * cellSize;
+      const top = centerY - spanY;
+      const height = spanY * 2;
+      const trail = ctx.createLinearGradient(x, top, x, top + height);
+      trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+      trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+      trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+      ctx.fillStyle = trail;
+      ctx.fillRect(x - glowWidth / 2, top, glowWidth, height);
+
+      [-1, 1].forEach((side) => {
+        const edgeY = centerY + side * spanY;
+        const beam = ctx.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
+        beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+        beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+        beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+        ctx.fillStyle = beam;
+        ctx.fillRect(x - cellSize * 0.55, edgeY - beamWidth, cellSize * 1.1, beamWidth * 2);
+      });
+
+      ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.9})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, top + height);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  drawLineClearParticles(effect, visual) {
+    const { ctx, layout } = this;
+    const { boardRect, cellSize } = layout;
+    const elapsed = effect.duration - effect.remaining;
+    ctx.save();
+    effect.particles.forEach((particle) => {
+      const lifeProgress = Math.min(1, elapsed / particle.life);
+      if (lifeProgress >= 1) {
+        return;
+      }
+      const x = boardRect.x + (particle.col + 0.5 + particle.offsetX * 0.35 + particle.velocityX * lifeProgress) * cellSize;
+      const y = boardRect.y + (particle.row + 0.5 + particle.offsetY * 0.35 + particle.velocityY * lifeProgress) * cellSize;
+      ctx.globalAlpha = (1 - lifeProgress) * visual.fadeAlpha;
+      if (particle.shape === 'spark') {
+        const length = particle.size * 2.6;
+        const angle = Math.atan2(particle.velocityY, particle.velocityX);
+        ctx.strokeStyle = 'rgba(255, 246, 196, 0.92)';
+        ctx.lineWidth = Math.max(1, particle.size * 0.45);
+        ctx.beginPath();
+        ctx.moveTo(x - Math.cos(angle) * length, y - Math.sin(angle) * length);
+        ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+        ctx.stroke();
+        return;
+      }
+
+      ctx.fillStyle = 'rgba(110, 214, 255, 0.82)';
+      ctx.beginPath();
+      ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
   }
 
   drawPreview(state) {

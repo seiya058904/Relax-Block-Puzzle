@@ -53,6 +53,14 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.5`
+
+- Added laser-style row and column clear effects / 新增激光风格消行和消列特效
+- Clear lines now use a short charge, center-out laser sweep, quick erase, and a few light fragments / 清线时加入短暂蓄光、中心向两侧激光扫光、快速擦除和少量碎光
+- Improved clear feedback so row and column clears feel more visible and responsive / 优化清线视觉反馈，让消除更明显、更有冲击感
+- Kept scoring, difficulty, undo, save data, and block rules unchanged / 保持计分、难度、撤回、存档和方块规则不变
+- Updated Android version metadata to `versionName 1.0.5` and `versionCode 5` / Android 版本号更新为 `1.0.5`
+
 `v1.0.4`
 
 - Optimized block drag, placement, and invalid placement feedback / 优化方块拖动、放置和无效放置反馈

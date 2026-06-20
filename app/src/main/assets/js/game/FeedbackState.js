@@ -12,12 +12,18 @@ export const FEEDBACK_EVENTS = Object.freeze({
 });
 
 export const FEEDBACK_DURATIONS = Object.freeze({
+  clearEffect: 560,
   clearScore: 900,
   scorePulse: 500,
   highScore: 1200,
   dragLift: 200,
   dragSettle: 140,
   dragInvalid: 160
+});
+
+export const CLEAR_EFFECT_LIMITS = Object.freeze({
+  maxParticles: 40,
+  maxStackedEffects: 6
 });
 
 function createTimedState(duration) {
@@ -60,6 +66,8 @@ export function createFeedbackState() {
       bonusScore: 0,
       clearedLines: 0
     },
+    clearEffects: [],
+    nextClearEffectId: 1,
     scorePulse: createTimedState(FEEDBACK_DURATIONS.scorePulse),
     highScore: createTimedState(FEEDBACK_DURATIONS.highScore),
     drag: createDragState()
@@ -81,6 +89,151 @@ function advanceTimed(state, deltaTime) {
   if (state.remaining === 0) {
     state.active = false;
   }
+}
+
+function normalizeCells(cells) {
+  const unique = new Map();
+  (cells || []).forEach((cell) => {
+    const row = Number(cell.row);
+    const col = Number(cell.col);
+    if (!Number.isInteger(row) || !Number.isInteger(col)) {
+      return;
+    }
+    unique.set(`${row}:${col}`, { row, col });
+  });
+  return Array.from(unique.values()).sort((a, b) => a.row - b.row || a.col - b.col);
+}
+
+function seededUnit(seed) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+export function createLineClearParticles(cells, seed = 1, lineCount = 1) {
+  const normalized = normalizeCells(cells);
+  if (normalized.length === 0) {
+    return [];
+  }
+
+  const maxParticles = Math.min(
+    CLEAR_EFFECT_LIMITS.maxParticles,
+    Math.max(12, lineCount * 8, Math.ceil(normalized.length * 1.1))
+  );
+  const particles = [];
+
+  for (let index = 0; index < maxParticles; index += 1) {
+    const cell = normalized[index % normalized.length];
+    const particleSeed = seed * 97 + index * 31 + cell.row * 13 + cell.col * 17;
+    const angle = seededUnit(particleSeed) * Math.PI * 2;
+    const speed = 0.08 + seededUnit(particleSeed + 1) * 0.22;
+    const shapeRoll = seededUnit(particleSeed + 6);
+    particles.push({
+      row: cell.row,
+      col: cell.col,
+      shape: shapeRoll < 0.62 ? 'dot' : 'spark',
+      offsetX: seededUnit(particleSeed + 2) - 0.5,
+      offsetY: seededUnit(particleSeed + 3) - 0.5,
+      velocityX: Math.cos(angle) * speed,
+      velocityY: Math.sin(angle) * speed,
+      size: 1.2 + seededUnit(particleSeed + 4) * (shapeRoll < 0.62 ? 1.8 : 2.4),
+      life: 180 + seededUnit(particleSeed + 5) * 180
+    });
+  }
+
+  return particles;
+}
+
+function createImpact(lineCount) {
+  const intensity = Math.max(1, lineCount);
+  const capped = Math.min(5, intensity);
+  return {
+    intensity: capped,
+    shakePixels: 0,
+    pulseScale: 1,
+    duration: 80
+  };
+}
+
+function createLasers(rows, cols) {
+  return [
+    ...rows.map((row) => ({ kind: 'row', index: row, origin: 0.5 })),
+    ...cols.map((col) => ({ kind: 'col', index: col, origin: 0.5 }))
+  ];
+}
+
+export function triggerLineClearEffect(state, details) {
+  const clearedRows = (details.rows || [])
+    .map((row) => Number(row))
+    .filter(Number.isInteger)
+    .sort((a, b) => a - b);
+  const clearedCols = (details.cols || [])
+    .map((col) => Number(col))
+    .filter(Number.isInteger)
+    .sort((a, b) => a - b);
+  const cells = normalizeCells(details.cells);
+  if (clearedRows.length === 0 && clearedCols.length === 0 && cells.length === 0) {
+    return null;
+  }
+
+  const id = state.nextClearEffectId;
+  state.nextClearEffectId += 1;
+  const lineCount = Math.max(1, clearedRows.length + clearedCols.length);
+  const effect = {
+    id,
+    startedAt: state.clock,
+    duration: FEEDBACK_DURATIONS.clearEffect,
+    remaining: FEEDBACK_DURATIONS.clearEffect,
+    clearedRows,
+    clearedCols,
+    cells,
+    lineCount,
+    impact: createImpact(lineCount),
+    lasers: createLasers(clearedRows, clearedCols),
+    bursts: [],
+    particles: createLineClearParticles(cells, id, lineCount)
+  };
+
+  state.clearEffects.push(effect);
+  if (state.clearEffects.length > CLEAR_EFFECT_LIMITS.maxStackedEffects) {
+    state.clearEffects.splice(0, state.clearEffects.length - CLEAR_EFFECT_LIMITS.maxStackedEffects);
+  }
+  return effect;
+}
+
+export function getLineClearEffectVisual(effect) {
+  if (!effect) {
+    return null;
+  }
+
+  const duration = effect.duration || FEEDBACK_DURATIONS.clearEffect;
+  const elapsed = Math.max(0, Math.min(duration, duration - effect.remaining));
+  const progress = duration > 0 ? elapsed / duration : 1;
+  let phase = 'erase';
+  if (elapsed < 80) {
+    phase = 'charge';
+  } else if (elapsed < 300) {
+    phase = 'laser';
+  }
+  const chargeAlpha = Math.max(0, 1 - elapsed / 120);
+  const laserProgress = Math.max(0, Math.min(1, (elapsed - 80) / 220));
+  const laserAlpha = elapsed < 80 ? 0 : Math.max(0, 1 - Math.max(0, elapsed - 280) / 160);
+  const eraseProgress = Math.max(0, Math.min(1, (elapsed - 160) / 320));
+  const fadeAlpha = Math.max(0, 1 - eraseProgress);
+
+  return {
+    phase,
+    progress,
+    chargeAlpha,
+    laserProgress,
+    laserAlpha,
+    shakeX: 0,
+    shakeY: 0,
+    boardScale: 1,
+    highlightAlpha: Math.max(chargeAlpha * 0.42, laserAlpha * 0.26),
+    sweepProgress: laserProgress,
+    fadeAlpha,
+    cellScale: 1 - eraseProgress * 0.12
+  };
 }
 
 export function triggerScorePulse(state) {
@@ -174,6 +327,12 @@ export function advanceFeedbackState(state, deltaTime) {
   advanceTimed(state.clearScore, safeDelta);
   advanceTimed(state.scorePulse, safeDelta);
   advanceTimed(state.highScore, safeDelta);
+  state.clearEffects = (state.clearEffects || [])
+    .map((effect) => ({
+      ...effect,
+      remaining: Math.max(0, effect.remaining - safeDelta)
+    }))
+    .filter((effect) => effect.remaining > 0);
 
   const drag = state.drag;
   if (!drag.active) {
@@ -202,6 +361,7 @@ export function hasActiveFeedback(state) {
   return !!(
     state &&
     (state.clearScore.active ||
+      (state.clearEffects && state.clearEffects.length > 0) ||
       state.scorePulse.active ||
       state.highScore.active ||
       state.drag.active)

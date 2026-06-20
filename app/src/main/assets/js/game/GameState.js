@@ -9,6 +9,7 @@ import {
   releaseDragFeedback,
   startDragFeedback,
   triggerClearScore,
+  triggerLineClearEffect,
   triggerHighScore,
   updateDragFeedback
 } from './FeedbackState.js';
@@ -119,6 +120,21 @@ function clonePendingClear(pendingClear) {
     lineCount: pendingClear.lineCount,
     remainingTime: pendingClear.remainingTime
   };
+}
+
+function createLineClearCells(rows, cols, boardSize) {
+  const cells = new Map();
+  rows.forEach((row) => {
+    for (let col = 0; col < boardSize; col += 1) {
+      cells.set(`${row}:${col}`, { row, col });
+    }
+  });
+  cols.forEach((col) => {
+    for (let row = 0; row < boardSize; row += 1) {
+      cells.set(`${row}:${col}`, { row, col });
+    }
+  });
+  return Array.from(cells.values()).sort((a, b) => a.row - b.row || a.col - b.col);
 }
 
 function clamp(value, min, max) {
@@ -756,9 +772,15 @@ export default class GameState {
 
     const pendingClear = this.pendingClear;
     const lineCount = pendingClear.lineCount;
+    const clearCells = createLineClearCells(pendingClear.rows, pendingClear.cols, this.board.size);
     this.board.clearLines(pendingClear.rows, pendingClear.cols);
     const scoreResult = this.scoreManager.applyLineClear(this, lineCount);
     triggerClearScore(this.feedbackState, scoreResult);
+    triggerLineClearEffect(this.feedbackState, {
+      rows: pendingClear.rows,
+      cols: pendingClear.cols,
+      cells: clearCells
+    });
     this.emitFeedbackEvent(FEEDBACK_EVENTS.linesCleared, {
       rows: pendingClear.rows.slice(),
       cols: pendingClear.cols.slice(),
