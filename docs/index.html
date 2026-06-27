@@ -11,14 +11,13 @@
     />
     <title>&#x8F7B;&#x677E;&#x4FC4;&#x7F57;&#x65AF;&#x65B9;&#x5757;</title>
     <style>
-      html, body, canvas {
+      html, body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
         overflow: hidden;
         background: #09111d;
-        touch-action: none;
         overscroll-behavior: none;
         -webkit-user-select: none;
         user-select: none;
@@ -33,11 +32,28 @@
 
       #gameCanvas {
         display: block;
+        position: fixed;
+        inset: 0;
         width: 100vw;
         height: 100vh;
+        z-index: 0;
         touch-action: none;
         -webkit-user-select: none;
         user-select: none;
+      }
+
+      #inputLayer {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+        background: transparent;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
       }
 
       #wxKeyboard {
@@ -47,6 +63,7 @@
         width: 1px;
         height: 1px;
         opacity: 0;
+        z-index: 10;
       }
 
       #bootError {
@@ -66,6 +83,7 @@
   </head>
   <body>
     <canvas id="gameCanvas"></canvas>
+    <div id="inputLayer" aria-hidden="true"></div>
     <div id="bootError"></div>
     <input id="wxKeyboard" type="text" autocomplete="off" />
     <script>

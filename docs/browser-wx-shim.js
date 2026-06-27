@@ -1,4 +1,5 @@
 const canvas = document.getElementById('gameCanvas');
+const inputLayer = document.getElementById('inputLayer') || canvas;
 const keyboardInput = document.getElementById('wxKeyboard');
 
 const touchHandlers = {
@@ -56,34 +57,37 @@ function emitTouch(type, event) {
 }
 
 function registerTouchHandlers() {
-  canvas.addEventListener('touchstart', (event) => {
+  inputLayer.addEventListener('touchstart', (event) => {
     event.preventDefault();
     emitTouch('start', event);
   }, { passive: false });
 
-  canvas.addEventListener('touchmove', (event) => {
+  inputLayer.addEventListener('touchmove', (event) => {
     event.preventDefault();
     emitTouch('move', event);
   }, { passive: false });
 
-  canvas.addEventListener('touchend', (event) => {
+  inputLayer.addEventListener('touchend', (event) => {
     event.preventDefault();
     emitTouch('end', event);
   }, { passive: false });
 
-  canvas.addEventListener('touchcancel', (event) => {
+  inputLayer.addEventListener('touchcancel', (event) => {
     event.preventDefault();
     emitTouch('cancel', event);
   }, { passive: false });
 
   let mouseDown = false;
 
-  canvas.addEventListener('mousedown', (event) => {
+  inputLayer.addEventListener('mousedown', (event) => {
+    if (event.button !== 0) {
+      return;
+    }
     mouseDown = true;
     emitTouch('start', event);
   });
 
-  canvas.addEventListener('mousemove', (event) => {
+  inputLayer.addEventListener('mousemove', (event) => {
     if (!mouseDown) {
       return;
     }
