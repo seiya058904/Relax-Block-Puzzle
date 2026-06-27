@@ -7,7 +7,6 @@
 <img width="1122" height="1402" alt="ChatGPT Image 2026年5月25日 19_44_24" src="https://github.com/user-attachments/assets/584afa67-758f-4137-b936-be52627965f9" />
 
 
-<img width="387" height="387" alt="2fd25165497bdc6c6dd73d9826e75ad8" src="https://github.com/user-attachments/assets/78147e3b-a32e-41db-9234-8ffad2b556d0" />
 
 
 Relax Block Puzzle is a lightweight casual block puzzle game for Android. Drag blocks onto a 10x10 board, fill complete rows or columns, and enjoy a clean, relaxing puzzle experience.
