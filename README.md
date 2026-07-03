@@ -1,5 +1,6 @@
 # Relax Block Puzzle / 轻松俄罗斯方块
 
+<img width="1254" height="1254" alt="Relax Block Puzzle" src="https://github.com/user-attachments/assets/6aa37dea-56cd-41df-a3e9-a64c48cd9bfe" />
 
 <img width="1536" height="1024" alt="project-relax-block-puzzle" src="https://github.com/user-attachments/assets/a2c22e51-04ae-422a-af33-3acfdc93524a" />
 
