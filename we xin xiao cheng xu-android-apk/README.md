@@ -53,6 +53,11 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.6`
+
+- Updated the Android package version to `versionName 1.0.6` and `versionCode 6` / Android 版本号更新为 `1.0.6`
+- Kept the verified three-platform shared gameplay and resource separation / 保持已验证的三端共享玩法和资源隔离
+
 `v1.0.5`
 
 - Added laser-style row and column clear effects / 新增激光风格消行和消列特效
