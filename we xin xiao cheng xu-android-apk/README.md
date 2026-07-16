@@ -57,6 +57,7 @@ Source code and project files are stored in this repository. APK files should be
 
 - Updated the Android package version to `versionName 1.0.6` and `versionCode 6` / Android 版本号更新为 `1.0.6`
 - Kept the verified three-platform shared gameplay and resource separation / 保持已验证的三端共享玩法和资源隔离
+- The three-platform source and verification workflow are maintained in the unified repository / 三端源码和验证流程统一维护在三端统一仓库中
 
 `v1.0.5`
 
