@@ -1,0 +1,13 @@
+{
+  "name": "block-puzzle-parity-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --test-concurrency=1 tests/**/*.test.mjs",
+    "test:parity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --test-concurrency=1 tests/parity/*.test.mjs",
+    "sync": "node scripts/sync-platforms.mjs",
+    "verify": "node scripts/sync-platforms.mjs --check && node scripts/verify-platforms.mjs",
+    "verify:assets": "node scripts/verify-assets.mjs",
+    "verify:apk-assets": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-apk-assets.ps1",
+    "simulate:generation": "node scripts/simulate-piece-generation.mjs --samples 10000"
+  }
+}

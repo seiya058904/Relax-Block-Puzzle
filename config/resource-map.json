@@ -1,0 +1,46 @@
+{
+  "pickup": {
+    "wechat": "audio/pickup.mp3",
+    "full": "audio/pickup.mp3"
+  },
+  "place": {
+    "wechat": "audio/place.mp3",
+    "full": "audio/place.mp3"
+  },
+  "clear": {
+    "wechat": "audio/clear.mp3",
+    "full": "audio/clear.mp3"
+  },
+  "click": {
+    "wechat": "audio/click.mp3",
+    "full": "audio/click.mp3"
+  },
+  "combo": {
+    "wechat": "audio/combo.mp3",
+    "full": "audio/combo.mp3"
+  },
+  "combo3": {
+    "wechat": "audio/combo3.mp3",
+    "full": "audio/combo3.mp3"
+  },
+  "gameover": {
+    "wechat": "audio/gameover.mp3",
+    "full": "audio/gameover.mp3"
+  },
+  "bgm1": {
+    "wechat": "audio/bgm_1.mp3",
+    "full": "audio/bgm_1.mp3"
+  },
+  "bgm2": {
+    "wechat": "audio/bgm_2.mp3",
+    "full": "audio/bgm_2.mp3"
+  },
+  "bgm3": {
+    "wechat": "audio/bgm_3.mp3",
+    "full": "audio/bgm_3.mp3"
+  },
+  "bgm4": {
+    "wechat": "audio/bgm_4.mp3",
+    "full": "audio/bgm_4.mp3"
+  }
+}

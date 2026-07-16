@@ -1,35 +1,39 @@
-# Android / Gradle
-.gradle/
-build/
-app/build/
-captures/
-.externalNativeBuild/
-.cxx/
-local.properties
+# WeChat local project state
+we xin xiao cheng xu/project.private.config.json
+we xin xiao cheng xu/.agents/
 
-# Signing / secrets
-*.jks
-*.keystore
-key.properties
+# Node / local tooling
+node_modules/
+.cache/
+tmp/
+dist/
+.claude/
 .env
 .env.*
-*.key
-*.pem
-*.p12
-*.crt
 
-# APK / local duplicate assets / toolchains
-*.apk
-*.aab
-toolchain/
-app/src/main/assets/js/js/
-release-assets/
+# Android / Gradle build outputs and local SDK state
+**/.gradle/
+**/build/
+**/local.properties
+**/captures/
+**/.externalNativeBuild/
+**/.cxx/
+**/toolchain/
+**/release-assets/
 
-# Node / misc
-node_modules/
-dist/
-tmp/
-.cache/
+# APK / signing material
+**/*.apk
+**/*.aab
+**/*.jks
+**/*.keystore
+**/key.properties
+**/*.key
+**/*.pem
+**/*.p12
+**/*.crt
+
+# Android generated legacy duplicate
+**/app/src/main/assets/js/js/
 
 # OS / IDE
 .DS_Store
@@ -37,7 +41,3 @@ Thumbs.db
 .idea/
 .vscode/
 *.iml
-
-# Root-level app icon source files (not part of build)
-2fd25165497bdc6c6dd73d9826e75ad8.png
-ChatGPT Image 2026年5月22日 18_46_41.png

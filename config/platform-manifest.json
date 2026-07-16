@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "shared": [
+    "game/Board.js",
+    "game/Piece.js",
+    "game/ScoreManager.js",
+    "game/coreConstants.js",
+    "utils/storage.js",
+    "game/DragModel.js",
+    "game/FrameInputQueue.js",
+    "game/SafeHitArea.js",
+    "game/RenderPerfStats.js",
+    "config/quality.js"
+  ],
+  "platformSpecific": {
+    "wechat": [
+      "game/GameState.js",
+      "game/InputManager.js",
+      "game/Renderer.js",
+      "game/LayoutMetrics.js",
+      "game/constants.js",
+      "main.js",
+      "render.js",
+      "browser-wx-shim.js",
+      "index.html",
+      "audio/"
+    ],
+    "web": [
+      "game/GameState.js",
+      "game/InputManager.js",
+      "game/Renderer.js",
+      "game/LayoutMetrics.js",
+      "game/constants.js",
+      "main.js",
+      "render.js",
+      "browser-wx-shim.js",
+      "index.html",
+      "audio/"
+    ],
+    "android": [
+      "game/GameState.js",
+      "game/InputManager.js",
+      "game/Renderer.js",
+      "game/LayoutMetrics.js",
+      "game/constants.js",
+      "main.js",
+      "render.js",
+      "browser-wx-shim.js",
+      "index.html",
+      "audio/",
+      "../java/",
+      "../res/"
+    ]
+  },
+  "generated": [
+    "game/Board.js",
+    "game/Piece.js",
+    "game/ScoreManager.js",
+    "game/coreConstants.js",
+    "utils/storage.js",
+    "game/DragModel.js",
+    "game/FrameInputQueue.js",
+    "game/SafeHitArea.js",
+    "game/RenderPerfStats.js",
+    "config/quality.js"
+  ],
+  "targets": {
+    "wechat": "we xin xiao cheng xu/js",
+    "web": "we xin xiao cheng xu-android-apk/docs/js",
+    "android": "we xin xiao cheng xu-android-apk/app/src/main/assets/js"
+  },
+  "resources": {
+    "syncAudio": false,
+    "wechat": {
+      "audioMaxBytes": 4500000,
+      "canvasPixelMax": 5000000,
+      "qualityProfile": "light"
+    },
+    "full": {
+      "audioMinBytes": 25000000,
+      "qualityProfile": "full"
+    }
+  }
+}
