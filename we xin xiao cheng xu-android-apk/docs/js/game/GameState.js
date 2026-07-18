@@ -626,7 +626,6 @@ export default class GameState {
       displayCellSize,
       fingerOffsetY: dragFingerOffsetY
     });
-
     this.dragState = {
       activePieceIndex: pieceIndex,
       pointerX: touchX,
@@ -793,6 +792,11 @@ export default class GameState {
     this.clearDrag(true);
 
     if (lineCount > 0) {
+      triggerLineClearEffect(this.feedbackState, {
+        rows: completed.rows,
+        cols: completed.cols,
+        cells: createLineClearCells(completed.rows, completed.cols, this.board.size)
+      });
       this.pendingClear = {
         rows: completed.rows,
         cols: completed.cols,
@@ -817,15 +821,20 @@ export default class GameState {
 
     const pendingClear = this.pendingClear;
     const lineCount = pendingClear.lineCount;
-    const clearCells = createLineClearCells(pendingClear.rows, pendingClear.cols, this.board.size);
+    const hasMatchingEffect = this.feedbackState.clearEffects.some((effect) =>
+      effect.clearedRows.join(',') === pendingClear.rows.join(',') &&
+      effect.clearedCols.join(',') === pendingClear.cols.join(',')
+    );
+    if (!hasMatchingEffect) {
+      triggerLineClearEffect(this.feedbackState, {
+        rows: pendingClear.rows,
+        cols: pendingClear.cols,
+        cells: createLineClearCells(pendingClear.rows, pendingClear.cols, this.board.size)
+      });
+    }
     this.board.clearLines(pendingClear.rows, pendingClear.cols);
     const scoreResult = this.scoreManager.applyLineClear(this, lineCount);
     triggerClearScore(this.feedbackState, scoreResult);
-    triggerLineClearEffect(this.feedbackState, {
-      rows: pendingClear.rows,
-      cols: pendingClear.cols,
-      cells: clearCells
-    });
     this.emitFeedbackEvent(FEEDBACK_EVENTS.linesCleared, {
       rows: pendingClear.rows.slice(),
       cols: pendingClear.cols.slice(),
@@ -1379,7 +1388,6 @@ export default class GameState {
       this.adminError = '当前版本不可用';
       return false;
     }
-
     this.enableAdminMode();
     this.closeAdminPanel();
     this.showNotice('管理员模式已开启');

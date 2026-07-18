@@ -104,6 +104,9 @@ for (const version of versions) {
     assert.equal(effect.duration, 560);
     assert.equal(effect.duration <= 650, true);
     assert.equal(effect.lineCount, 2);
+    assert.deepEqual(effect.axes, { rows: true, cols: true });
+    assert.equal(effect.crossCells.length, 1);
+    assert.deepEqual(effect.crossCells[0], { row: 2, col: 5 });
     assert.deepEqual(effect.clearedRows, [2]);
     assert.deepEqual(effect.clearedCols, [5]);
     assert.deepEqual(effect.cells, [
@@ -117,10 +120,11 @@ for (const version of versions) {
       { kind: 'row', index: 2, origin: 0.5 },
       { kind: 'col', index: 5, origin: 0.5 }
     ]);
+    assert.equal(effect.bursts, undefined);
     assert.equal(effect.particles.length, 16);
     assert.equal(feedback.CLEAR_EFFECT_LIMITS.maxParticles, version === 'wechat' ? 20 : 40);
     assert.equal(effect.particles.length <= feedback.CLEAR_EFFECT_LIMITS.maxParticles, true);
-    assert.deepEqual(effect.particles, feedback.createLineClearParticles(effect.cells, effect.id, effect.lineCount));
+    assert.deepEqual(effect.particles, feedback.createLineClearParticles(effect.particleCells, effect.id, effect.lineCount));
     assert.deepEqual(effect.impact, {
       intensity: 2,
       shakePixels: 0,
@@ -145,6 +149,10 @@ for (const version of versions) {
     assert.deepEqual(columnEffect.lasers, [
       { kind: 'col', index: 4, origin: 0.5 }
     ]);
+    const columnParticle = columnEffect.particles[columnEffect.particleCells.findIndex((cell) => cell.axis === 'col')];
+    const rowParticle = multiEffect.particles[multiEffect.particleCells.findIndex((cell) => cell.axis === 'row')];
+    assert.equal(Math.abs(columnParticle.velocityY) > Math.abs(columnParticle.velocityX), true);
+    assert.equal(Math.abs(rowParticle.velocityX) > Math.abs(rowParticle.velocityY), true);
     assert.equal(columnEffect.impact.intensity, 1);
     assert.equal(columnEffect.impact.shakePixels, 0);
     assert.equal(multiEffect.impact.intensity, 5);
@@ -154,7 +162,7 @@ for (const version of versions) {
     assert.equal(multiEffect.particles.length <= 40, true);
     assert.equal(multiEffect.particles.some((particle) => particle.shape === 'spark'), true);
     assert.equal(multiEffect.particles.every((particle) => ['dot', 'spark'].includes(particle.shape)), true);
-    assert.deepEqual(multiEffect.particles, feedback.createLineClearParticles(multiEffect.cells, multiEffect.id, multiEffect.lineCount));
+    assert.deepEqual(multiEffect.particles, feedback.createLineClearParticles(multiEffect.particleCells, multiEffect.id, multiEffect.lineCount));
     assert.equal(multiEffect.lasers.length, 5);
   });
 
@@ -167,12 +175,25 @@ for (const version of versions) {
     assert.equal(charge.laserProgress, 0);
     assert.equal(charge.shakeX, 0);
     assert.equal(charge.boardScale, 1);
+    feedback.advanceFeedbackState(state, 80);
+    const handoff = feedback.getLineClearEffectVisual(state.clearEffects[0]);
+    assert.equal(handoff.laserAlpha > 0, true);
     feedback.advanceFeedbackState(state, 100);
     const laser = feedback.getLineClearEffectVisual(state.clearEffects[0]);
     assert.equal(laser.phase, 'laser');
     assert.equal(laser.laserProgress > 0 && laser.laserProgress < 1, true);
+    assert.equal(laser.boardScale >= 1 && laser.boardScale < 1.02, true);
+    assert.equal(laser.particleAlpha, 0);
+    assert.equal(laser.impactAlpha > 0 && laser.impactAlpha < 1, true);
+    assert.equal(laser.scoreSyncProgress > 0 && laser.scoreSyncProgress < 1, true);
     feedback.advanceFeedbackState(state, 220);
-    assert.equal(feedback.getLineClearEffectVisual(state.clearEffects[0]).phase, 'erase');
+    const erase = feedback.getLineClearEffectVisual(state.clearEffects[0]);
+    assert.equal(erase.phase, 'erase');
+    assert.equal(erase.particleAlpha > 0 && erase.particleAlpha <= 1, true);
+    assert.equal(erase.impactAlpha >= 0 && erase.impactAlpha <= 1, true);
+    assert.equal(erase.residualAlpha > 0 && erase.residualAlpha <= 1, true);
+    assert.equal(erase.boardScale >= 1 && erase.boardScale < 1.02, true);
+    assert.equal(erase.scoreSyncProgress, 1);
     feedback.advanceFeedbackState(state, 240);
     assert.deepEqual(state.clearEffects, []);
 

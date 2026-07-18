@@ -579,8 +579,10 @@ export default class Renderer {
 
         const tile = state.board.grid[row][col];
         if (tile) {
+          const pulse = this.getPulseAlpha(state, row, col);
           this.drawBlockCell(x + 0.5, y + 0.5, cellSize - 1, tile.color, {
-            pulse: this.getPulseAlpha(state, row, col),
+            pulse,
+            glow: pulse * 0.18,
             clearing: this.isClearingCell(state, row, col)
           });
         }
@@ -629,26 +631,82 @@ export default class Renderer {
       ctx.translate(-boardCenterX, -boardCenterY);
 
       this.drawLineClearLasers(effect, visual);
+      this.drawLineClearImpact(effect, visual);
       effect.cells.forEach((cell) => {
         const centerX = boardRect.x + cell.col * cellSize + cellSize / 2;
         const centerY = boardRect.y + cell.row * cellSize + cellSize / 2;
         const size = (cellSize - 3) * visual.cellScale;
         ctx.save();
-        ctx.globalAlpha = Math.max(visual.highlightAlpha, visual.fadeAlpha * 0.2);
-        ctx.shadowColor = 'rgba(255, 214, 10, 0.45)';
-        ctx.shadowBlur = 10 * visual.highlightAlpha;
+        ctx.globalAlpha = Math.max(visual.cellFlashAlpha, visual.fadeAlpha * 0.16);
+        ctx.shadowColor = 'rgba(255, 214, 10, 0.42)';
+        ctx.shadowBlur = 7 * visual.highlightAlpha;
         roundedRect(ctx, centerX - size / 2, centerY - size / 2, size, size, 4);
-        ctx.fillStyle = 'rgba(255, 246, 196, 0.34)';
+        ctx.fillStyle = visual.impactAlpha > 0.05
+          ? 'rgba(255, 246, 196, 0.68)'
+          : 'rgba(255, 246, 196, 0.42)';
         ctx.fill();
+        if (visual.residualAlpha > 0) {
+          ctx.globalAlpha = visual.residualAlpha * 0.3;
+          ctx.strokeStyle = 'rgba(110, 214, 255, 0.9)';
+          ctx.lineWidth = Math.max(1, cellSize * 0.06);
+          ctx.stroke();
+        }
         ctx.restore();
       });
-
-      if (this.quality.highCostEffects) {
-        this.drawLineClearSweeps(effect, visual);
-      }
       this.drawLineClearParticles(effect, visual);
+
       ctx.restore();
     });
+  }
+
+  drawLineClearImpact(effect, visual) {
+    if (visual.impactAlpha <= 0 || !effect.cells || effect.cells.length === 0) {
+      return;
+    }
+
+    const { ctx, layout } = this;
+    const { boardRect, cellSize } = layout;
+    const center = effect.cells.reduce((sum, cell) => ({
+      row: sum.row + cell.row / effect.cells.length,
+      col: sum.col + cell.col / effect.cells.length
+    }), { row: 0, col: 0 });
+    const x = boardRect.x + (center.col + 0.5) * cellSize;
+    const y = boardRect.y + (center.row + 0.5) * cellSize;
+    const radius = cellSize * (1.3 + visual.impactProgress * 2.4 + Math.min(4, effect.lineCount) * 0.28);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = visual.impactAlpha * (effect.crossCells.length > 0 ? 0.72 : 0.54);
+    const bloom = this.createRadialGradient(x, y, 0, x, y, radius);
+    bloom.addColorStop(0, 'rgba(255, 246, 196, 0.92)');
+    bloom.addColorStop(0.32, 'rgba(255, 224, 92, 0.44)');
+    bloom.addColorStop(1, 'rgba(110, 214, 255, 0)');
+    ctx.fillStyle = bloom;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = visual.impactAlpha * 0.72;
+    ctx.strokeStyle = 'rgba(255, 246, 196, 0.82)';
+    ctx.lineWidth = Math.max(1, cellSize * 0.08);
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 0.52, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (effect.crossCells.length > 0) {
+      const cross = effect.crossCells[0];
+      const crossX = boardRect.x + (cross.col + 0.5) * cellSize;
+      const crossY = boardRect.y + (cross.row + 0.5) * cellSize;
+      ctx.globalAlpha = visual.impactAlpha * 0.9;
+      ctx.lineWidth = Math.max(1, cellSize * 0.1);
+      ctx.beginPath();
+      ctx.moveTo(crossX - cellSize * 1.25, crossY);
+      ctx.lineTo(crossX + cellSize * 1.25, crossY);
+      ctx.moveTo(crossX, crossY - cellSize * 1.25);
+      ctx.lineTo(crossX, crossY + cellSize * 1.25);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   drawLineClearLasers(effect, visual) {
@@ -658,13 +716,9 @@ export default class Renderer {
 
     const { ctx, layout } = this;
     const { boardRect, cellSize } = layout;
-    const centerX = boardRect.x + boardRect.width / 2;
-    const centerY = boardRect.y + boardRect.height / 2;
     const alpha = Math.min(0.95, Math.max(0, visual.laserAlpha));
-    const spanX = boardRect.width * visual.laserProgress / 2;
-    const spanY = boardRect.height * visual.laserProgress / 2;
-    const beamWidth = Math.max(8, cellSize * 0.48);
-    const glowWidth = Math.max(cellSize * 1.15, beamWidth * 2.4);
+    const beamWidth = Math.max(3, cellSize * 0.16);
+    const glowWidth = Math.max(cellSize * 0.85, beamWidth * 3.4);
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -672,59 +726,41 @@ export default class Renderer {
       this.perfStats.recordLaser();
       if (laser.kind === 'row') {
         const y = boardRect.y + (laser.index + 0.5) * cellSize;
-        const left = centerX - spanX;
-        const width = spanX * 2;
-        const trail = this.createLinearGradient(left, y, left + width, y);
+        const headX = boardRect.x + boardRect.width * visual.laserProgress;
+        const trailStart = Math.max(boardRect.x, headX - boardRect.width * 0.32);
+        const trail = this.createLinearGradient(trailStart, y, headX, y);
         trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-        trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
-        trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+        trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
+        trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
         ctx.fillStyle = trail;
-        ctx.fillRect(left, y - glowWidth / 2, width, glowWidth);
-
-        [-1, 1].forEach((side) => {
-          const edgeX = centerX + side * spanX;
-          const beam = this.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
-          beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
-          beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
-          beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
-          ctx.fillStyle = beam;
-          ctx.fillRect(edgeX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
-        });
-
-        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.9})`;
-        ctx.lineWidth = 2;
+        ctx.fillRect(trailStart, y - glowWidth / 2, headX - trailStart, glowWidth);
+        ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
+        ctx.fillRect(headX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
+        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
+        ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
         ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + width, y);
+        ctx.moveTo(trailStart, y);
+        ctx.lineTo(headX, y);
         ctx.stroke();
         return;
       }
 
       const x = boardRect.x + (laser.index + 0.5) * cellSize;
-      const top = centerY - spanY;
-      const height = spanY * 2;
-      const trail = this.createLinearGradient(x, top, x, top + height);
+      const headY = boardRect.y + boardRect.height * visual.laserProgress;
+      const trailStart = Math.max(boardRect.y, headY - boardRect.height * 0.32);
+      const trail = this.createLinearGradient(x, trailStart, x, headY);
       trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-      trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
-      trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+      trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
+      trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
       ctx.fillStyle = trail;
-      ctx.fillRect(x - glowWidth / 2, top, glowWidth, height);
-
-      [-1, 1].forEach((side) => {
-        const edgeY = centerY + side * spanY;
-        const beam = this.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
-        beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
-        beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
-        beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
-        ctx.fillStyle = beam;
-        ctx.fillRect(x - cellSize * 0.55, edgeY - beamWidth, cellSize * 1.1, beamWidth * 2);
-      });
-
-      ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.9})`;
-      ctx.lineWidth = 2;
+      ctx.fillRect(x - glowWidth / 2, trailStart, glowWidth, headY - trailStart);
+      ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
+      ctx.fillRect(x - cellSize * 0.55, headY - beamWidth, cellSize * 1.1, beamWidth * 2);
+      ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
+      ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
       ctx.beginPath();
-      ctx.moveTo(x, top);
-      ctx.lineTo(x, top + height);
+      ctx.moveTo(x, trailStart);
+      ctx.lineTo(x, headY);
       ctx.stroke();
     });
     ctx.restore();
@@ -771,7 +807,7 @@ export default class Renderer {
 
       const x = boardRect.x + (burst.col + 0.5) * cellSize;
       const y = boardRect.y + (burst.row + 0.5) * cellSize;
-      const radius = cellSize * (1.45 + Math.min(4, effect.lineCount) * 0.18);
+      const radius = cellSize * (0.8 + visual.burstProgress * 1.5 + Math.min(4, effect.lineCount) * 0.18);
       const gradient = this.createRadialGradient(x, y, 0, x, y, radius);
       gradient.addColorStop(0, `rgba(255, 235, 122, ${alpha})`);
       gradient.addColorStop(0.45, `rgba(110, 214, 255, ${alpha * 0.5})`);
@@ -821,11 +857,16 @@ export default class Renderer {
   }
 
   drawLineClearParticles(effect, visual) {
+    if (visual.particleAlpha <= 0) {
+      return;
+    }
+
     const { ctx, layout } = this;
     const { boardRect, cellSize } = layout;
     const elapsed = effect.duration - effect.remaining;
     ctx.save();
-    effect.particles.slice(0, this.quality.maxParticles).forEach((particle) => {
+    const particleLimit = Math.min(this.quality.maxParticles, this.quality.highCostEffects ? 28 : 12);
+    effect.particles.slice(0, particleLimit).forEach((particle) => {
       this.perfStats.recordParticles();
       const lifeProgress = Math.min(1, elapsed / particle.life);
       if (lifeProgress >= 1) {
@@ -833,7 +874,7 @@ export default class Renderer {
       }
       const x = boardRect.x + (particle.col + 0.5 + particle.offsetX * 0.35 + particle.velocityX * lifeProgress) * cellSize;
       const y = boardRect.y + (particle.row + 0.5 + particle.offsetY * 0.35 + particle.velocityY * lifeProgress) * cellSize;
-      ctx.globalAlpha = (1 - lifeProgress) * visual.fadeAlpha;
+      ctx.globalAlpha = (1 - lifeProgress) * visual.particleAlpha;
       if (particle.shape === 'spark') {
         const length = particle.size * 2.6;
         const angle = Math.atan2(particle.velocityY, particle.velocityX);
@@ -869,7 +910,7 @@ export default class Renderer {
 
       this.drawBlockCell(drawX, drawY, cellSize - 1, piece.color, {
         alpha: canPlace ? 0.58 : 0.22,
-        glow: canPlace ? 0.14 : 0,
+        glow: canPlace ? 0.22 : 0,
         shadowAlpha: 0,
         borderBoost: canPlace ? 0.1 : 0,
         flatten: true
@@ -925,8 +966,16 @@ export default class Renderer {
       });
 
       roundedRect(ctx, buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 14);
+      if (item.active) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(110, 214, 255, 0.38)';
+        ctx.shadowBlur = 10;
+      }
       ctx.fillStyle = item.active ? 'rgba(61, 124, 185, 0.96)' : 'rgba(9, 29, 55, 0.82)';
       ctx.fill();
+      if (item.active) {
+        ctx.restore();
+      }
       ctx.lineWidth = 1;
       ctx.strokeStyle = item.active ? 'rgba(192, 240, 255, 0.72)' : 'rgba(125, 200, 255, 0.28)';
       ctx.stroke();
@@ -1040,14 +1089,16 @@ export default class Renderer {
     ctx.translate(-cx, -cy);
 
     piece.cells.forEach((cell) => {
+      const invalid = drag.phase === 'invalid';
       this.drawBlockCell(
         visual.x + cell.x * displayCellSize,
         visual.y + cell.y * displayCellSize,
         displayCellSize,
-        piece.color,
+        invalid ? '#FF6B86' : piece.color,
         {
-          glow: 0.15,
-          borderBoost: 0.1,
+          alpha: invalid ? 0.82 : 1,
+          glow: invalid ? 0.08 : 0.2,
+          borderBoost: invalid ? 0.04 : 0.1,
           shadowAlpha: 0.1
         }
       );

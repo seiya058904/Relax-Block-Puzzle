@@ -183,6 +183,9 @@ for (const version of versions) {
       assert.equal(game.state.startDrag(0, 35, 145, { x: 20, y: 400, width: 30, height: 30, cellSize: 30 }), true);
       game.state.previewState = { row: 0, col: 0, canPlace: true, visible: true };
       assert.equal(game.state.endDrag(), true);
+      assert.equal(game.state.feedbackState.clearEffects.length, 1);
+      assert.equal(game.state.feedbackState.clearScore.active, false);
+      assert.equal(game.state.pendingClear.remainingTime, 180);
       game.state.finishPendingClear();
       assert.equal(game.state.feedbackState.clearEffects.length, 1);
       assert.deepEqual(game.state.feedbackState.clearEffects[0].clearedRows, [0]);

@@ -104,7 +104,7 @@ function normalizeCells(cells) {
     if (!Number.isInteger(row) || !Number.isInteger(col)) {
       return;
     }
-    unique.set(`${row}:${col}`, { row, col });
+    unique.set(`${row}:${col}`, { row, col, ...(cell.axis ? { axis: cell.axis } : {}) });
   });
   return Array.from(unique.values()).sort((a, b) => a.row - b.row || a.col - b.col);
 }
@@ -129,7 +129,9 @@ export function createLineClearParticles(cells, seed = 1, lineCount = 1) {
   for (let index = 0; index < maxParticles; index += 1) {
     const cell = normalized[index % normalized.length];
     const particleSeed = seed * 97 + index * 31 + cell.row * 13 + cell.col * 17;
-    const angle = seededUnit(particleSeed) * Math.PI * 2;
+    const direction = cell.axis === 'row' ? 0 : cell.axis === 'col' ? Math.PI / 2 : seededUnit(particleSeed) * Math.PI * 2;
+    const spread = (seededUnit(particleSeed + 7) - 0.5) * (cell.axis ? 0.85 : Math.PI * 2);
+    const angle = direction + spread;
     const speed = 0.08 + seededUnit(particleSeed + 1) * 0.22;
     const shapeRoll = seededUnit(particleSeed + 6);
     particles.push({
@@ -166,6 +168,12 @@ function createLasers(rows, cols) {
   ];
 }
 
+function createCrossCells(rows, cols, cells) {
+  const rowSet = new Set(rows);
+  const colSet = new Set(cols);
+  return cells.filter((cell) => rowSet.has(cell.row) && colSet.has(cell.col));
+}
+
 export function triggerLineClearEffect(state, details) {
   const clearedRows = (details.rows || [])
     .map((row) => Number(row))
@@ -183,6 +191,13 @@ export function triggerLineClearEffect(state, details) {
   const id = state.nextClearEffectId;
   state.nextClearEffectId += 1;
   const lineCount = Math.max(1, clearedRows.length + clearedCols.length);
+  const crossCells = createCrossCells(clearedRows, clearedCols, cells);
+  const particleCells = cells.map((cell) => ({
+    ...cell,
+    axis: clearedRows.includes(cell.row) && clearedCols.includes(cell.col)
+      ? 'cross'
+      : clearedRows.includes(cell.row) ? 'row' : 'col'
+  }));
   const effect = {
     id,
     startedAt: state.clock,
@@ -192,10 +207,12 @@ export function triggerLineClearEffect(state, details) {
     clearedCols,
     cells,
     lineCount,
+    axes: { rows: clearedRows.length > 0, cols: clearedCols.length > 0 },
+    crossCells,
+    particleCells,
     impact: createImpact(lineCount),
     lasers: createLasers(clearedRows, clearedCols),
-    bursts: [],
-    particles: createLineClearParticles(cells, id, lineCount)
+    particles: createLineClearParticles(particleCells, id, lineCount)
   };
 
   state.clearEffects.push(effect);
@@ -219,25 +236,39 @@ export function getLineClearEffectVisual(effect) {
   } else if (elapsed < 300) {
     phase = 'laser';
   }
-  const chargeAlpha = Math.max(0, 1 - elapsed / 120);
+  const smoothstep = (value) => value * value * (3 - 2 * value);
+  const chargeProgress = smoothstep(Math.max(0, Math.min(1, elapsed / 120)));
   const laserProgress = Math.max(0, Math.min(1, (elapsed - 80) / 220));
-  const laserAlpha = elapsed < 80 ? 0 : Math.max(0, 1 - Math.max(0, elapsed - 280) / 160);
+  const fadeIn = smoothstep(Math.max(0, Math.min(1, (elapsed - 60) / 40)));
+  const fadeOut = smoothstep(Math.max(0, Math.min(1, (elapsed - 280) / 160)));
+  const laserAlpha = fadeIn * (1 - fadeOut);
   const eraseProgress = Math.max(0, Math.min(1, (elapsed - 160) / 320));
   const fadeAlpha = Math.max(0, 1 - eraseProgress);
+  const particleAlpha = smoothstep(Math.max(0, Math.min(1, (elapsed - 220) / 80))) * fadeAlpha;
+  const impactProgress = smoothstep(Math.max(0, Math.min(1, (elapsed - 145) / 145)));
+  const impactAlpha = Math.sin(Math.PI * impactProgress);
+  const scoreSyncProgress = smoothstep(Math.max(0, Math.min(1, (elapsed - 120) / 120)));
 
   return {
     phase,
     progress,
-    chargeAlpha,
+    chargeAlpha: 1 - chargeProgress,
     laserProgress,
     laserAlpha,
+    impactProgress,
+    impactAlpha,
+    scoreSyncProgress,
     shakeX: 0,
     shakeY: 0,
-    boardScale: 1,
-    highlightAlpha: Math.max(chargeAlpha * 0.42, laserAlpha * 0.26),
+    boardScale: 1 + impactAlpha * Math.min(5, effect.impact?.intensity || 1) * 0.0015,
+    highlightAlpha: Math.max((1 - chargeProgress) * 0.5, laserAlpha * 0.34, impactAlpha * 0.22),
     sweepProgress: laserProgress,
     fadeAlpha,
-    cellScale: 1 - eraseProgress * 0.12
+    particleAlpha,
+    cellFlashAlpha: Math.max((1 - chargeProgress) * 0.55, impactAlpha * 0.42),
+    residualAlpha: smoothstep(Math.max(0, Math.min(1, (elapsed - 260) / 80))) *
+      (1 - smoothstep(Math.max(0, Math.min(1, (elapsed - 420) / 140)))),
+    cellScale: 1 + (1 - chargeProgress) * 0.035 - eraseProgress * 0.18
   };
 }
 
