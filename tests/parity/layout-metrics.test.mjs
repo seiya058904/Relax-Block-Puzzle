@@ -133,6 +133,51 @@ test('Android home layout keeps modules in a vertical chain with and without adm
   }
 });
 
+test('wechat: home layout exposes a safe vertical information hierarchy', async () => {
+  const version = versions.find((item) => item.name === 'wechat');
+  const { calculateWechatHomeLayout } = await import(version.layoutUrl);
+
+  for (const viewport of viewports) {
+    for (const adminVisible of [false, true]) {
+      const layout = calculateWechatHomeLayout({
+        viewportWidth: viewport.width,
+        viewportHeight: viewport.height,
+        safeInsets: { top: 52, bottom: 18 },
+        adminVisible
+      });
+      const keys = [
+        'title',
+        'subtitle',
+        ...(adminVisible ? ['adminButton'] : []),
+        'difficultyButton',
+        'highScoreCard',
+        'startButton',
+        'helpButton',
+        'settingsButton'
+      ];
+
+      assertFiniteRect(layout.panel, 'wechat panel');
+      for (const key of keys) {
+        assertFiniteRect(layout[key], `wechat ${key}`);
+        assert.ok(layout[key].x >= layout.panel.x, `${key} should stay inside panel horizontally`);
+        assert.ok(rectRight(layout[key]) <= rectRight(layout.panel), `${key} should not exceed panel width`);
+        assert.ok(layout[key].y >= layout.panel.y, `${key} should stay inside panel vertically`);
+        assert.ok(rectBottom(layout[key]) <= rectBottom(layout.panel), `${key} should not exceed panel height`);
+      }
+
+      for (let index = 1; index < keys.length; index += 1) {
+        const previous = layout[keys[index - 1]];
+        const current = layout[keys[index]];
+        assert.ok(
+          current.y >= rectBottom(previous) + layout.minimumGap,
+          `${keys[index]} should follow ${keys[index - 1]} on ${viewport.width}x${viewport.height}`
+        );
+        assert.equal(overlaps(previous, current), false, `${keys[index]} should not overlap ${keys[index - 1]}`);
+      }
+    }
+  }
+});
+
 test('wechat: HUD score text fits between left controls and right safe area', async () => {
   const version = versions.find((item) => item.name === 'wechat');
   const { calculateHudLayout } = await import(version.layoutUrl);

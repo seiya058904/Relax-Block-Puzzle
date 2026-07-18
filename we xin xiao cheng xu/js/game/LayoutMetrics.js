@@ -61,7 +61,7 @@ export function fitTextSize({
   };
 }
 
-export function calculateAndroidHomeLayout({
+export function calculateWechatHomeLayout({
   viewportWidth,
   viewportHeight,
   safeInsets = {},

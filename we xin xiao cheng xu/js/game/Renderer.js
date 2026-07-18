@@ -25,7 +25,7 @@ import {
 } from './constants.js';
 import { getDifficultyLabel } from './GameState.js';
 import { getClearFeedbackLabel, getDragVisual, getLineClearEffectVisual } from './FeedbackState.js';
-import { calculateHudLayout } from './LayoutMetrics.js';
+import { calculateHudLayout, calculateWechatHomeLayout } from './LayoutMetrics.js';
 import { createSafeHitRect } from './SafeHitArea.js';
 import { getQualityProfile } from '../config/quality.js';
 import { createRenderPerfStats } from './RenderPerfStats.js';
@@ -210,12 +210,12 @@ export default class Renderer {
       width: 64,
       height: 28
     };
-    const homePanelRect = {
-      x: sideMargin + 8,
-      y: clamp(screenHeight * 0.14, topInset + 8, topInset + 36),
-      width: screenWidth - (sideMargin + 8) * 2,
-      height: clamp(screenHeight * 0.56, 380, 460)
-    };
+    const homeLayout = calculateWechatHomeLayout({
+      viewportWidth: screenWidth,
+      viewportHeight: screenHeight,
+      safeInsets: { top: topInset, bottom: bottomInset },
+      adminVisible: false
+    });
 
     return {
       screenWidth,
@@ -231,7 +231,8 @@ export default class Renderer {
       rackSlots,
       settingsButtonRect,
       pauseButtonRect,
-      homePanelRect
+      homePanelRect: homeLayout.panel,
+      homeLayout
     };
   }
 
@@ -333,16 +334,25 @@ export default class Renderer {
 
   drawHome(state) {
     const { ctx, layout } = this;
-    const panel = layout.homePanelRect;
     const difficultyLabel = getDifficultyLabel(state.settings.difficulty);
     const difficultyBestScore = state.bestScores[state.settings.difficulty] || 0;
+    const homeLayout = calculateWechatHomeLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      safeInsets: { top: layout.headerRect.y, bottom: layout.bottomInset },
+      adminVisible: state.isAdminModeActive()
+    });
+    const panel = homeLayout.panel;
 
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
     ctx.shadowBlur = 18;
     ctx.shadowOffsetY = 10;
     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
-    ctx.fillStyle = 'rgba(10, 28, 53, 0.58)';
+    const panelGrad = this.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+    panelGrad.addColorStop(0, 'rgba(16, 42, 78, 0.72)');
+    panelGrad.addColorStop(1, 'rgba(8, 22, 48, 0.82)');
+    ctx.fillStyle = panelGrad;
     ctx.fill();
     ctx.restore();
 
@@ -351,50 +361,61 @@ export default class Renderer {
     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
     ctx.stroke();
 
-    this.homeTitleRect = {
-      x: panel.x + 40,
-      y: panel.y + 20,
-      width: panel.width - 80,
-      height: 68
-    };
+    this.homeTitleRect = homeLayout.title;
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 36px sans-serif';
-    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, panel.y + 64);
+    ctx.font = `bold ${homeLayout.titleFontSize}px sans-serif`;
+    ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, homeLayout.title.y + homeLayout.title.height - 16);
+
+    const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
+    const decoLineWidth = homeLayout.title.width * 0.4;
+    const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
+    const decoGrad = this.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
+    decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
+    decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.5)');
+    decoGrad.addColorStop(1, 'rgba(120, 214, 255, 0)');
+    ctx.strokeStyle = decoGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(decoLineX, decoLineY);
+    ctx.lineTo(decoLineX + decoLineWidth, decoLineY);
+    ctx.stroke();
 
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText('拖动方块，填满整行或整列即可消除', layout.screenWidth / 2, panel.y + 96);
+    ctx.font = `${homeLayout.subtitleFontSize}px sans-serif`;
+    ctx.fillText(
+      '拖动方块，填满整行或整列即可消除',
+      layout.screenWidth / 2,
+      homeLayout.subtitle.y + homeLayout.subtitle.height - 5
+    );
 
-    if (state.isAdminModeActive()) {
-      const adminRect = {
-        x: panel.x + panel.width / 2 - 54,
-        y: panel.y + 108,
-        width: 108,
-        height: 28
-      };
-      this.drawSecondaryChip(adminRect, '管理员模式');
+    if (homeLayout.adminButton) {
+      this.drawSecondaryChip(homeLayout.adminButton, '管理员模式');
     }
 
-    const difficultyRect = {
-      x: panel.x + 34,
-      y: panel.y + 146,
-      width: panel.width - 68,
-      height: 42
-    };
-    this.homeActionRects.difficulty = difficultyRect;
-    this.drawSecondaryChip(difficultyRect, `难度：${difficultyLabel}`);
+    this.homeActionRects.difficulty = homeLayout.difficultyButton;
+    this.drawSecondaryChip(homeLayout.difficultyButton, `难度：${difficultyLabel}`);
 
+    const scoreCard = homeLayout.highScoreCard;
+    roundedRect(ctx, scoreCard.x, scoreCard.y, scoreCard.width, scoreCard.height, 14);
+    ctx.fillStyle = 'rgba(11, 28, 52, 0.65)';
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(120, 202, 255, 0.18)';
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '18px sans-serif';
-    ctx.fillText(`${difficultyLabel}最高分：${difficultyBestScore}`, layout.screenWidth / 2, panel.y + 220);
+    ctx.font = '16px sans-serif';
+    ctx.fillText(`★ ${difficultyLabel}最高分`, layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 - 4);
+    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 + 18);
 
-    const buttonWidth = panel.width - 72;
-    const buttonX = panel.x + 36;
-    const startRect = { x: buttonX, y: panel.y + 252, width: buttonWidth, height: 58 };
-    const helpRect = { x: buttonX, y: startRect.y + 74, width: buttonWidth, height: 48 };
-    const settingsRect = { x: buttonX, y: helpRect.y + 58, width: buttonWidth, height: 48 };
+    const startRect = homeLayout.startButton;
+    const helpRect = homeLayout.helpButton;
+    const settingsRect = homeLayout.settingsButton;
 
     this.homeActionRects.start = startRect;
     this.homeActionRects.help = helpRect;
@@ -1667,6 +1688,26 @@ export default class Renderer {
       ctx.strokeStyle = 'rgba(120,202,255,0.28)';
     }
     ctx.stroke();
+
+    if (isPrimary) {
+      const highlightPadding = 16;
+      const highlightY = rect.y + 8;
+      const highlight = this.createLinearGradient(
+        rect.x + highlightPadding,
+        highlightY,
+        rect.x + rect.width - highlightPadding,
+        highlightY
+      );
+      highlight.addColorStop(0, 'rgba(255,255,255,0)');
+      highlight.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+      highlight.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = highlight;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(rect.x + highlightPadding, highlightY);
+      ctx.lineTo(rect.x + rect.width - highlightPadding, highlightY);
+      ctx.stroke();
+    }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = isDangerOutline ? '#F1B2A4' : '#FFFFFF';
