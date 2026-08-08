@@ -1,0 +1,1196 @@
+diff --git a/app/src/main/assets/js/game/Board.js b/app/src/main/assets/js/game/Board.js
+index 1b257fd..ebde87f 100644
+--- a/app/src/main/assets/js/game/Board.js
++++ b/app/src/main/assets/js/game/Board.js
+@@ -1,4 +1,5 @@
+-import { BOARD_SIZE } from './constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { BOARD_SIZE } from './coreConstants.js';
+ 
+ function createEmptyGrid(size) {
+   return Array.from({ length: size }, () => Array(size).fill(null));
+diff --git a/app/src/main/assets/js/game/FeedbackState.js b/app/src/main/assets/js/game/FeedbackState.js
+index 73270a8..c151c35 100644
+--- a/app/src/main/assets/js/game/FeedbackState.js
++++ b/app/src/main/assets/js/game/FeedbackState.js
+@@ -1,3 +1,8 @@
++import { QUALITY_PROFILE } from './constants.js';
++import { getQualityProfile } from '../config/quality.js';
++
++const QUALITY = getQualityProfile(QUALITY_PROFILE);
++
+ export const FEEDBACK_EVENTS = Object.freeze({
+   piecePicked: 'piecePicked',
+   piecePlaced: 'piecePlaced',
+@@ -22,8 +27,8 @@ export const FEEDBACK_DURATIONS = Object.freeze({
+ });
+ 
+ export const CLEAR_EFFECT_LIMITS = Object.freeze({
+-  maxParticles: 40,
+-  maxStackedEffects: 6
++  maxParticles: QUALITY.maxParticles,
++  maxStackedEffects: QUALITY.maxStackedEffects
+ });
+ 
+ function createTimedState(duration) {
+diff --git a/app/src/main/assets/js/game/GameState.js b/app/src/main/assets/js/game/GameState.js
+index d3e3017..5d6be73 100644
+--- a/app/src/main/assets/js/game/GameState.js
++++ b/app/src/main/assets/js/game/GameState.js
+@@ -1,4 +1,5 @@
+ import Board from './Board.js';
++import { createDragModel } from './DragModel.js';
+ import ScoreManager from './ScoreManager.js';
+ import {
+   FEEDBACK_EVENTS,
+@@ -610,13 +611,27 @@ export default class GameState {
+     const dragFingerOffsetY = this.getDragFingerOffsetY();
+     const pieceWidth = (piece && piece.bounds ? piece.bounds.width : 0) * displayCellSize;
+     const pieceHeight = (piece && piece.bounds ? piece.bounds.height : 0) * displayCellSize;
++    this.dragModel = this.layout
++      ? createDragModel({
++          boardRect: this.layout.boardRect,
++          cellSize: this.layout.cellSize,
++          canPlace: (row, col) => this.board.canPlace(piece.cells, row, col)
++        })
++      : null;
++    const modelState = this.dragModel && this.dragModel.begin({
++      pointerX: touchX,
++      pointerY: touchY,
++      pieceCells: piece.cells,
++      displayCellSize,
++      fingerOffsetY: dragFingerOffsetY
++    });
+ 
+     this.dragState = {
+       activePieceIndex: pieceIndex,
+       pointerX: touchX,
+       pointerY: touchY,
+-      visualX: touchX - pieceWidth / 2,
+-      visualY: touchY - dragFingerOffsetY - pieceHeight,
++      visualX: modelState ? modelState.visualX : touchX - pieceWidth / 2,
++      visualY: modelState ? modelState.visualY : touchY - dragFingerOffsetY - pieceHeight,
+       pieceWidth,
+       pieceHeight,
+       displayCellSize,
+@@ -658,9 +673,23 @@ export default class GameState {
+ 
+     this.dragState.pointerX = touchX;
+     this.dragState.pointerY = touchY;
+-    this.dragState.visualX = touchX - this.dragState.pieceWidth / 2;
+-    this.dragState.visualY = touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
+-    this.updatePreviewStateFromVisual(piece);
++    const modelState = this.dragModel && this.dragModel.move({ pointerX: touchX, pointerY: touchY });
++    this.dragState.visualX = modelState
++      ? modelState.visualX
++      : touchX - this.dragState.pieceWidth / 2;
++    this.dragState.visualY = modelState
++      ? modelState.visualY
++      : touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
++    if (modelState) {
++      this.previewState = {
++        row: modelState.row,
++        col: modelState.col,
++        canPlace: modelState.canPlace,
++        visible: true
++      };
++    } else {
++      this.updatePreviewStateFromVisual(piece);
++    }
+     updateDragFeedback(this.feedbackState, {
+       pointerX: touchX,
+       pointerY: touchY,
+@@ -674,6 +703,21 @@ export default class GameState {
+       return false;
+     }
+ 
++    if (this.dragModel) {
++      const result = this.dragModel.release({
++        pointerX: this.dragState.pointerX,
++        pointerY: this.dragState.pointerY
++      });
++      if (result.accepted) {
++        this.previewState = {
++          row: result.row,
++          col: result.col,
++          canPlace: true,
++          visible: true
++        };
++      }
++    }
++
+     if (this.previewState.visible && this.previewState.canPlace) {
+       return this.tryPlaceDraggedPiece();
+     }
+@@ -1227,7 +1271,12 @@ export default class GameState {
+   }
+ 
+   clearDrag(preserveFeedback = false) {
++    if (this.dragModel) {
++      this.dragModel.cancel();
++      this.dragModel = null;
++    }
+     this.dragState = createEmptyDragState();
++    this.dragModel = null;
+     this.previewState = createEmptyPreviewState();
+     if (!preserveFeedback) {
+       clearDragFeedback(this.feedbackState);
+diff --git a/app/src/main/assets/js/game/InputManager.js b/app/src/main/assets/js/game/InputManager.js
+index dafeacc..e042d05 100644
+--- a/app/src/main/assets/js/game/InputManager.js
++++ b/app/src/main/assets/js/game/InputManager.js
+@@ -1,10 +1,14 @@
++import { createFrameInputQueue } from './FrameInputQueue.js';
++
+ export default class InputManager {
+-  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender) {
++  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender, requestInputFrame) {
+     this.gameState = gameState;
+     this.renderer = renderer;
+     this.soundManager = soundManager;
+     this.applySettings = applySettings;
+     this.requestImmediateRender = requestImmediateRender || (() => {});
++    this.requestInputFrame = requestInputFrame || (() => {});
++    this.inputQueue = createFrameInputQueue(this.requestInputFrame);
+     this.homeTitleTapCount = 0;
+     this.homeTitleTapStartTime = 0;
+ 
+@@ -121,8 +125,7 @@ export default class InputManager {
+       return;
+     }
+ 
+-    this.gameState.moveDrag(touch.clientX, touch.clientY);
+-    this.requestImmediateRender();
++    this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
+   }
+ 
+   handleTouchEnd(event) {
+@@ -143,18 +146,26 @@ export default class InputManager {
+       (event && event.touches && event.touches[0]);
+ 
+     if (touch && this.gameState.dragState.isDragging) {
+-      this.gameState.moveDrag(touch.clientX, touch.clientY);
++      this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
+     }
+ 
++    this.flushPendingInput();
+     this.gameState.endDrag();
+     this.requestImmediateRender();
+   }
+ 
+   handleTouchCancel() {
++    this.inputQueue.clear();
+     this.gameState.cancelDrag();
+     this.requestImmediateRender();
+   }
+ 
++  flushPendingInput() {
++    this.inputQueue.flush(({ x, y }) => {
++      this.gameState.moveDrag(x, y);
++    });
++  }
++
+   handleHomeTouch(point) {
+     if (this.isPointInRect(point, this.renderer.homeTitleRect)) {
+       this.handleHomeTitleSecretTap();
+diff --git a/app/src/main/assets/js/game/LayoutMetrics.js b/app/src/main/assets/js/game/LayoutMetrics.js
+index 520f220..7844f45 100644
+--- a/app/src/main/assets/js/game/LayoutMetrics.js
++++ b/app/src/main/assets/js/game/LayoutMetrics.js
+@@ -154,6 +154,7 @@ export function calculateHudLayout({
+   const header = headerRect || { x: 14, y: 44, width: width - 28, height: 96 };
+   const pause = pauseButtonRect || { x: header.x + 72, y: header.y + 8, width: 64, height: 28 };
+   const isAndroid = platform === 'android';
++  const viewportCenterX = width / 2;
+   const scoreArea = isAndroid && boardPanelRect
+     ? rect(boardPanelRect.x + 8, header.y, Math.max(80, boardPanelRect.width - 16), header.height)
+     : (() => {
+@@ -161,9 +162,12 @@ export function calculateHudLayout({
+         const rightSafe = platform === 'wechat' && menuButton
+           ? Math.max(leftSafe + 60, menuButton.left - 12)
+           : header.x + header.width;
+-        return rect(leftSafe, header.y, Math.max(60, rightSafe - leftSafe), header.height);
++        const leftSpace = Math.max(0, viewportCenterX - leftSafe);
++        const rightSpace = Math.max(0, rightSafe - viewportCenterX);
++        const maxCenteredWidth = Math.max(1, Math.min(leftSpace, rightSpace) * 2);
++        return rect(viewportCenterX - maxCenteredWidth / 2, header.y, maxCenteredWidth, header.height);
+       })();
+-  const scoreCenterX = isAndroid && boardPanelRect ? centerX(boardPanelRect) : centerX(scoreArea);
++  const scoreCenterX = isAndroid && boardPanelRect ? centerX(boardPanelRect) : viewportCenterX;
+   const preferredScoreFontSize = 46;
+   const minimumScoreFontSize = platform === 'wechat' ? 16 : 22;
+   const preferredBestScoreFontSize = 16;
+diff --git a/app/src/main/assets/js/game/Piece.js b/app/src/main/assets/js/game/Piece.js
+index 3dc640e..54f2de1 100644
+--- a/app/src/main/assets/js/game/Piece.js
++++ b/app/src/main/assets/js/game/Piece.js
+@@ -1,4 +1,5 @@
+-import { COLORS, RACK_SIZE } from './constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { COLORS, RACK_SIZE } from './coreConstants.js';
+ import { normalizeDifficulty } from '../utils/storage.js';
+ 
+ let pieceCounter = 0;
+diff --git a/app/src/main/assets/js/game/Renderer.js b/app/src/main/assets/js/game/Renderer.js
+index fa1a7c0..8dd9fd9 100644
+--- a/app/src/main/assets/js/game/Renderer.js
++++ b/app/src/main/assets/js/game/Renderer.js
+@@ -9,6 +9,7 @@
+   BOARD_PANEL_BORDER,
+   BOARD_PANEL_GLOW,
+   BOARD_SIZE,
++  QUALITY_PROFILE,
+   BUTTON_FILL,
+   HEADER_GAP,
+   MAX_SIDE_MARGIN,
+@@ -25,6 +26,9 @@
+ import { getDifficultyLabel } from './GameState.js';
+ import { getClearFeedbackLabel, getDragVisual, getLineClearEffectVisual } from './FeedbackState.js';
+ import { calculateAndroidHomeLayout, calculateHudLayout } from './LayoutMetrics.js';
++import { createSafeHitRect } from './SafeHitArea.js';
++import { getQualityProfile } from '../config/quality.js';
++import { createRenderPerfStats } from './RenderPerfStats.js';
+ 
+ function clamp(value, min, max) {
+   return Math.max(min, Math.min(max, value));
+@@ -99,7 +103,13 @@ export default class Renderer {
+     this.ctx = ctx;
+     this.screenInfo = screenInfo;
+     this.safeAreaInfo = safeAreaInfo;
++    this.quality = getQualityProfile(QUALITY_PROFILE);
++    this.perfStats = createRenderPerfStats({
++      enabled: globalThis.__RELAX_BLOCK_DEBUG__ === true,
++      logger: (report) => console.log('[RelaxBlock][render-perf]', report)
++    });
+     this.layout = this.getLayout(screenInfo, safeAreaInfo);
++    this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
+     this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+     this.resetHitAreas();
+   }
+@@ -243,7 +253,13 @@ export default class Renderer {
+   }
+ 
+   render(state) {
+-    this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
++    this.perfStats.beginFrame(globalThis.performance?.now?.() ?? Date.now());
++    this.perfStats.recordFullRender();
++    const nextLayoutKey = JSON.stringify({ screenInfo: this.screenInfo, safeAreaInfo: this.safeAreaInfo });
++    if (nextLayoutKey !== this.layoutKey) {
++      this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
++      this.layoutKey = nextLayoutKey;
++    }
+     state.setLayout(this.layout);
+     this.resetHitAreas();
+ 
+@@ -289,12 +305,23 @@ export default class Renderer {
+     } else if (typeof globalThis.__syncKeyboardInputPosition === 'function') {
+       globalThis.__syncKeyboardInputPosition(null);
+     }
++    this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
+   }
+ 
+   clearCanvas() {
+     this.ctx.clearRect(0, 0, this.layout.screenWidth, this.layout.screenHeight);
+   }
+ 
++  createLinearGradient(...args) {
++    this.perfStats.recordGradient();
++    return this.ctx.createLinearGradient(...args);
++  }
++
++  createRadialGradient(...args) {
++    this.perfStats.recordGradient();
++    return this.ctx.createRadialGradient(...args);
++  }
++
+   measureCanvasText(text, size, fontFamily = 'sans-serif', fontWeight = '') {
+     const previousFont = this.ctx.font;
+     this.ctx.font = `${fontWeight ? `${fontWeight} ` : ''}${size}px ${fontFamily}`;
+@@ -305,7 +332,7 @@ export default class Renderer {
+ 
+   drawBackground(isDragging = false) {
+     const { ctx, layout } = this;
+-    const gradient = ctx.createLinearGradient(0, 0, 0, layout.screenHeight);
++    const gradient = this.createLinearGradient(0, 0, 0, layout.screenHeight);
+     gradient.addColorStop(0, BACKGROUND_TOP);
+     gradient.addColorStop(0.34, BACKGROUND_MID);
+     gradient.addColorStop(1, BACKGROUND_BOTTOM);
+@@ -344,7 +371,7 @@ export default class Renderer {
+     ctx.shadowBlur = 18;
+     ctx.shadowOffsetY = 10;
+     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
+-    const panelGrad = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
++    const panelGrad = this.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+     panelGrad.addColorStop(0, 'rgba(16, 42, 78, 0.72)');
+     panelGrad.addColorStop(1, 'rgba(8, 22, 48, 0.82)');
+     ctx.fillStyle = panelGrad;
+@@ -366,7 +393,7 @@ export default class Renderer {
+     const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
+     const decoLineWidth = homeLayout.title.width * 0.4;
+     const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
+-    const decoGrad = ctx.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
++    const decoGrad = this.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
+     decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
+     decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.5)');
+     decoGrad.addColorStop(1, 'rgba(120, 214, 255, 0)');
+@@ -421,8 +448,27 @@ export default class Renderer {
+   }
+ 
+   drawPlayingScene(state) {
+-    this.settingsButtonRect = this.layout.settingsButtonRect;
+-    this.pauseButtonRect = this.layout.pauseButtonRect;
++    const headerHitContainer = this.layout.headerRect;
++    this.settingsButtonVisualRect = this.layout.settingsButtonRect;
++    this.pauseButtonVisualRect = this.layout.pauseButtonRect;
++    this.settingsButtonRect = createSafeHitRect({
++      visualRect: this.settingsButtonVisualRect,
++      containerRect: headerHitContainer,
++      nextRect: this.pauseButtonVisualRect,
++      expandTop: 8,
++      expandBottom: 8,
++      minimumTouchHeight: 44,
++      slotGap: 1
++    });
++    this.pauseButtonRect = createSafeHitRect({
++      visualRect: this.pauseButtonVisualRect,
++      containerRect: headerHitContainer,
++      previousRect: this.settingsButtonVisualRect,
++      expandTop: 8,
++      expandBottom: 8,
++      minimumTouchHeight: 44,
++      slotGap: 1
++    });
+     this.drawHeader(state);
+     this.drawBoard(state);
+     this.drawPreview(state);
+@@ -572,6 +618,7 @@ export default class Renderer {
+ 
+   drawLineClearEffects(state) {
+     const effects = state.feedbackState && state.feedbackState.clearEffects;
++    this.perfStats.setActiveEffects(effects ? effects.length : 0);
+     if (!effects || effects.length === 0) {
+       return;
+     }
+@@ -631,12 +678,13 @@ export default class Renderer {
+ 
+     ctx.save();
+     ctx.globalCompositeOperation = 'lighter';
+-    effect.lasers.forEach((laser) => {
++    effect.lasers.slice(0, this.quality.maxLaserDraws).forEach((laser) => {
++      this.perfStats.recordLaser();
+       if (laser.kind === 'row') {
+         const y = boardRect.y + (laser.index + 0.5) * cellSize;
+         const left = centerX - spanX;
+         const width = spanX * 2;
+-        const trail = ctx.createLinearGradient(left, y, left + width, y);
++        const trail = this.createLinearGradient(left, y, left + width, y);
+         trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+         trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+         trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -645,7 +693,7 @@ export default class Renderer {
+ 
+         [-1, 1].forEach((side) => {
+           const edgeX = centerX + side * spanX;
+-          const beam = ctx.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
++          const beam = this.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
+           beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+           beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+           beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -665,7 +713,7 @@ export default class Renderer {
+       const x = boardRect.x + (laser.index + 0.5) * cellSize;
+       const top = centerY - spanY;
+       const height = spanY * 2;
+-      const trail = ctx.createLinearGradient(x, top, x, top + height);
++      const trail = this.createLinearGradient(x, top, x, top + height);
+       trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+       trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+       trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -674,7 +722,7 @@ export default class Renderer {
+ 
+       [-1, 1].forEach((side) => {
+         const edgeY = centerY + side * spanY;
+-        const beam = ctx.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
++        const beam = this.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
+         beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+         beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+         beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -697,7 +745,8 @@ export default class Renderer {
+     const { boardRect, cellSize } = layout;
+     const elapsed = effect.duration - effect.remaining;
+     ctx.save();
+-    effect.particles.forEach((particle) => {
++    effect.particles.slice(0, this.quality.maxParticles).forEach((particle) => {
++      this.perfStats.recordParticles();
+       const lifeProgress = Math.min(1, elapsed / particle.life);
+       if (lifeProgress >= 1) {
+         return;
+@@ -764,14 +813,36 @@ export default class Renderer {
+       { key: 'undo', label: `撤回 ×${state.getToolCountLabel(state.toolState.undoCount)}`, active: false }
+     ];
+ 
+-    items.forEach((item, index) => {
+-      const buttonRect = {
++    const visualRects = items.map((item, index) => ({
++      key: item.key,
++      rect: {
+         x: rect.x + (width + gap) * index,
+         y: rect.y,
+         width,
+         height: rect.height
+-      };
+-      this.toolActionRects[item.key] = buttonRect;
++      }
++    }));
++    const hitContainer = {
++      x: rect.x,
++      y: rect.y,
++      width: rect.width,
++      height: Math.max(0, this.layout.rackRect.y - rect.y - 1)
++    };
++
++    items.forEach((item, index) => {
++      const buttonRect = visualRects[index].rect;
++      this.toolActionRects[item.key] = createSafeHitRect({
++        visualRect: buttonRect,
++        containerRect: hitContainer,
++        previousRect: index > 0 ? visualRects[index - 1].rect : null,
++        nextRect: index + 1 < visualRects.length ? visualRects[index + 1].rect : null,
++        lowerBoundary: this.layout.rackRect.y - 1,
++        expandBottom: 24,
++        expandLeft: 8,
++        expandRight: 8,
++        minimumTouchHeight: 44,
++        slotGap: 1
++      });
+ 
+       roundedRect(ctx, buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 14);
+       ctx.fillStyle = item.active ? 'rgba(61, 124, 185, 0.96)' : 'rgba(9, 29, 55, 0.82)';
+@@ -814,6 +885,10 @@ export default class Renderer {
+         y,
+         width,
+         height,
++        slotX: slot.x,
++        slotY: slot.y,
++        slotWidth: slot.width,
++        slotHeight: slot.height,
+         cellSize
+       });
+ 
+@@ -826,7 +901,7 @@ export default class Renderer {
+   }
+ 
+   drawSettingsButton() {
+-    const rect = this.settingsButtonRect;
++    const rect = this.settingsButtonVisualRect || this.settingsButtonRect;
+     const { ctx } = this;
+ 
+     roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
+@@ -843,7 +918,7 @@ export default class Renderer {
+   }
+ 
+   drawPauseButton() {
+-    const rect = this.pauseButtonRect;
++    const rect = this.pauseButtonVisualRect || this.pauseButtonRect;
+     const { ctx } = this;
+ 
+     roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
+@@ -1567,7 +1642,7 @@ export default class Renderer {
+     if (isPrimary) {
+       const hlPadX = 16;
+       const hlY = rect.y + 8;
+-      const hlGrad = ctx.createLinearGradient(rect.x + hlPadX, hlY, rect.x + rect.width - hlPadX, hlY);
++      const hlGrad = this.createLinearGradient(rect.x + hlPadX, hlY, rect.x + rect.width - hlPadX, hlY);
+       hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
+       hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+       hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+@@ -1662,7 +1737,7 @@ export default class Renderer {
+     ctx.shadowBlur = glow > 0 ? 3 : 0.8;
+     ctx.shadowOffsetY = glow > 0 ? 1 : 0.5;
+     roundedRect(ctx, drawX, drawY, drawSize, drawSize, radius);
+-    const gradient = ctx.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
++    const gradient = this.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
+     gradient.addColorStop(0, topColor);
+     gradient.addColorStop(0.45, midColor);
+     gradient.addColorStop(1, bottomColor);
+@@ -1734,13 +1809,25 @@ export default class Renderer {
+   }
+ 
+   getRackHitArea(x, y) {
++    const touchPadding = 24;
++    const slotInset = 4;
+     for (let index = 0; index < this.rackHitAreas.length; index += 1) {
+       const hitArea = this.rackHitAreas[index];
++      const left = Math.max(hitArea.x - touchPadding, hitArea.slotX + slotInset);
++      const top = Math.max(hitArea.y - touchPadding, hitArea.slotY + slotInset);
++      const right = Math.min(
++        hitArea.x + hitArea.width + touchPadding,
++        hitArea.slotX + hitArea.slotWidth - slotInset
++      );
++      const bottom = Math.min(
++        hitArea.y + hitArea.height + touchPadding,
++        hitArea.slotY + hitArea.slotHeight - slotInset
++      );
+       if (
+-        x >= hitArea.x &&
+-        x <= hitArea.x + hitArea.width &&
+-        y >= hitArea.y &&
+-        y <= hitArea.y + hitArea.height
++        x >= left &&
++        x <= right &&
++        y >= top &&
++        y <= bottom
+       ) {
+         return hitArea;
+       }
+diff --git a/app/src/main/assets/js/game/ScoreManager.js b/app/src/main/assets/js/game/ScoreManager.js
+index 3ee4e7d..a68d259 100644
+--- a/app/src/main/assets/js/game/ScoreManager.js
++++ b/app/src/main/assets/js/game/ScoreManager.js
+@@ -1,3 +1,4 @@
++// GENERATED FILE - edit shared/js source and run npm run sync.
+ import { saveBestScore } from '../utils/storage.js';
+ 
+ export default class ScoreManager {
+diff --git a/app/src/main/assets/js/game/constants.js b/app/src/main/assets/js/game/constants.js
+index 5fc8bf0..40468ed 100644
+--- a/app/src/main/assets/js/game/constants.js
++++ b/app/src/main/assets/js/game/constants.js
+@@ -4,6 +4,7 @@ export const RACK_SIZE = 3;
+ export const LEGACY_BEST_SCORE_KEY = 'block_puzzle_best_score_v1';
+ export const BEST_SCORES_KEY = 'block_puzzle_best_scores_v1';
+ export const DEBUG_CODE_ENABLED = true;
++export const QUALITY_PROFILE = 'full';
+ export const REVIVE_CLEAR_COUNT = 5;
+ export const ADMIN_CLEAR_COUNT = 5;
+ export const MEMBERSHIP_CODES = [
+diff --git a/app/src/main/assets/js/main.js b/app/src/main/assets/js/main.js
+index 8d36afb..7e88623 100644
+--- a/app/src/main/assets/js/main.js
++++ b/app/src/main/assets/js/main.js
+@@ -41,7 +41,8 @@ export default class Main {
+       this.renderer,
+       this.soundManager,
+       this.applySettings.bind(this),
+-      this.requestImmediateRender.bind(this)
++      this.requestImmediateRender.bind(this),
++      this.ensureFrame.bind(this)
+     );
+ 
+     this.bindAppLifecycle();
+@@ -245,6 +246,7 @@ export default class Main {
+     }
+ 
+     const animating = this.hasActiveAnimation();
++    this.inputManager.flushPendingInput();
+     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
+     this.lastTimestamp = timestamp;
+ 
+diff --git a/app/src/main/assets/js/utils/storage.js b/app/src/main/assets/js/utils/storage.js
+index 4f779d6..f2b9bd2 100644
+--- a/app/src/main/assets/js/utils/storage.js
++++ b/app/src/main/assets/js/utils/storage.js
+@@ -1,4 +1,5 @@
+-import { BEST_SCORES_KEY, LEGACY_BEST_SCORE_KEY } from '../game/constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { BEST_SCORES_KEY, LEGACY_BEST_SCORE_KEY } from '../game/coreConstants.js';
+ 
+ export const SETTINGS_KEY = 'block_puzzle_settings_v1';
+ 
+diff --git a/docs/js/game/Board.js b/docs/js/game/Board.js
+index 1b257fd..ebde87f 100644
+--- a/docs/js/game/Board.js
++++ b/docs/js/game/Board.js
+@@ -1,4 +1,5 @@
+-import { BOARD_SIZE } from './constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { BOARD_SIZE } from './coreConstants.js';
+ 
+ function createEmptyGrid(size) {
+   return Array.from({ length: size }, () => Array(size).fill(null));
+diff --git a/docs/js/game/FeedbackState.js b/docs/js/game/FeedbackState.js
+index 73270a8..c151c35 100644
+--- a/docs/js/game/FeedbackState.js
++++ b/docs/js/game/FeedbackState.js
+@@ -1,3 +1,8 @@
++import { QUALITY_PROFILE } from './constants.js';
++import { getQualityProfile } from '../config/quality.js';
++
++const QUALITY = getQualityProfile(QUALITY_PROFILE);
++
+ export const FEEDBACK_EVENTS = Object.freeze({
+   piecePicked: 'piecePicked',
+   piecePlaced: 'piecePlaced',
+@@ -22,8 +27,8 @@ export const FEEDBACK_DURATIONS = Object.freeze({
+ });
+ 
+ export const CLEAR_EFFECT_LIMITS = Object.freeze({
+-  maxParticles: 40,
+-  maxStackedEffects: 6
++  maxParticles: QUALITY.maxParticles,
++  maxStackedEffects: QUALITY.maxStackedEffects
+ });
+ 
+ function createTimedState(duration) {
+diff --git a/docs/js/game/GameState.js b/docs/js/game/GameState.js
+index d3e3017..0d45381 100644
+--- a/docs/js/game/GameState.js
++++ b/docs/js/game/GameState.js
+@@ -1,4 +1,5 @@
+ import Board from './Board.js';
++import { createDragModel } from './DragModel.js';
+ import ScoreManager from './ScoreManager.js';
+ import {
+   FEEDBACK_EVENTS,
+@@ -611,12 +612,27 @@ export default class GameState {
+     const pieceWidth = (piece && piece.bounds ? piece.bounds.width : 0) * displayCellSize;
+     const pieceHeight = (piece && piece.bounds ? piece.bounds.height : 0) * displayCellSize;
+ 
++    this.dragModel = this.layout
++      ? createDragModel({
++          boardRect: this.layout.boardRect,
++          cellSize: this.layout.cellSize,
++          canPlace: (row, col) => this.board.canPlace(piece.cells, row, col)
++        })
++      : null;
++    const modelState = this.dragModel && this.dragModel.begin({
++      pointerX: touchX,
++      pointerY: touchY,
++      pieceCells: piece.cells,
++      displayCellSize,
++      fingerOffsetY: dragFingerOffsetY
++    });
++
+     this.dragState = {
+       activePieceIndex: pieceIndex,
+       pointerX: touchX,
+       pointerY: touchY,
+-      visualX: touchX - pieceWidth / 2,
+-      visualY: touchY - dragFingerOffsetY - pieceHeight,
++      visualX: modelState ? modelState.visualX : touchX - pieceWidth / 2,
++      visualY: modelState ? modelState.visualY : touchY - dragFingerOffsetY - pieceHeight,
+       pieceWidth,
+       pieceHeight,
+       displayCellSize,
+@@ -658,9 +674,23 @@ export default class GameState {
+ 
+     this.dragState.pointerX = touchX;
+     this.dragState.pointerY = touchY;
+-    this.dragState.visualX = touchX - this.dragState.pieceWidth / 2;
+-    this.dragState.visualY = touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
+-    this.updatePreviewStateFromVisual(piece);
++    const modelState = this.dragModel && this.dragModel.move({ pointerX: touchX, pointerY: touchY });
++    this.dragState.visualX = modelState
++      ? modelState.visualX
++      : touchX - this.dragState.pieceWidth / 2;
++    this.dragState.visualY = modelState
++      ? modelState.visualY
++      : touchY - this.dragState.dragFingerOffsetY - this.dragState.pieceHeight;
++    if (modelState) {
++      this.previewState = {
++        row: modelState.row,
++        col: modelState.col,
++        canPlace: modelState.canPlace,
++        visible: true
++      };
++    } else {
++      this.updatePreviewStateFromVisual(piece);
++    }
+     updateDragFeedback(this.feedbackState, {
+       pointerX: touchX,
+       pointerY: touchY,
+@@ -674,6 +704,21 @@ export default class GameState {
+       return false;
+     }
+ 
++    if (this.dragModel) {
++      const result = this.dragModel.release({
++        pointerX: this.dragState.pointerX,
++        pointerY: this.dragState.pointerY
++      });
++      if (result.accepted) {
++        this.previewState = {
++          row: result.row,
++          col: result.col,
++          canPlace: true,
++          visible: true
++        };
++      }
++    }
++
+     if (this.previewState.visible && this.previewState.canPlace) {
+       return this.tryPlaceDraggedPiece();
+     }
+@@ -1227,7 +1272,12 @@ export default class GameState {
+   }
+ 
+   clearDrag(preserveFeedback = false) {
++    if (this.dragModel) {
++      this.dragModel.cancel();
++      this.dragModel = null;
++    }
+     this.dragState = createEmptyDragState();
++    this.dragModel = null;
+     this.previewState = createEmptyPreviewState();
+     if (!preserveFeedback) {
+       clearDragFeedback(this.feedbackState);
+diff --git a/docs/js/game/InputManager.js b/docs/js/game/InputManager.js
+index dafeacc..e042d05 100644
+--- a/docs/js/game/InputManager.js
++++ b/docs/js/game/InputManager.js
+@@ -1,10 +1,14 @@
++import { createFrameInputQueue } from './FrameInputQueue.js';
++
+ export default class InputManager {
+-  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender) {
++  constructor(gameState, renderer, soundManager, applySettings, requestImmediateRender, requestInputFrame) {
+     this.gameState = gameState;
+     this.renderer = renderer;
+     this.soundManager = soundManager;
+     this.applySettings = applySettings;
+     this.requestImmediateRender = requestImmediateRender || (() => {});
++    this.requestInputFrame = requestInputFrame || (() => {});
++    this.inputQueue = createFrameInputQueue(this.requestInputFrame);
+     this.homeTitleTapCount = 0;
+     this.homeTitleTapStartTime = 0;
+ 
+@@ -121,8 +125,7 @@ export default class InputManager {
+       return;
+     }
+ 
+-    this.gameState.moveDrag(touch.clientX, touch.clientY);
+-    this.requestImmediateRender();
++    this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
+   }
+ 
+   handleTouchEnd(event) {
+@@ -143,18 +146,26 @@ export default class InputManager {
+       (event && event.touches && event.touches[0]);
+ 
+     if (touch && this.gameState.dragState.isDragging) {
+-      this.gameState.moveDrag(touch.clientX, touch.clientY);
++      this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
+     }
+ 
++    this.flushPendingInput();
+     this.gameState.endDrag();
+     this.requestImmediateRender();
+   }
+ 
+   handleTouchCancel() {
++    this.inputQueue.clear();
+     this.gameState.cancelDrag();
+     this.requestImmediateRender();
+   }
+ 
++  flushPendingInput() {
++    this.inputQueue.flush(({ x, y }) => {
++      this.gameState.moveDrag(x, y);
++    });
++  }
++
+   handleHomeTouch(point) {
+     if (this.isPointInRect(point, this.renderer.homeTitleRect)) {
+       this.handleHomeTitleSecretTap();
+diff --git a/docs/js/game/LayoutMetrics.js b/docs/js/game/LayoutMetrics.js
+index 520f220..7844f45 100644
+--- a/docs/js/game/LayoutMetrics.js
++++ b/docs/js/game/LayoutMetrics.js
+@@ -154,6 +154,7 @@ export function calculateHudLayout({
+   const header = headerRect || { x: 14, y: 44, width: width - 28, height: 96 };
+   const pause = pauseButtonRect || { x: header.x + 72, y: header.y + 8, width: 64, height: 28 };
+   const isAndroid = platform === 'android';
++  const viewportCenterX = width / 2;
+   const scoreArea = isAndroid && boardPanelRect
+     ? rect(boardPanelRect.x + 8, header.y, Math.max(80, boardPanelRect.width - 16), header.height)
+     : (() => {
+@@ -161,9 +162,12 @@ export function calculateHudLayout({
+         const rightSafe = platform === 'wechat' && menuButton
+           ? Math.max(leftSafe + 60, menuButton.left - 12)
+           : header.x + header.width;
+-        return rect(leftSafe, header.y, Math.max(60, rightSafe - leftSafe), header.height);
++        const leftSpace = Math.max(0, viewportCenterX - leftSafe);
++        const rightSpace = Math.max(0, rightSafe - viewportCenterX);
++        const maxCenteredWidth = Math.max(1, Math.min(leftSpace, rightSpace) * 2);
++        return rect(viewportCenterX - maxCenteredWidth / 2, header.y, maxCenteredWidth, header.height);
+       })();
+-  const scoreCenterX = isAndroid && boardPanelRect ? centerX(boardPanelRect) : centerX(scoreArea);
++  const scoreCenterX = isAndroid && boardPanelRect ? centerX(boardPanelRect) : viewportCenterX;
+   const preferredScoreFontSize = 46;
+   const minimumScoreFontSize = platform === 'wechat' ? 16 : 22;
+   const preferredBestScoreFontSize = 16;
+diff --git a/docs/js/game/Piece.js b/docs/js/game/Piece.js
+index 3dc640e..54f2de1 100644
+--- a/docs/js/game/Piece.js
++++ b/docs/js/game/Piece.js
+@@ -1,4 +1,5 @@
+-import { COLORS, RACK_SIZE } from './constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { COLORS, RACK_SIZE } from './coreConstants.js';
+ import { normalizeDifficulty } from '../utils/storage.js';
+ 
+ let pieceCounter = 0;
+diff --git a/docs/js/game/Renderer.js b/docs/js/game/Renderer.js
+index fa1a7c0..8dd9fd9 100644
+--- a/docs/js/game/Renderer.js
++++ b/docs/js/game/Renderer.js
+@@ -9,6 +9,7 @@
+   BOARD_PANEL_BORDER,
+   BOARD_PANEL_GLOW,
+   BOARD_SIZE,
++  QUALITY_PROFILE,
+   BUTTON_FILL,
+   HEADER_GAP,
+   MAX_SIDE_MARGIN,
+@@ -25,6 +26,9 @@
+ import { getDifficultyLabel } from './GameState.js';
+ import { getClearFeedbackLabel, getDragVisual, getLineClearEffectVisual } from './FeedbackState.js';
+ import { calculateAndroidHomeLayout, calculateHudLayout } from './LayoutMetrics.js';
++import { createSafeHitRect } from './SafeHitArea.js';
++import { getQualityProfile } from '../config/quality.js';
++import { createRenderPerfStats } from './RenderPerfStats.js';
+ 
+ function clamp(value, min, max) {
+   return Math.max(min, Math.min(max, value));
+@@ -99,7 +103,13 @@ export default class Renderer {
+     this.ctx = ctx;
+     this.screenInfo = screenInfo;
+     this.safeAreaInfo = safeAreaInfo;
++    this.quality = getQualityProfile(QUALITY_PROFILE);
++    this.perfStats = createRenderPerfStats({
++      enabled: globalThis.__RELAX_BLOCK_DEBUG__ === true,
++      logger: (report) => console.log('[RelaxBlock][render-perf]', report)
++    });
+     this.layout = this.getLayout(screenInfo, safeAreaInfo);
++    this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
+     this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+     this.resetHitAreas();
+   }
+@@ -243,7 +253,13 @@ export default class Renderer {
+   }
+ 
+   render(state) {
+-    this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
++    this.perfStats.beginFrame(globalThis.performance?.now?.() ?? Date.now());
++    this.perfStats.recordFullRender();
++    const nextLayoutKey = JSON.stringify({ screenInfo: this.screenInfo, safeAreaInfo: this.safeAreaInfo });
++    if (nextLayoutKey !== this.layoutKey) {
++      this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
++      this.layoutKey = nextLayoutKey;
++    }
+     state.setLayout(this.layout);
+     this.resetHitAreas();
+ 
+@@ -289,12 +305,23 @@ export default class Renderer {
+     } else if (typeof globalThis.__syncKeyboardInputPosition === 'function') {
+       globalThis.__syncKeyboardInputPosition(null);
+     }
++    this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
+   }
+ 
+   clearCanvas() {
+     this.ctx.clearRect(0, 0, this.layout.screenWidth, this.layout.screenHeight);
+   }
+ 
++  createLinearGradient(...args) {
++    this.perfStats.recordGradient();
++    return this.ctx.createLinearGradient(...args);
++  }
++
++  createRadialGradient(...args) {
++    this.perfStats.recordGradient();
++    return this.ctx.createRadialGradient(...args);
++  }
++
+   measureCanvasText(text, size, fontFamily = 'sans-serif', fontWeight = '') {
+     const previousFont = this.ctx.font;
+     this.ctx.font = `${fontWeight ? `${fontWeight} ` : ''}${size}px ${fontFamily}`;
+@@ -305,7 +332,7 @@ export default class Renderer {
+ 
+   drawBackground(isDragging = false) {
+     const { ctx, layout } = this;
+-    const gradient = ctx.createLinearGradient(0, 0, 0, layout.screenHeight);
++    const gradient = this.createLinearGradient(0, 0, 0, layout.screenHeight);
+     gradient.addColorStop(0, BACKGROUND_TOP);
+     gradient.addColorStop(0.34, BACKGROUND_MID);
+     gradient.addColorStop(1, BACKGROUND_BOTTOM);
+@@ -344,7 +371,7 @@ export default class Renderer {
+     ctx.shadowBlur = 18;
+     ctx.shadowOffsetY = 10;
+     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
+-    const panelGrad = ctx.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
++    const panelGrad = this.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+     panelGrad.addColorStop(0, 'rgba(16, 42, 78, 0.72)');
+     panelGrad.addColorStop(1, 'rgba(8, 22, 48, 0.82)');
+     ctx.fillStyle = panelGrad;
+@@ -366,7 +393,7 @@ export default class Renderer {
+     const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
+     const decoLineWidth = homeLayout.title.width * 0.4;
+     const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
+-    const decoGrad = ctx.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
++    const decoGrad = this.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
+     decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
+     decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.5)');
+     decoGrad.addColorStop(1, 'rgba(120, 214, 255, 0)');
+@@ -421,8 +448,27 @@ export default class Renderer {
+   }
+ 
+   drawPlayingScene(state) {
+-    this.settingsButtonRect = this.layout.settingsButtonRect;
+-    this.pauseButtonRect = this.layout.pauseButtonRect;
++    const headerHitContainer = this.layout.headerRect;
++    this.settingsButtonVisualRect = this.layout.settingsButtonRect;
++    this.pauseButtonVisualRect = this.layout.pauseButtonRect;
++    this.settingsButtonRect = createSafeHitRect({
++      visualRect: this.settingsButtonVisualRect,
++      containerRect: headerHitContainer,
++      nextRect: this.pauseButtonVisualRect,
++      expandTop: 8,
++      expandBottom: 8,
++      minimumTouchHeight: 44,
++      slotGap: 1
++    });
++    this.pauseButtonRect = createSafeHitRect({
++      visualRect: this.pauseButtonVisualRect,
++      containerRect: headerHitContainer,
++      previousRect: this.settingsButtonVisualRect,
++      expandTop: 8,
++      expandBottom: 8,
++      minimumTouchHeight: 44,
++      slotGap: 1
++    });
+     this.drawHeader(state);
+     this.drawBoard(state);
+     this.drawPreview(state);
+@@ -572,6 +618,7 @@ export default class Renderer {
+ 
+   drawLineClearEffects(state) {
+     const effects = state.feedbackState && state.feedbackState.clearEffects;
++    this.perfStats.setActiveEffects(effects ? effects.length : 0);
+     if (!effects || effects.length === 0) {
+       return;
+     }
+@@ -631,12 +678,13 @@ export default class Renderer {
+ 
+     ctx.save();
+     ctx.globalCompositeOperation = 'lighter';
+-    effect.lasers.forEach((laser) => {
++    effect.lasers.slice(0, this.quality.maxLaserDraws).forEach((laser) => {
++      this.perfStats.recordLaser();
+       if (laser.kind === 'row') {
+         const y = boardRect.y + (laser.index + 0.5) * cellSize;
+         const left = centerX - spanX;
+         const width = spanX * 2;
+-        const trail = ctx.createLinearGradient(left, y, left + width, y);
++        const trail = this.createLinearGradient(left, y, left + width, y);
+         trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+         trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+         trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -645,7 +693,7 @@ export default class Renderer {
+ 
+         [-1, 1].forEach((side) => {
+           const edgeX = centerX + side * spanX;
+-          const beam = ctx.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
++          const beam = this.createLinearGradient(edgeX - beamWidth, y, edgeX + beamWidth, y);
+           beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+           beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+           beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -665,7 +713,7 @@ export default class Renderer {
+       const x = boardRect.x + (laser.index + 0.5) * cellSize;
+       const top = centerY - spanY;
+       const height = spanY * 2;
+-      const trail = ctx.createLinearGradient(x, top, x, top + height);
++      const trail = this.createLinearGradient(x, top, x, top + height);
+       trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+       trail.addColorStop(0.5, `rgba(110, 214, 255, ${alpha * 0.18})`);
+       trail.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -674,7 +722,7 @@ export default class Renderer {
+ 
+       [-1, 1].forEach((side) => {
+         const edgeY = centerY + side * spanY;
+-        const beam = ctx.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
++        const beam = this.createLinearGradient(x, edgeY - beamWidth, x, edgeY + beamWidth);
+         beam.addColorStop(0, 'rgba(255, 246, 196, 0)');
+         beam.addColorStop(0.5, `rgba(255, 246, 196, ${alpha})`);
+         beam.addColorStop(1, 'rgba(110, 214, 255, 0)');
+@@ -697,7 +745,8 @@ export default class Renderer {
+     const { boardRect, cellSize } = layout;
+     const elapsed = effect.duration - effect.remaining;
+     ctx.save();
+-    effect.particles.forEach((particle) => {
++    effect.particles.slice(0, this.quality.maxParticles).forEach((particle) => {
++      this.perfStats.recordParticles();
+       const lifeProgress = Math.min(1, elapsed / particle.life);
+       if (lifeProgress >= 1) {
+         return;
+@@ -764,14 +813,36 @@ export default class Renderer {
+       { key: 'undo', label: `撤回 ×${state.getToolCountLabel(state.toolState.undoCount)}`, active: false }
+     ];
+ 
+-    items.forEach((item, index) => {
+-      const buttonRect = {
++    const visualRects = items.map((item, index) => ({
++      key: item.key,
++      rect: {
+         x: rect.x + (width + gap) * index,
+         y: rect.y,
+         width,
+         height: rect.height
+-      };
+-      this.toolActionRects[item.key] = buttonRect;
++      }
++    }));
++    const hitContainer = {
++      x: rect.x,
++      y: rect.y,
++      width: rect.width,
++      height: Math.max(0, this.layout.rackRect.y - rect.y - 1)
++    };
++
++    items.forEach((item, index) => {
++      const buttonRect = visualRects[index].rect;
++      this.toolActionRects[item.key] = createSafeHitRect({
++        visualRect: buttonRect,
++        containerRect: hitContainer,
++        previousRect: index > 0 ? visualRects[index - 1].rect : null,
++        nextRect: index + 1 < visualRects.length ? visualRects[index + 1].rect : null,
++        lowerBoundary: this.layout.rackRect.y - 1,
++        expandBottom: 24,
++        expandLeft: 8,
++        expandRight: 8,
++        minimumTouchHeight: 44,
++        slotGap: 1
++      });
+ 
+       roundedRect(ctx, buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 14);
+       ctx.fillStyle = item.active ? 'rgba(61, 124, 185, 0.96)' : 'rgba(9, 29, 55, 0.82)';
+@@ -814,6 +885,10 @@ export default class Renderer {
+         y,
+         width,
+         height,
++        slotX: slot.x,
++        slotY: slot.y,
++        slotWidth: slot.width,
++        slotHeight: slot.height,
+         cellSize
+       });
+ 
+@@ -826,7 +901,7 @@ export default class Renderer {
+   }
+ 
+   drawSettingsButton() {
+-    const rect = this.settingsButtonRect;
++    const rect = this.settingsButtonVisualRect || this.settingsButtonRect;
+     const { ctx } = this;
+ 
+     roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
+@@ -843,7 +918,7 @@ export default class Renderer {
+   }
+ 
+   drawPauseButton() {
+-    const rect = this.pauseButtonRect;
++    const rect = this.pauseButtonVisualRect || this.pauseButtonRect;
+     const { ctx } = this;
+ 
+     roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
+@@ -1567,7 +1642,7 @@ export default class Renderer {
+     if (isPrimary) {
+       const hlPadX = 16;
+       const hlY = rect.y + 8;
+-      const hlGrad = ctx.createLinearGradient(rect.x + hlPadX, hlY, rect.x + rect.width - hlPadX, hlY);
++      const hlGrad = this.createLinearGradient(rect.x + hlPadX, hlY, rect.x + rect.width - hlPadX, hlY);
+       hlGrad.addColorStop(0, 'rgba(255,255,255,0)');
+       hlGrad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+       hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+@@ -1662,7 +1737,7 @@ export default class Renderer {
+     ctx.shadowBlur = glow > 0 ? 3 : 0.8;
+     ctx.shadowOffsetY = glow > 0 ? 1 : 0.5;
+     roundedRect(ctx, drawX, drawY, drawSize, drawSize, radius);
+-    const gradient = ctx.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
++    const gradient = this.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
+     gradient.addColorStop(0, topColor);
+     gradient.addColorStop(0.45, midColor);
+     gradient.addColorStop(1, bottomColor);
+@@ -1734,13 +1809,25 @@ export default class Renderer {
+   }
+ 
+   getRackHitArea(x, y) {
++    const touchPadding = 24;
++    const slotInset = 4;
+     for (let index = 0; index < this.rackHitAreas.length; index += 1) {
+       const hitArea = this.rackHitAreas[index];
++      const left = Math.max(hitArea.x - touchPadding, hitArea.slotX + slotInset);
++      const top = Math.max(hitArea.y - touchPadding, hitArea.slotY + slotInset);
++      const right = Math.min(
++        hitArea.x + hitArea.width + touchPadding,
++        hitArea.slotX + hitArea.slotWidth - slotInset
++      );
++      const bottom = Math.min(
++        hitArea.y + hitArea.height + touchPadding,
++        hitArea.slotY + hitArea.slotHeight - slotInset
++      );
+       if (
+-        x >= hitArea.x &&
+-        x <= hitArea.x + hitArea.width &&
+-        y >= hitArea.y &&
+-        y <= hitArea.y + hitArea.height
++        x >= left &&
++        x <= right &&
++        y >= top &&
++        y <= bottom
+       ) {
+         return hitArea;
+       }
+diff --git a/docs/js/game/ScoreManager.js b/docs/js/game/ScoreManager.js
+index 3ee4e7d..a68d259 100644
+--- a/docs/js/game/ScoreManager.js
++++ b/docs/js/game/ScoreManager.js
+@@ -1,3 +1,4 @@
++// GENERATED FILE - edit shared/js source and run npm run sync.
+ import { saveBestScore } from '../utils/storage.js';
+ 
+ export default class ScoreManager {
+diff --git a/docs/js/game/constants.js b/docs/js/game/constants.js
+index 5fc8bf0..40468ed 100644
+--- a/docs/js/game/constants.js
++++ b/docs/js/game/constants.js
+@@ -4,6 +4,7 @@ export const RACK_SIZE = 3;
+ export const LEGACY_BEST_SCORE_KEY = 'block_puzzle_best_score_v1';
+ export const BEST_SCORES_KEY = 'block_puzzle_best_scores_v1';
+ export const DEBUG_CODE_ENABLED = true;
++export const QUALITY_PROFILE = 'full';
+ export const REVIVE_CLEAR_COUNT = 5;
+ export const ADMIN_CLEAR_COUNT = 5;
+ export const MEMBERSHIP_CODES = [
+diff --git a/docs/js/main.js b/docs/js/main.js
+index 8d36afb..7e88623 100644
+--- a/docs/js/main.js
++++ b/docs/js/main.js
+@@ -41,7 +41,8 @@ export default class Main {
+       this.renderer,
+       this.soundManager,
+       this.applySettings.bind(this),
+-      this.requestImmediateRender.bind(this)
++      this.requestImmediateRender.bind(this),
++      this.ensureFrame.bind(this)
+     );
+ 
+     this.bindAppLifecycle();
+@@ -245,6 +246,7 @@ export default class Main {
+     }
+ 
+     const animating = this.hasActiveAnimation();
++    this.inputManager.flushPendingInput();
+     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
+     this.lastTimestamp = timestamp;
+ 
+diff --git a/docs/js/utils/storage.js b/docs/js/utils/storage.js
+index 4f779d6..f2b9bd2 100644
+--- a/docs/js/utils/storage.js
++++ b/docs/js/utils/storage.js
+@@ -1,4 +1,5 @@
+-import { BEST_SCORES_KEY, LEGACY_BEST_SCORE_KEY } from '../game/constants.js';
++// GENERATED FILE - edit shared/js source and run npm run sync.
++import { BEST_SCORES_KEY, LEGACY_BEST_SCORE_KEY } from '../game/coreConstants.js';
+ 
+ export const SETTINGS_KEY = 'block_puzzle_settings_v1';
+ 
