@@ -8,6 +8,7 @@ node_modules/
 tmp/
 dist/
 .claude/
+.superpowers/
 .env
 .env.*
 
