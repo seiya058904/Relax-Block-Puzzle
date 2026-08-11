@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Relax Block Puzzle is a three-platform block-puzzle project: a WeChat Mini Game, an Android WebView APK, and a browser build. Gameplay is plain JavaScript ES modules; the Android shell is Kotlin/Gradle. The WeChat project is opened in WeChat Developer Tools. The browser build is served from `we xin xiao cheng xu-android-apk/docs/`, and Android bundles its web assets under `app/src/main/assets/`.
+Relax Block Puzzle is a three-platform block-puzzle project: a WeChat Mini Game, an Android WebView APK, and a browser build. Gameplay is plain JavaScript ES modules; the Android shell is Kotlin/Gradle. The WeChat project is opened in WeChat Developer Tools. The browser build is served from `we xin xiao cheng xu-android-apk/docs/` and deployed to GitHub Pages by `.github/workflows/deploy-pages.yml`; Android bundles its web assets under `app/src/main/assets/`.
 
 ## Project Structure & Module Organization
 
