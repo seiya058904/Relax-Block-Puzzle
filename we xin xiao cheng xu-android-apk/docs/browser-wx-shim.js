@@ -20,6 +20,8 @@ const visibilityHandlers = {
   show: []
 };
 
+const loopingAudioContexts = new Set();
+
 function safeParseStorage(value) {
   if (value == null) {
     return '';
@@ -54,6 +56,10 @@ function emitTouch(type, event) {
       console.error(`touch handler failed: ${type}`, error);
     }
   });
+
+  if (type === 'start' || type === 'end') {
+    resumeRequestedLoopingAudio();
+  }
 }
 
 function registerTouchHandlers() {
@@ -128,14 +134,6 @@ function registerVisibilityHandlers() {
     emitVisibility(document.hidden ? 'hide' : 'show');
   });
 
-  window.addEventListener('blur', () => {
-    emitVisibility('hide');
-  });
-
-  window.addEventListener('focus', () => {
-    emitVisibility('show');
-  });
-
   window.addEventListener('pagehide', () => {
     emitVisibility('hide');
   });
@@ -148,6 +146,8 @@ function registerVisibilityHandlers() {
 function createAudioContext() {
   const audio = new Audio();
   let errorHandler = null;
+  let wantsPlayback = false;
+  let destroyed = false;
 
   audio.preload = 'auto';
 
@@ -157,7 +157,28 @@ function createAudioContext() {
     }
   });
 
-  return {
+  const reportPlayFailure = (error) => {
+    if (errorHandler) {
+      errorHandler({ errMsg: (error && error.message) || `audio playback failed: ${audio.src}` });
+    }
+  };
+
+  const attemptPlayback = () => {
+    if (destroyed || !wantsPlayback) {
+      return;
+    }
+
+    try {
+      const promise = audio.play();
+      if (promise && typeof promise.catch === 'function') {
+        promise.catch(reportPlayFailure);
+      }
+    } catch (error) {
+      reportPlayFailure(error);
+    }
+  };
+
+  const context = {
     get src() {
       return audio.getAttribute('src') || '';
     },
@@ -175,6 +196,11 @@ function createAudioContext() {
     },
     set loop(value) {
       audio.loop = !!value;
+      if (audio.loop) {
+        loopingAudioContexts.add(context);
+      } else {
+        loopingAudioContexts.delete(context);
+      }
     },
     get volume() {
       return audio.volume;
@@ -183,12 +209,11 @@ function createAudioContext() {
       audio.volume = Number(value);
     },
     play() {
-      const promise = audio.play();
-      if (promise && typeof promise.catch === 'function') {
-        promise.catch(() => {});
-      }
+      wantsPlayback = true;
+      attemptPlayback();
     },
     stop() {
+      wantsPlayback = false;
       audio.pause();
       audio.currentTime = 0;
     },
@@ -196,14 +221,28 @@ function createAudioContext() {
       audio.currentTime = Number(time) || 0;
     },
     destroy() {
+      wantsPlayback = false;
+      destroyed = true;
+      loopingAudioContexts.delete(context);
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
     },
     onError(handler) {
       errorHandler = handler;
+    },
+    resumeIfNeeded() {
+      if (audio.paused) {
+        attemptPlayback();
+      }
     }
   };
+
+  return context;
+}
+
+function resumeRequestedLoopingAudio() {
+  loopingAudioContexts.forEach((audio) => audio.resumeIfNeeded());
 }
 
 function syncCanvasSize() {

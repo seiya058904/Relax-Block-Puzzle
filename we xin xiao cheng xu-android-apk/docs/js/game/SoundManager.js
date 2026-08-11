@@ -199,10 +199,6 @@ export default class SoundManager {
     }
 
     try {
-      audio.stop();
-      if (audio.seek) {
-        audio.seek(0);
-      }
       audio.play();
     } catch (error) {
       this.warnOnce(`bgm_play_${this.currentBgmTrack}`, 'bgm play failed');
