@@ -1,11 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { marker, validateInventory } from './platform-inventory.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await fs.readFile(path.join(rootDir, 'config', 'platform-manifest.json'), 'utf8'));
 const checkOnly = process.argv.includes('--check');
-const marker = '// GENERATED FILE - edit shared/js source and run npm run sync.\n';
+const generated = await validateInventory(rootDir, manifest);
 
 function targetPath(platform, relativePath) {
   return path.join(rootDir, manifest.targets[platform], relativePath);
@@ -20,7 +21,7 @@ async function readUtf8(filePath) {
 }
 
 const drift = [];
-for (const relativePath of manifest.generated) {
+for (const relativePath of generated) {
   const sourcePath = path.join(rootDir, 'shared', 'js', relativePath);
   const source = await readUtf8(sourcePath);
   const expected = marker + source;

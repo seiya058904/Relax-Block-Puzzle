@@ -1,12 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { marker, validateInventory } from './platform-inventory.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await fs.readFile(path.join(rootDir, 'config', 'platform-manifest.json'), 'utf8'));
-const marker = '// GENERATED FILE - edit shared/js source and run npm run sync.\n';
+const generated = await validateInventory(rootDir, manifest);
 
-for (const relativePath of manifest.generated) {
+for (const relativePath of generated) {
   const source = await fs.readFile(path.join(rootDir, 'shared', 'js', relativePath), 'utf8');
   if (source.includes('\ufeff')) throw new Error(`BOM is not allowed in shared/${relativePath}`);
   const expected = marker + source.replaceAll('\r\n', '\n');

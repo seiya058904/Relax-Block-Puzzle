@@ -114,6 +114,15 @@ export default class Renderer {
     this.resetHitAreas();
   }
 
+  setViewport(screenInfo, safeAreaInfo) {
+    this.screenInfo = screenInfo;
+    this.safeAreaInfo = safeAreaInfo;
+    this.layout = this.getLayout(screenInfo, safeAreaInfo);
+    this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
+    this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+    this.resetHitAreas();
+  }
+
   resetHitAreas() {
     this.rackHitAreas = [];
     this.homeActionRects = {};

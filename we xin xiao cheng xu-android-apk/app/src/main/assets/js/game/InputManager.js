@@ -9,6 +9,7 @@ export default class InputManager {
     this.requestImmediateRender = requestImmediateRender || (() => {});
     this.requestInputFrame = requestInputFrame || (() => {});
     this.inputQueue = createFrameInputQueue(this.requestInputFrame);
+    this.activeTouchIdentifier = null;
     this.homeTitleTapCount = 0;
     this.homeTitleTapStartTime = 0;
 
@@ -20,8 +21,10 @@ export default class InputManager {
   }
 
   handleTouchStart(event) {
-    const touch = event.touches && event.touches[0];
-    if (!touch) {
+    this.reconcileInputSession();
+    if (this.activeTouchIdentifier !== null) return;
+    const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
+    if (!touch || touch.identifier == null) {
       return;
     }
 
@@ -105,62 +108,78 @@ export default class InputManager {
     const hitArea = this.renderer.getRackHitArea(point.x, point.y);
     if (hitArea) {
       if (this.gameState.startDrag(hitArea.index, point.x, point.y, hitArea)) {
+        this.activeTouchIdentifier = touch.identifier;
         this.requestImmediateRender();
       }
     }
   }
 
-  handleTouchMove(event) {
-    const touch = event.touches && event.touches[0];
-    if (
-      !touch ||
-      this.gameState.inputLocked ||
-      this.gameState.screen !== 'playing' ||
-      this.gameState.ui.isSettingsOpen ||
-      this.gameState.ui.isAdminPanelOpen ||
-      this.gameState.ui.isRevivePromptOpen ||
-      this.gameState.ui.isPauseOpen ||
-      this.gameState.toolState.clearMode
-    ) {
-      return;
-    }
+  canContinueInputSession() {
+    return this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
+      this.gameState.screen === 'playing' &&
+      !this.gameState.ui.isSettingsOpen && !this.gameState.ui.isAdminPanelOpen &&
+      !this.gameState.ui.isMembershipPanelOpen && !this.gameState.ui.isRevivePromptOpen &&
+      !this.gameState.ui.isPauseOpen && !this.gameState.toolState.clearMode;
+  }
 
-    this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
+  reconcileInputSession() {
+    if (this.activeTouchIdentifier !== null && !this.canContinueInputSession()) {
+      this.cancelInputSession();
+    }
+  }
+
+  cancelInputSession() {
+    const hadSession = this.activeTouchIdentifier !== null || this.gameState.dragState.isDragging;
+    this.activeTouchIdentifier = null;
+    this.inputQueue.clear();
+    if (hadSession) this.gameState.cancelDrag();
+  }
+
+  findOwnedTouch(touches) {
+    return Array.from(touches || []).find((touch) => touch.identifier === this.activeTouchIdentifier);
+  }
+
+  handleTouchMove(event) {
+    this.reconcileInputSession();
+    if (this.activeTouchIdentifier === null) return;
+    const touch = this.findOwnedTouch(event.touches);
+    if (touch) this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
   }
 
   handleTouchEnd(event) {
-    if (
-      this.gameState.inputLocked ||
-      this.gameState.screen !== 'playing' ||
-      this.gameState.ui.isSettingsOpen ||
-      this.gameState.ui.isAdminPanelOpen ||
-      this.gameState.ui.isRevivePromptOpen ||
-      this.gameState.ui.isPauseOpen ||
-      this.gameState.toolState.clearMode
-    ) {
+    this.reconcileInputSession();
+    if (this.activeTouchIdentifier === null) return;
+    const touch = this.findOwnedTouch(event && event.changedTouches);
+    if (!touch) {
+      // A known other finger ending must not end this session.
+      if (event && event.changedTouches && event.changedTouches.length &&
+        Array.from(event.changedTouches).every((item) => item.identifier != null)) return;
+      this.cancelInputSession();
+      this.requestImmediateRender();
       return;
     }
-
-    const touch =
-      (event && event.changedTouches && event.changedTouches[0]) ||
-      (event && event.touches && event.touches[0]);
-
-    if (touch && this.gameState.dragState.isDragging) {
-      this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
-    }
-
+    this.inputQueue.push({ x: touch.clientX, y: touch.clientY });
     this.flushPendingInput();
+    this.activeTouchIdentifier = null;
     this.gameState.endDrag();
     this.requestImmediateRender();
   }
 
-  handleTouchCancel() {
-    this.inputQueue.clear();
-    this.gameState.cancelDrag();
+  handleTouchCancel(event) {
+    if (this.activeTouchIdentifier === null) return;
+    if (event && event.changedTouches && event.changedTouches.length &&
+      !this.findOwnedTouch(event.changedTouches) &&
+      Array.from(event.changedTouches).every((item) => item.identifier != null)) return;
+    this.cancelInputSession();
     this.requestImmediateRender();
   }
 
   flushPendingInput() {
+    this.reconcileInputSession();
+    if (this.activeTouchIdentifier === null) {
+      this.inputQueue.clear();
+      return;
+    }
     this.inputQueue.flush(({ x, y }) => {
       this.gameState.moveDrag(x, y);
     });

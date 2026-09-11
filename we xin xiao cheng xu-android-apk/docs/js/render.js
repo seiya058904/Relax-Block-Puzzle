@@ -1,25 +1,39 @@
-GameGlobal.canvas = wx.createCanvas();
+export function readCanvasMetrics() {
+  const systemInfo = wx.getSystemInfoSync();
+  const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : systemInfo;
+  const width = windowInfo.screenWidth;
+  const height = windowInfo.screenHeight;
+  const rawPixelRatio = systemInfo.pixelRatio || window.devicePixelRatio || 1;
+  const pixelRatioFromPixels = Math.sqrt(5_000_000 / Math.max(1, width * height));
+  const effectiveDpr = Math.max(1, Math.min(rawPixelRatio, 1.5, pixelRatioFromPixels, 1.75));
+  return {
+    width, height, effectiveDpr,
+    screenInfo: { screenWidth: width, screenHeight: height },
+    safeAreaInfo: {
+      safeArea: systemInfo.safeArea || null,
+      menuButton: wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    }
+  };
+}
 
-const systemInfo = wx.getSystemInfoSync();
-const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : systemInfo;
-const menuButton = wx.getMenuButtonBoundingClientRect
-  ? wx.getMenuButtonBoundingClientRect()
-  : null;
-const rawPixelRatio = systemInfo.pixelRatio || window.devicePixelRatio || 1;
-const maxCanvasPixels = 5_000_000;
-const pixelRatioFromPixels = Math.sqrt(
-  maxCanvasPixels / Math.max(1, windowInfo.screenWidth * windowInfo.screenHeight)
-);
-// Cap DPR on Android WebView to keep canvas size and background transitions stable.
-const pixelRatio = Math.max(1, Math.min(rawPixelRatio, 1.5, pixelRatioFromPixels, 1.75));
-
-canvas.width = Math.round(windowInfo.screenWidth * pixelRatio);
-canvas.height = Math.round(windowInfo.screenHeight * pixelRatio);
-
-export const SCREEN_WIDTH = windowInfo.screenWidth;
-export const SCREEN_HEIGHT = windowInfo.screenHeight;
-export const DEVICE_PIXEL_RATIO = pixelRatio;
-export const RAW_DEVICE_PIXEL_RATIO = rawPixelRatio;
-export const SYSTEM_INFO = systemInfo;
-export const SAFE_AREA = systemInfo.safeArea || null;
-export const MENU_BUTTON = menuButton;
+// The only owner of the Web/WebView canvas bitmap and context scale.
+export function createCanvasSizeController(canvas, ctx) {
+  let sizeKey = '';
+  return {
+    refresh() {
+      const metrics = readCanvasMetrics();
+      const nextKey = `${metrics.width}:${metrics.height}:${metrics.effectiveDpr}`;
+      const changed = nextKey !== sizeKey;
+      if (changed) {
+        canvas.style.width = `${metrics.width}px`;
+        canvas.style.height = `${metrics.height}px`;
+        canvas.width = Math.round(metrics.width * metrics.effectiveDpr);
+        canvas.height = Math.round(metrics.height * metrics.effectiveDpr);
+        ctx.setTransform(metrics.effectiveDpr, 0, 0, metrics.effectiveDpr, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        sizeKey = nextKey;
+      }
+      return { ...metrics, changed };
+    }
+  };
+}

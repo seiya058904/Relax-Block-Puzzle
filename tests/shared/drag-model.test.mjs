@@ -76,3 +76,18 @@ test('drag model rejects a clearly invalid release and cancel clears all transie
   assert.equal(model.snapshot().active, false);
   assert.equal(model.snapshot().lastValid, null);
 });
+
+test('last-valid fallback covers the actual invalid branch and exact tolerance boundary', () => {
+  for (const delta of [1, 8, 8.01]) {
+    let allowed = true;
+    const model = makeModel((row, col) => allowed && row === 2 && col === 2);
+    model.begin({ pointerX: 110, pointerY: 180, pieceCells: [{ x: 0, y: 0 }], displayCellSize: 40, fingerOffsetY: 40 });
+    model.move({ pointerX: 136, pointerY: 180 });
+    const result = model.release({ pointerX: 136 + delta, pointerY: 180 });
+    assert.equal(model.snapshot().canPlace, false, 'must enter the invalid candidate branch');
+    assert.equal(result.accepted, delta <= 8);
+    if (result.accepted) assert.deepEqual([result.row, result.col, result.fromLastValid], [2, 2, true]);
+    allowed = false;
+    assert.equal(model.release({ pointerX: 137, pointerY: 180 }).accepted, false);
+  }
+});

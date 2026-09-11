@@ -53,6 +53,12 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.8`
+
+- Hardened three-platform input ownership, drag release validation, storage recovery, canvas scheduling, and shared-file inventory checks / 加固三端输入归属、拖拽释放校验、存档恢复、Canvas 调度和共享文件清单校验
+- Added parity and runtime regression coverage for malformed storage, touch cancellation, viewport changes, synchronization integrity, and terminal-frame behavior / 新增 malformed 存档、触点取消、视口变化、同步完整性和终局帧行为的三端回归覆盖
+- Android version metadata updated to `versionName 1.0.8` and `versionCode 8` / Android 版本号更新为 `1.0.8` / `versionCode 8`
+
 `v1.0.6`
 
 - Updated the Android package version to `versionName 1.0.6` and `versionCode 6` / Android 版本号更新为 `1.0.6`

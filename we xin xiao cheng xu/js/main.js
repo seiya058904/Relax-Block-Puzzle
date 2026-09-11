@@ -91,6 +91,7 @@ export default class Main {
 
     if (wx.onHide) {
       wx.onHide(() => {
+        this.inputManager.cancelInputSession();
         this.soundManager.handleAppHide();
       });
     }
@@ -157,6 +158,7 @@ export default class Main {
   }
 
   render() {
+    this.inputManager.reconcileInputSession();
     this.renderer.render(this.gameState);
   }
 

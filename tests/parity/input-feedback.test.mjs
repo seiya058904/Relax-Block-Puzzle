@@ -45,16 +45,18 @@ for (const version of versions) {
       const renderer = {};
       const soundManager = {};
       const input = new InputManager(gameState, renderer, soundManager, () => {}, () => {});
-      input.handleTouchMove({ touches: [{ clientX: 1, clientY: 2 }] });
-      input.handleTouchMove({ touches: [{ clientX: 3, clientY: 4 }] });
-      input.handleTouchMove({ touches: [{ clientX: 123, clientY: 456 }] });
+      input.activeTouchIdentifier = 0;
+      input.handleTouchMove({ touches: [{ identifier: 0, clientX: 1, clientY: 2 }] });
+      input.handleTouchMove({ touches: [{ identifier: 0, clientX: 3, clientY: 4 }] });
+      input.handleTouchMove({ touches: [{ identifier: 0, clientX: 123, clientY: 456 }] });
       assert.deepEqual(calls, []);
       input.flushPendingInput();
       assert.deepEqual(calls, [['move', 123, 456]]);
       calls.length = 0;
-      input.handleTouchEnd({ changedTouches: [{ clientX: 123, clientY: 456 }] });
+      input.handleTouchEnd({ changedTouches: [{ identifier: 0, clientX: 123, clientY: 456 }] });
       assert.deepEqual(calls, [['move', 123, 456], ['end']]);
       calls.length = 0;
+      input.activeTouchIdentifier = 0;
       input.handleTouchCancel();
       assert.deepEqual(calls, [['cancel']]);
     } finally {

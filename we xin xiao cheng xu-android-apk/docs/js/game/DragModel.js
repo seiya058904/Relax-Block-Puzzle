@@ -20,7 +20,7 @@ function snapAxis(position, origin, cellSize, current, hysteresis) {
 }
 
 function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
+  return Math.hypot(a.visualX - b.visualX, a.visualY - b.visualY);
 }
 
 export function createDragModel({
@@ -120,7 +120,8 @@ export function createDragModel({
         };
       }
 
-      if (state.lastValid && distance(state, state.lastValid) <= releaseTolerance * cellSize) {
+      if (state.lastValid && distance(state, state.lastValid) <= releaseTolerance * cellSize &&
+        canPlace(state.lastValid.row, state.lastValid.col)) {
         return {
           accepted: true,
           row: state.lastValid.row,

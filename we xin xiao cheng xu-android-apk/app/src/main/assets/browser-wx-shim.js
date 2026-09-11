@@ -33,21 +33,22 @@ function safeParseStorage(value) {
   }
 }
 
-function buildTouchEvent(event) {
-  const source =
-    (event.touches && event.touches[0]) ||
-    (event.changedTouches && event.changedTouches[0]) ||
-    event;
-
-  return {
-    touches: source ? [{ clientX: source.clientX, clientY: source.clientY }] : [],
-    changedTouches: source ? [{ clientX: source.clientX, clientY: source.clientY }] : []
-  };
+function buildTouchEvent(event, type) {
+  const mapTouches = (touches) => Array.from(touches || [], (touch) => ({
+    identifier: touch.identifier,
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  }));
+  if (event.touches || event.changedTouches) {
+    return { touches: mapTouches(event.touches), changedTouches: mapTouches(event.changedTouches) };
+  }
+  const mouse = { identifier: 'mouse', clientX: event.clientX, clientY: event.clientY };
+  return { touches: type === 'end' || type === 'cancel' ? [] : [mouse], changedTouches: [mouse] };
 }
 
 function emitTouch(type, event) {
   const handlers = touchHandlers[type] || [];
-  const payload = buildTouchEvent(event);
+  const payload = buildTouchEvent(event, type);
   handlers.forEach((handler) => {
     try {
       handler(payload);
@@ -241,27 +242,35 @@ function resumeRequestedLoopingAudio() {
   loopingAudioContexts.forEach((audio) => audio.resumeIfNeeded());
 }
 
-function syncCanvasSize() {
+const resizeHandlers = new Set();
+
+function syncCanvasMetrics(notify = true) {
   const width = window.innerWidth || document.documentElement.clientWidth || 360;
   const height = window.innerHeight || document.documentElement.clientHeight || 640;
   const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
-
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-  canvas.width = Math.round(width * pixelRatio);
-  canvas.height = Math.round(height * pixelRatio);
-
-  const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
-  if (ctx && typeof ctx.setTransform === 'function') {
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-  }
-
   globalThis.GameGlobal = globalThis.GameGlobal || {};
-  globalThis.GameGlobal.__canvasMetrics = {
-    width,
-    height,
-    pixelRatio
+  const previous = globalThis.GameGlobal.__canvasMetrics;
+  globalThis.GameGlobal.__canvasMetrics = { width, height, pixelRatio };
+  if (notify && (!previous || previous.width !== width || previous.height !== height || previous.pixelRatio !== pixelRatio)) {
+    resizeHandlers.forEach((handler) => handler({ windowWidth: width, windowHeight: height }));
+  }
+}
+
+let devicePixelRatioQuery;
+
+function watchDevicePixelRatio() {
+  if (!window.matchMedia) return;
+  const query = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+  devicePixelRatioQuery = query;
+  const changed = () => {
+    if (devicePixelRatioQuery !== query) return;
+    if (query.removeEventListener) query.removeEventListener('change', changed);
+    else query.removeListener(changed);
+    syncCanvasMetrics();
+    watchDevicePixelRatio();
   };
+  if (query.addEventListener) query.addEventListener('change', changed);
+  else query.addListener(changed);
 }
 
 function emitKeyboard(type, value) {
@@ -277,8 +286,9 @@ function emitKeyboard(type, value) {
 
 registerTouchHandlers();
 registerVisibilityHandlers();
-syncCanvasSize();
-window.addEventListener('resize', syncCanvasSize);
+syncCanvasMetrics();
+window.addEventListener('resize', () => syncCanvasMetrics());
+watchDevicePixelRatio();
 
 function resetKeyboardInput() {
   keyboardInput.removeAttribute('style');
@@ -350,10 +360,13 @@ globalThis.GameGlobal.canvas = canvas;
 
 globalThis.wx = {
   createCanvas() {
-    syncCanvasSize();
+    syncCanvasMetrics();
     return canvas;
   },
+  onWindowResize(handler) { resizeHandlers.add(handler); },
+  offWindowResize(handler) { resizeHandlers.delete(handler); },
   getSystemInfoSync() {
+    syncCanvasMetrics(false);
     const metrics = globalThis.GameGlobal.__canvasMetrics || {};
     const width = metrics.width || window.innerWidth || document.documentElement.clientWidth || 360;
     const height = metrics.height || window.innerHeight || document.documentElement.clientHeight || 640;
@@ -375,6 +388,7 @@ globalThis.wx = {
     };
   },
   getWindowInfo() {
+    syncCanvasMetrics(false);
     const metrics = globalThis.GameGlobal.__canvasMetrics || {};
     const width = metrics.width || window.innerWidth || document.documentElement.clientWidth || 360;
     const height = metrics.height || window.innerHeight || document.documentElement.clientHeight || 640;

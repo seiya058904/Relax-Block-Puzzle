@@ -1,5 +1,4 @@
-import './render.js';
-import { DEVICE_PIXEL_RATIO, MENU_BUTTON, SCREEN_HEIGHT, SCREEN_WIDTH, SAFE_AREA } from './render.js';
+import { createCanvasSizeController } from './render.js';
 import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
@@ -8,12 +7,12 @@ import { hasActiveFeedback } from './game/FeedbackState.js';
 import { shouldScheduleFrame } from './RenderScheduler.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
-const ctx = canvas.getContext('2d');
-ctx.setTransform(DEVICE_PIXEL_RATIO, 0, 0, DEVICE_PIXEL_RATIO, 0, 0);
-ctx.imageSmoothingEnabled = true;
-
 export default class Main {
   constructor() {
+    GameGlobal.canvas = wx.createCanvas();
+    const ctx = canvas.getContext('2d');
+    this.canvasSize = createCanvasSizeController(canvas, ctx);
+    const metrics = this.canvasSize.refresh();
     this.aniId = 0;
     this.lastTimestamp = 0;
     this.appLifecycleBound = false;
@@ -25,17 +24,7 @@ export default class Main {
     this.gameState.setSettings(this.settings);
     this.soundManager = new SoundManager();
     this.soundManager.setSettings(this.settings);
-    this.renderer = new Renderer(
-      ctx,
-      {
-        screenWidth: SCREEN_WIDTH,
-        screenHeight: SCREEN_HEIGHT
-      },
-      {
-        menuButton: MENU_BUTTON,
-        safeArea: SAFE_AREA
-      }
-    );
+    this.renderer = new Renderer(ctx, metrics.screenInfo, metrics.safeAreaInfo);
     this.inputManager = new InputManager(
       this.gameState,
       this.renderer,
@@ -46,6 +35,7 @@ export default class Main {
     );
 
     this.bindAppLifecycle();
+    if (wx.onWindowResize) wx.onWindowResize(() => this.handleViewportChange());
     this.start();
   }
 
@@ -117,6 +107,9 @@ export default class Main {
     }
 
     this.gameState.update(deltaTime);
+  }
+
+  consumeGameEvents() {
     const events = this.gameState.consumeEvents();
     events.forEach((event) => {
       switch (event.type) {
@@ -153,6 +146,7 @@ export default class Main {
   }
 
   render() {
+    this.inputManager.reconcileInputSession();
     if (this.isRendering) {
       return;
     }
@@ -170,7 +164,7 @@ export default class Main {
   }
 
   hasActiveAnimation() {
-    return !!(
+    return this.gameState.canAdvanceTime() && !!(
       this.gameState.dragState.isDragging ||
       this.gameState.pendingClear ||
       (this.gameState.placementPulse && this.gameState.placementPulse.length > 0) ||
@@ -184,12 +178,16 @@ export default class Main {
       return;
     }
 
+    this.inputManager.reconcileInputSession();
+    this.consumeGameEvents();
     this.markDirty();
     this.render();
     this.needsRender = false;
 
     if (this.hasActiveAnimation()) {
       this.ensureFrame();
+    } else {
+      this.stopLoop();
     }
   }
 
@@ -215,24 +213,33 @@ export default class Main {
     }
 
     this.isPaused = true;
-    this.gameState.clearDrag();
+    this.inputManager.cancelInputSession();
     this.needsRender = false;
     this.stopLoop();
     this.soundManager.handleAppHide();
   }
 
-  handleAppForeground() {
-    if (!this.isPaused) {
-      this.requestImmediateRender();
-      return;
-    }
+  refreshViewport() {
+    const metrics = this.canvasSize.refresh();
+    if (metrics.changed) this.inputManager.cancelInputSession();
+    this.renderer.setViewport(metrics.screenInfo, metrics.safeAreaInfo);
+    this.gameState.setLayout(this.renderer.layout);
+  }
 
-    this.isPaused = false;
-    this.soundManager.handleAppShow();
+  handleViewportChange() {
+    this.inputManager.cancelInputSession();
     this.markDirty();
-    this.render();
-    this.needsRender = false;
-    this.start();
+    if (this.isPaused) return;
+    this.refreshViewport();
+    this.requestImmediateRender();
+  }
+
+  handleAppForeground() {
+    const wasPaused = this.isPaused;
+    this.isPaused = false;
+    this.refreshViewport();
+    if (wasPaused) this.soundManager.handleAppShow();
+    this.requestImmediateRender();
   }
 
   loop(timestamp) {
@@ -245,14 +252,16 @@ export default class Main {
       this.lastTimestamp = timestamp;
     }
 
-    const animating = this.hasActiveAnimation();
     this.inputManager.flushPendingInput();
+    const animating = this.hasActiveAnimation();
     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
     this.lastTimestamp = timestamp;
 
     if (animating) {
       this.update(deltaTime);
     }
+
+    this.consumeGameEvents();
 
     if (this.needsRender || animating) {
       this.render();

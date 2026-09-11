@@ -33,16 +33,25 @@ function sanitizeBestScores(value) {
   };
 }
 
-export function loadBestScores() {
+function readBestScores() {
   try {
     const stored = wx.getStorageSync(BEST_SCORES_KEY);
-    if (stored && typeof stored === 'object') {
-      return sanitizeBestScores(stored);
+    // Both wx and the browser adapter return '' for a missing key.
+    if (stored === '') return { status: 'missing' };
+    if (stored && typeof stored === 'object' &&
+      (Object.getPrototypeOf(stored) === Object.prototype || Object.getPrototypeOf(stored) === null)) {
+      return { status: 'readable', scores: sanitizeBestScores(stored) };
     }
+    return { status: 'malformed' };
   } catch (error) {
-    // Ignore and fall back to legacy migration.
+    return { status: 'exception' };
   }
+}
 
+function loadWritableBestScores() {
+  const result = readBestScores();
+  if (result.status === 'readable') return result.scores;
+  if (result.status !== 'missing') return null;
   const migrated = { ...DEFAULT_BEST_SCORES };
 
   try {
@@ -51,7 +60,7 @@ export function loadBestScores() {
       migrated.normal = legacy;
     }
   } catch (error) {
-    // Ignore legacy storage failures.
+    return null;
   }
 
   try {
@@ -61,6 +70,10 @@ export function loadBestScores() {
   }
 
   return migrated;
+}
+
+export function loadBestScores() {
+  return loadWritableBestScores() || { ...DEFAULT_BEST_SCORES };
 }
 
 export function saveBestScores(bestScores) {
@@ -77,13 +90,15 @@ export function loadBestScore(difficulty = 'normal') {
 }
 
 export function saveBestScore(difficulty, score) {
-  const bestScores = loadBestScores();
+  const bestScores = loadWritableBestScores();
+  if (!bestScores) return;
   bestScores[normalizeDifficulty(difficulty)] = Number.isFinite(score) ? score : 0;
   saveBestScores(bestScores);
 }
 
 export function resetBestScore(difficulty = 'normal') {
-  const bestScores = loadBestScores();
+  const bestScores = loadWritableBestScores();
+  if (!bestScores) return;
   bestScores[normalizeDifficulty(difficulty)] = 0;
   saveBestScores(bestScores);
 }

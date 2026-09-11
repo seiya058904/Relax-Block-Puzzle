@@ -358,16 +358,14 @@ export default class GameState {
     this.generateRackForPlay(true);
   }
 
+  canAdvanceTime() {
+    return this.screen === 'playing' &&
+      !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
+      !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+  }
+
   update(deltaTime) {
-    if (
-      this.screen !== 'playing' ||
-      this.ui.isSettingsOpen ||
-      this.ui.isPauseOpen ||
-      this.ui.isAdminPanelOpen ||
-      this.ui.isRevivePromptOpen
-    ) {
-      return;
-    }
+    if (!this.canAdvanceTime()) return;
 
     if (this.notice) {
       this.notice.remainingTime -= deltaTime;
