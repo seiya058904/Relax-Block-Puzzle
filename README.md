@@ -35,7 +35,7 @@ Open `we xin xiao cheng xu/` in WeChat Developer Tools as a Mini Game project fo
 
 ## Android Release
 
-The current Android package version is `1.0.8` (`versionCode 8`). APK files are ignored by Git and should be distributed through a release attachment rather than committed to the repository. Android-specific notes are in [`we xin xiao cheng xu-android-apk/README.md`](we%20xin%20xiao%20cheng%20xu-android-apk/README.md).
+The current Android package version is `1.0.9` (`versionCode 9`). APK files are ignored by Git and should be distributed through a release attachment rather than committed to the repository. Android-specific notes are in [`we xin xiao cheng xu-android-apk/README.md`](we%20xin%20xiao%20cheng%20xu-android-apk/README.md).
 
 ## Documentation
 

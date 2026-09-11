@@ -53,6 +53,11 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.9`
+
+- Fixed Android WebView timer restoration across Activity recreation by keeping the app-owned pause state at process scope / 修复 Activity 重建后 Android WebView 计时器未恢复的问题，将应用持有的暂停状态提升到进程级
+- Added lifecycle regression coverage and verified the APK on the Pixel 4 Android 14 API 34 emulator / 新增生命周期回归覆盖，并在 Pixel 4 Android 14 API 34 模拟器上验证 APK
+
 `v1.0.8`
 
 - Hardened three-platform input ownership, drag release validation, storage recovery, canvas scheduling, and shared-file inventory checks / 加固三端输入归属、拖拽释放校验、存档恢复、Canvas 调度和共享文件清单校验

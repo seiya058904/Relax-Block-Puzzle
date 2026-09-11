@@ -12,7 +12,10 @@ import com.blockpuzzle.android.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
-  private var timersPaused = false
+
+  private companion object {
+    var timersPaused = false
+  }
 
   private val webView: WebView
     get() = binding.webView
