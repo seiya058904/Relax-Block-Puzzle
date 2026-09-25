@@ -31,6 +31,12 @@ export default class InputManager {
 
     const point = { x: touch.clientX, y: touch.clientY };
 
+    // While a modal close motion is on screen the panel is still visible:
+    // swallow new touches so they cannot reach the page underneath.
+    if (this.isClosingModalMotion()) {
+      return;
+    }
+
     if (this.gameState.ui.isMembershipPanelOpen) {
       this.handleMembershipTouch(point);
       return;
@@ -115,6 +121,12 @@ export default class InputManager {
         this.requestImmediateRender();
       }
     }
+  }
+
+  isClosingModalMotion() {
+    const uiMotion = this.gameState.feedbackState && this.gameState.feedbackState.uiMotion;
+    const modal = uiMotion ? uiMotion.modal : null;
+    return !!(modal && modal.active && modal.phase === 'close');
   }
 
   canContinueInputSession() {
@@ -441,7 +453,6 @@ export default class InputManager {
       triggerUiPress(this.gameState.feedbackState, `settings:${action}`);
       this.soundManager.playClick();
       this.gameState.setSettingsTab(action === 'tab:account' ? 'account' : 'game');
-      this.requestImmediateRender();
       this.requestImmediateRender();
       return;
     }
