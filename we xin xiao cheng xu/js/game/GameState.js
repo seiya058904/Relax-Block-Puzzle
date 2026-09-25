@@ -229,6 +229,7 @@ export default class GameState {
     this.notice = null;
     this.comboState = createComboState();
     this.lastRackHadSnake = false;
+    this.recentRackBaseIds = [];
     this.ui = createUiState();
     this.bestScoreEligible = !this.adminModeEnabled;
     this.reviveCount = this.adminModeEnabled ? Infinity : 0;
@@ -367,6 +368,7 @@ export default class GameState {
     this.notice = null;
     this.comboState = createComboState();
     this.lastRackHadSnake = false;
+    this.recentRackBaseIds = [];
     this.bestScoreEligible = !this.adminModeEnabled;
     this.reviveUsedCount = 0;
     this.reviveCount = this.getRoundReviveAllowance();
@@ -952,7 +954,8 @@ export default class GameState {
     }
 
     const result = createRack(this.board, this.activeDifficulty, {
-      previousHadSnake: this.lastRackHadSnake
+      previousHadSnake: this.lastRackHadSnake,
+      recentBaseIds: this.recentRackBaseIds
     });
 
     if (!result.success) {
@@ -966,6 +969,7 @@ export default class GameState {
     this.toolState.clearMode = false;
     this.rackPieces = result.pieces;
     this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
+    this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
     this.undoSnapshot = null;
     this.clearDrag();
     this.showNotice('已刷新候选方块');
@@ -1100,11 +1104,13 @@ export default class GameState {
 
   generateRackForPlay(allowGameOverOnFailure) {
     const result = createRack(this.board, this.activeDifficulty, {
-      previousHadSnake: this.lastRackHadSnake
+      previousHadSnake: this.lastRackHadSnake,
+      recentBaseIds: this.recentRackBaseIds
     });
     if (result.success) {
       this.rackPieces = result.pieces;
       this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
+      this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
       return true;
     }
 

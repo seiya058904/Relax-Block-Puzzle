@@ -66,9 +66,11 @@ export async function loadPieceInternals(version) {
   const coreConstantsUrl = pathToFileURL(getVersionPath(version, 'game/coreConstants.js')).href;
   const storageUrl = pathToFileURL(getVersionPath(version, 'utils/storage.js')).href;
   let source = await fs.readFile(piecePath, 'utf8');
+  const boardUrl = pathToFileURL(getVersionPath(version, 'game/Board.js')).href;
   source = source
     .replace("from './constants.js'", `from '${constantsUrl}'`)
     .replace("from './coreConstants.js'", `from '${coreConstantsUrl}'`)
+    .replace("from './Board.js'", `from '${boardUrl}'`)
     .replace("from '../utils/storage.js'", `from '${storageUrl}'`);
   source += '\nexport { SHAPE_LIBRARY, DIFFICULTY_RULES, createCandidateRack, isRackValidForDifficulty };\n';
   const dataUrl = `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`;
