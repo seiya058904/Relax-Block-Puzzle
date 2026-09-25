@@ -205,6 +205,31 @@ for (const version of versions) {
     }
   });
 
+  test(`${version.name}: settings row rects carry label, key and value through the layout`, async () => {
+    const { calculateModalShellLayout, calculateModalRowsLayout } = await import(version.layoutUrl);
+
+    for (const viewport of viewports) {
+      const shell = calculateModalShellLayout({
+        viewportWidth: viewport.width,
+        viewportHeight: viewport.height,
+        bottomInset: 18,
+        preferredContentHeight: 300
+      });
+      const rows = [
+        { type: 'section', label: '游戏设置' },
+        { key: 'sound', label: '音效', value: '开' },
+        { key: 'difficulty', label: '难度', value: '普通' }
+      ];
+      const layout = calculateModalRowsLayout({ contentRect: shell.content, rows });
+      const soundRow = layout.rects.find((rowRect) => rowRect.key === 'sound');
+
+      assert.ok(soundRow, 'sound row rect should exist');
+      assert.equal(soundRow.label, '音效', 'row label must survive the layout');
+      assert.equal(soundRow.value, '开', 'row value must survive the layout or right-side text disappears');
+      assert.equal(soundRow.type, 'row');
+    }
+  });
+
   test(`${version.name}: help rows fit the modal content area on small screens`, async () => {
     const { calculateModalShellLayout, calculateHelpRowsLayout } = await import(version.layoutUrl);
 

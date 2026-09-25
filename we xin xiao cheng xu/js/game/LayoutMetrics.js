@@ -344,7 +344,8 @@ export function calculateModalRowsLayout({ contentRect, rows }) {
       ...rect(contentRect.x, cursorY, contentRect.width, height),
       type: row.type || 'row',
       key: row.key || null,
-      label: row.label || ''
+      label: row.label || '',
+      value: row.value || ''
     });
     cursorY += height;
   });
