@@ -1,4 +1,5 @@
 import { createFrameInputQueue } from './FrameInputQueue.js';
+import { triggerUiPress } from './FeedbackState.js';
 
 export default class InputManager {
   constructor(gameState, renderer, soundManager, applySettings, requestInputFrame) {
@@ -74,12 +75,14 @@ export default class InputManager {
     }
 
     if (this.isPointInRect(point, this.renderer.settingsButtonRect)) {
+      triggerUiPress(this.gameState.feedbackState, 'hud:settings');
       this.soundManager.playClick();
       this.gameState.openSettings();
       return;
     }
 
     if (this.isPointInRect(point, this.renderer.pauseButtonRect)) {
+      triggerUiPress(this.gameState.feedbackState, 'hud:pause');
       this.soundManager.playClick();
       this.gameState.openPause();
       return;
@@ -188,6 +191,7 @@ export default class InputManager {
       return;
     }
 
+    triggerUiPress(this.gameState.feedbackState, `home:${action}`);
     this.soundManager.playClick();
 
     if (action === 'difficulty') {
@@ -235,6 +239,7 @@ export default class InputManager {
   handleHelpTouch(point) {
     const action = this.renderer.getHelpAction(point.x, point.y);
     if (action === 'close') {
+      triggerUiPress(this.gameState.feedbackState, 'help:close');
       this.soundManager.playClick();
       this.gameState.closeHelp();
     }
@@ -242,6 +247,7 @@ export default class InputManager {
 
   handleGameOverTouch(point) {
     if (this.isPointInRect(point, this.renderer.restartButtonRect)) {
+      triggerUiPress(this.gameState.feedbackState, 'gameover:restart');
       this.soundManager.playClick();
       this.gameState.startNewGame();
     }
@@ -253,6 +259,7 @@ export default class InputManager {
       return;
     }
 
+    triggerUiPress(this.gameState.feedbackState, `pause:${action}`);
     this.soundManager.playClick();
 
     if (action === 'continue') {
@@ -291,6 +298,7 @@ export default class InputManager {
       return;
     }
 
+    triggerUiPress(this.gameState.feedbackState, `revive:${action}`);
     this.soundManager.playClick();
 
     if (action === 'use') {
@@ -314,6 +322,7 @@ export default class InputManager {
       return;
     }
 
+    triggerUiPress(this.gameState.feedbackState, `admin:${action}`);
     this.soundManager.playClick();
 
     if (action === 'cancel') {
@@ -337,6 +346,7 @@ export default class InputManager {
       return;
     }
 
+    triggerUiPress(this.gameState.feedbackState, `membership:${action}`);
     this.soundManager.playClick();
 
     if (action === 'cancel') {
@@ -350,6 +360,8 @@ export default class InputManager {
   }
 
   handleToolTouch(action) {
+    triggerUiPress(this.gameState.feedbackState, `tool:${action}`);
+
     if (action === 'refresh') {
       if (this.gameState.useRefreshTool()) {
         this.soundManager.playClick();
@@ -375,6 +387,15 @@ export default class InputManager {
     if (!action) {
       return;
     }
+
+    if (action === 'tab:game' || action === 'tab:account') {
+      triggerUiPress(this.gameState.feedbackState, `settings:${action}`);
+      this.soundManager.playClick();
+      this.gameState.setSettingsTab(action === 'tab:account' ? 'account' : 'game');
+      return;
+    }
+
+    triggerUiPress(this.gameState.feedbackState, `settings:${action}`);
 
     if (action === 'continue') {
       this.soundManager.playClick();

@@ -215,3 +215,205 @@ export function calculateHudLayout({
     hudBottom: Math.max(bottom(maxPulseScoreRect), bottom(bestScoreRect))
   };
 }
+
+export function calculateModalShellLayout({
+  viewportWidth,
+  viewportHeight,
+  bottomInset = 18,
+  topGap = 16,
+  sideInset = 17,
+  headerHeight = 46,
+  footerHeight = 64,
+  contentSidePadding = 20,
+  contentTopPadding = 10,
+  contentBottomPadding = 14,
+  preferredContentHeight = null,
+  minContentHeight = 96
+}) {
+  const width = Math.max(320, finite(viewportWidth, 360));
+  const height = Math.max(560, finite(viewportHeight, 640));
+  const safeBottom = Math.max(12, finite(bottomInset, 18));
+  const panelWidth = width - Math.max(0, sideInset) * 2;
+  const maxPanelHeight = height - topGap * 2 - safeBottom;
+  const availableContentHeight = Math.max(
+    minContentHeight,
+    maxPanelHeight - headerHeight - footerHeight - contentTopPadding - contentBottomPadding
+  );
+  const requestedContentHeight = preferredContentHeight == null
+    ? availableContentHeight
+    : Math.max(minContentHeight, preferredContentHeight);
+  const contentHeight = Math.min(availableContentHeight, requestedContentHeight);
+  const panelHeight = headerHeight + footerHeight + contentHeight + contentTopPadding + contentBottomPadding;
+  const panelX = (width - panelWidth) / 2;
+  const panelY = Math.max(topGap, (height - panelHeight - safeBottom) / 2);
+  const footerButtonHeight = Math.min(48, footerHeight - 10);
+
+  return {
+    panel: rect(panelX, panelY, panelWidth, panelHeight),
+    header: rect(panelX, panelY, panelWidth, headerHeight),
+    content: rect(
+      panelX + contentSidePadding,
+      panelY + headerHeight + contentTopPadding,
+      Math.max(0, panelWidth - contentSidePadding * 2),
+      contentHeight
+    ),
+    footerButton: rect(
+      panelX + contentSidePadding,
+      panelY + panelHeight - footerHeight + (footerHeight - footerButtonHeight) / 2,
+      Math.max(0, panelWidth - contentSidePadding * 2),
+      footerButtonHeight
+    ),
+    titleBaselineY: panelY + 32
+  };
+}
+
+const MODAL_ROW_MEASURES = [
+  { rowHeight: 42, rowGap: 9, sectionHeight: 26, sectionGap: 6 },
+  { rowHeight: 38, rowGap: 7, sectionHeight: 24, sectionGap: 5 },
+  { rowHeight: 35, rowGap: 5, sectionHeight: 22, sectionGap: 4 },
+  { rowHeight: 32, rowGap: 4, sectionHeight: 20, sectionGap: 3 }
+];
+
+function measureRowsTotal(rows, measure) {
+  let total = 0;
+  rows.forEach((row, index) => {
+    if (index > 0) {
+      total += measure.rowGap;
+    }
+    total += row.type === 'section' ? measure.sectionHeight : measure.rowHeight;
+    if (row.type === 'section' && index > 0) {
+      total += measure.sectionGap;
+    }
+  });
+  return total;
+}
+
+export function measureModalRowsHeight(rows) {
+  return measureRowsTotal(Array.isArray(rows) ? rows : [], MODAL_ROW_MEASURES[0]);
+}
+
+export function calculateModalRowsLayout({ contentRect, rows }) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  let fitted = false;
+  let measure = MODAL_ROW_MEASURES[MODAL_ROW_MEASURES.length - 1];
+
+  for (const candidate of MODAL_ROW_MEASURES) {
+    if (measureRowsTotal(safeRows, candidate) <= contentRect.height) {
+      measure = candidate;
+      fitted = true;
+      break;
+    }
+  }
+
+  // When even the tightest measure overflows, distribute the available
+  // height evenly so the rows always stay inside the content area.
+  let squeezedPerItem = 0;
+  if (!fitted && safeRows.length > 0) {
+    let gapsTotal = 0;
+    safeRows.forEach((row, index) => {
+      if (index > 0) {
+        gapsTotal += measure.rowGap;
+      }
+      if (row.type === 'section' && index > 0) {
+        gapsTotal += measure.sectionGap;
+      }
+    });
+    squeezedPerItem = Math.max(
+      16,
+      Math.floor(Math.max(contentRect.height - gapsTotal, safeRows.length * 16) / safeRows.length)
+    );
+  }
+
+  const rects = [];
+  let cursorY = contentRect.y;
+  const bottomLimit = contentRect.y + contentRect.height;
+  safeRows.forEach((row, index) => {
+    if (index > 0) {
+      cursorY += measure.rowGap;
+    }
+    if (row.type === 'section' && index > 0) {
+      cursorY += measure.sectionGap;
+    }
+    let height = row.type === 'section' ? measure.sectionHeight : measure.rowHeight;
+    if (!fitted) {
+      height = row.type === 'section'
+        ? Math.min(measure.sectionHeight, squeezedPerItem)
+        : squeezedPerItem;
+    }
+    rects.push({
+      ...rect(contentRect.x, cursorY, contentRect.width, height),
+      type: row.type || 'row',
+      key: row.key || null,
+      label: row.label || ''
+    });
+    cursorY += height;
+  });
+
+  return { rects, measure, fitted };
+}
+
+export function calculateSettingsTabsLayout({ contentRect, tabs }) {
+  const safeTabs = Array.isArray(tabs) ? tabs : [];
+  const tabHeight = 34;
+  const gap = 8;
+  const tabWidth = safeTabs.length > 0
+    ? (contentRect.width - gap * (safeTabs.length - 1)) / safeTabs.length
+    : 0;
+  const tabRects = safeTabs.map((key, index) => ({
+    ...rect(contentRect.x + (tabWidth + gap) * index, contentRect.y, tabWidth, tabHeight),
+    key
+  }));
+  const contentBelow = rect(
+    contentRect.x,
+    contentRect.y + tabHeight + 10,
+    contentRect.width,
+    Math.max(0, contentRect.height - tabHeight - 10)
+  );
+  return { tabRects, contentBelow };
+}
+
+const HELP_ROW_MEASURES = [
+  { sectionSize: 17, bodySize: 15, sectionHeight: 27, bodyHeight: 24, sectionGap: 10 },
+  { sectionSize: 16, bodySize: 14, sectionHeight: 25, bodyHeight: 22, sectionGap: 8 },
+  { sectionSize: 15, bodySize: 13, sectionHeight: 23, bodyHeight: 20, sectionGap: 7 }
+];
+
+export function calculateHelpRowsLayout({ contentRect, rows }) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  let fitted = false;
+  let measure = HELP_ROW_MEASURES[HELP_ROW_MEASURES.length - 1];
+
+  for (const candidate of HELP_ROW_MEASURES) {
+    let total = 0;
+    safeRows.forEach((row, index) => {
+      if (index > 0) total += 4;
+      if (row.isSection && index > 0) total += candidate.sectionGap;
+      total += row.isSection ? candidate.sectionHeight : candidate.bodyHeight;
+    });
+    if (total <= contentRect.height) {
+      measure = candidate;
+      fitted = true;
+      break;
+    }
+  }
+
+  const lineRects = [];
+  let cursorY = contentRect.y;
+  const bottomLimit = contentRect.y + contentRect.height;
+  safeRows.forEach((row, index) => {
+    if (index > 0) cursorY += 4;
+    if (row.isSection && index > 0) cursorY += measure.sectionGap;
+    const height = row.isSection ? measure.sectionHeight : measure.bodyHeight;
+    if (cursorY + height <= bottomLimit) {
+      lineRects.push({
+        ...rect(contentRect.x, cursorY, contentRect.width, height),
+        text: row.text,
+        isSection: !!row.isSection,
+        fontSize: row.isSection ? measure.sectionSize : measure.bodySize
+      });
+    }
+    cursorY += height;
+  });
+
+  return { lineRects, measure, fitted };
+}

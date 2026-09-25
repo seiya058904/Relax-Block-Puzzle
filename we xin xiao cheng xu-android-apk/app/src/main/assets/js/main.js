@@ -3,7 +3,7 @@ import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
-import { hasActiveFeedback } from './game/FeedbackState.js';
+import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
 import { shouldScheduleFrame } from './RenderScheduler.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
@@ -164,12 +164,14 @@ export default class Main {
   }
 
   hasActiveAnimation() {
-    return this.gameState.canAdvanceTime() && !!(
-      this.gameState.dragState.isDragging ||
-      this.gameState.pendingClear ||
-      (this.gameState.placementPulse && this.gameState.placementPulse.length > 0) ||
-      (this.gameState.notice && this.gameState.screen === 'playing') ||
-      hasActiveFeedback(this.gameState.feedbackState)
+    return hasActiveUiMotion(this.gameState.feedbackState) || (
+      this.gameState.canAdvanceTime() && !!(
+        this.gameState.dragState.isDragging ||
+        this.gameState.pendingClear ||
+        (this.gameState.placementPulse && this.gameState.placementPulse.length > 0) ||
+        (this.gameState.notice && this.gameState.screen === 'playing') ||
+        hasActiveFeedback(this.gameState.feedbackState)
+      )
     );
   }
 
@@ -256,6 +258,10 @@ export default class Main {
     const animating = this.hasActiveAnimation();
     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
     this.lastTimestamp = timestamp;
+
+    // UI motion (button press, modal transitions) advances even while a modal
+    // freezes gameplay time; Android scheduling relies on hasActiveAnimation.
+    advanceUiMotion(this.gameState.feedbackState, deltaTime);
 
     if (animating) {
       this.update(deltaTime);

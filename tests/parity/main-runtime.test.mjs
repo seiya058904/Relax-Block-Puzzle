@@ -68,7 +68,12 @@ for (const version of ['web', 'android']) {
       main.gameState.showNotice('pause fixture');
       main.gameState.openPause();
       main.requestImmediateRender();
-      assert.equal(frames.size, 0);
+      // The approved modal motion contract keeps exactly one frame alive
+      // while the open transition plays, then returns to idle. The loop
+      // clamps per-frame delta to 32ms, so the 180ms motion needs ~12 ticks.
+      assert.equal(frames.size, 1, 'modal open motion should keep one frame');
+      for (let time = 17; time < 500; time += 16) tick(time);
+      assert.equal(frames.size, 0, 'modal open motion should stop scheduling after it finishes');
       const remaining = main.gameState.notice.remainingTime;
       globalThis.innerWidth = 400;
       main.handleViewportChange();
@@ -96,6 +101,8 @@ for (const version of ['web', 'android']) {
       main.gameState.pendingClear = { rows: [0], cols: [], lineCount: 1, remainingTime: 120 };
       main.gameState.inputLocked = true;
       main.gameState.openPause();
+      main.requestImmediateRender();
+      for (let time = 4016; time < 4500; time += 16) tick(time); // expire the pause open motion while gameplay stays frozen
       const pending = structuredClone(main.gameState.pendingClear);
       globalThis.innerHeight = 700;
       main.handleViewportChange();
@@ -103,7 +110,7 @@ for (const version of ['web', 'android']) {
       assert.equal(frames.size, 0);
       main.gameState.closePause();
       main.requestImmediateRender();
-      for (let time = 4000; time < 6500; time += 16) tick(time);
+      for (let time = 4500; time < 7000; time += 16) tick(time);
       assert.equal(main.gameState.pendingClear, null);
       assert.ok(main.gameState.board.grid[0].every((cell) => cell === null));
 
@@ -130,10 +137,13 @@ for (const version of ['web', 'android']) {
       main.inputManager.handleTouchEnd({ touches: [], changedTouches: [release] });
       assert.equal(state.screen, 'gameover');
       assert.equal(gameOverSounds, 1);
-      assert.equal(frames.size, 0, 'sound must not depend on a following RAF');
+      // The gameover panel open motion keeps at most one extra frame alive;
+      // the gameover sound itself is still played synchronously in touchend.
+      assert.ok(frames.size <= 1, 'sound must not depend on a following RAF');
       main.requestImmediateRender();
       assert.equal(gameOverSounds, 1);
       assert.ok(state.placementPulse.length > 0);
+      for (let time = 7000; time < 7600; time += 16) tick(time); // let the gameover open transition finish
       main.handleAppBackground();
       const beforeBackground = bitmapWrites;
       globalThis.innerHeight = 720;

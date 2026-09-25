@@ -26,6 +26,22 @@ export const FEEDBACK_DURATIONS = Object.freeze({
   dragInvalid: 160
 });
 
+export const UI_MOTION_DURATIONS = Object.freeze({
+  press: 90,
+  modalOpen: 180,
+  modalClose: 140
+});
+
+export const MODAL_MOTION_KINDS = Object.freeze([
+  'settings',
+  'pause',
+  'help',
+  'revive',
+  'membership',
+  'admin',
+  'gameover'
+]);
+
 export const CLEAR_EFFECT_LIMITS = Object.freeze({
   maxParticles: QUALITY.maxParticles,
   maxStackedEffects: QUALITY.maxStackedEffects
@@ -61,6 +77,23 @@ function createDragState() {
   };
 }
 
+function createModalMotionState() {
+  return {
+    active: false,
+    kind: '',
+    phase: 'open',
+    remaining: 0,
+    duration: 0
+  };
+}
+
+function createUiMotionState() {
+  return {
+    press: {},
+    modal: createModalMotionState()
+  };
+}
+
 export function createFeedbackState() {
   return {
     clock: 0,
@@ -75,7 +108,8 @@ export function createFeedbackState() {
     nextClearEffectId: 1,
     scorePulse: createTimedState(FEEDBACK_DURATIONS.scorePulse),
     highScore: createTimedState(FEEDBACK_DURATIONS.highScore),
-    drag: createDragState()
+    drag: createDragState(),
+    uiMotion: createUiMotionState()
   };
 }
 
@@ -402,6 +436,126 @@ export function hasActiveFeedback(state) {
       state.highScore.active ||
       state.drag.active)
   );
+}
+
+export function triggerUiPress(state, key) {
+  if (!state || !state.uiMotion || !key) {
+    return;
+  }
+
+  state.uiMotion.press[key] = {
+    remaining: UI_MOTION_DURATIONS.press,
+    duration: UI_MOTION_DURATIONS.press
+  };
+}
+
+export function getUiPressVisual(state, key) {
+  const press = state && state.uiMotion ? state.uiMotion.press[key] : null;
+  if (!press) {
+    return null;
+  }
+
+  const progress = press.duration > 0
+    ? Math.max(0, Math.min(1, press.remaining / press.duration))
+    : 0;
+  const strength = Math.min(1, progress * 1.6);
+  return {
+    strength,
+    scale: 1 - 0.03 * strength
+  };
+}
+
+export function triggerModalOpen(state, kind) {
+  if (!state || !state.uiMotion || !MODAL_MOTION_KINDS.includes(kind)) {
+    return;
+  }
+
+  state.uiMotion.modal = {
+    active: true,
+    kind,
+    phase: 'open',
+    remaining: UI_MOTION_DURATIONS.modalOpen,
+    duration: UI_MOTION_DURATIONS.modalOpen
+  };
+}
+
+export function triggerModalClose(state, kind) {
+  if (!state || !state.uiMotion || !MODAL_MOTION_KINDS.includes(kind)) {
+    return;
+  }
+
+  state.uiMotion.modal = {
+    active: true,
+    kind,
+    phase: 'close',
+    remaining: UI_MOTION_DURATIONS.modalClose,
+    duration: UI_MOTION_DURATIONS.modalClose
+  };
+}
+
+export function getModalMotion(state, kind) {
+  const modal = state && state.uiMotion ? state.uiMotion.modal : null;
+  if (!modal || !modal.active || modal.kind !== kind) {
+    return null;
+  }
+
+  const progress = modal.duration > 0
+    ? Math.max(0, Math.min(1, 1 - modal.remaining / modal.duration))
+    : 1;
+  if (modal.phase === 'open') {
+    const eased = 1 - Math.pow(1 - progress, 3);
+    return {
+      phase: 'open',
+      progress: eased,
+      alpha: eased,
+      scale: 0.97 + 0.03 * eased,
+      offsetY: 8 * (1 - eased)
+    };
+  }
+
+  const easedIn = progress * progress;
+  return {
+    phase: 'close',
+    progress,
+    alpha: 1 - easedIn,
+    scale: 1 - 0.02 * easedIn,
+    offsetY: 4 * easedIn
+  };
+}
+
+export function advanceUiMotion(state, deltaTime) {
+  if (!state || !state.uiMotion) {
+    return;
+  }
+
+  const safeDelta = Math.max(0, Number(deltaTime) || 0);
+  const press = state.uiMotion.press;
+  Object.keys(press).forEach((key) => {
+    press[key].remaining -= safeDelta;
+    if (press[key].remaining <= 0) {
+      delete press[key];
+    }
+  });
+
+  const modal = state.uiMotion.modal;
+  if (modal.active) {
+    modal.remaining = Math.max(0, modal.remaining - safeDelta);
+    if (modal.remaining === 0) {
+      state.uiMotion.modal = createModalMotionState();
+    }
+  }
+}
+
+export function hasActiveUiMotion(state) {
+  if (!state || !state.uiMotion) {
+    return false;
+  }
+
+  if (Object.keys(state.uiMotion.press).length > 0) {
+    return true;
+  }
+
+  return state.uiMotion.modal.active;
 }
 
 export function getClearFeedbackLabel(clearedLines) {

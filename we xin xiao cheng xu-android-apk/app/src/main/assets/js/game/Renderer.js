@@ -3,6 +3,7 @@ import {
   BACKGROUND_MID,
   BACKGROUND_TOP,
   BOARD_CELL,
+  BOARD_CELL_ALT,
   BOARD_GRID,
   BOARD_PADDING,
   BOARD_PANEL,
@@ -15,17 +16,31 @@ import {
   MAX_SIDE_MARGIN,
   MIN_SIDE_MARGIN,
   OVERLAY,
-  PANEL,
-  PANEL_BORDER,
   PREVIEW_INVALID,
   PREVIEW_VALID,
   SLOT_PADDING,
+  TEXT_MUTED,
   TEXT_PRIMARY,
-  TEXT_SECONDARY
+  TEXT_SECONDARY,
+  UI_TOKENS
 } from './constants.js';
 import { getDifficultyLabel } from './GameState.js';
-import { getClearFeedbackLabel, getDragVisual, getLineClearEffectVisual } from './FeedbackState.js';
-import { calculateAndroidHomeLayout, calculateHudLayout } from './LayoutMetrics.js';
+import {
+  getClearFeedbackLabel,
+  getDragVisual,
+  getLineClearEffectVisual,
+  getModalMotion,
+  getUiPressVisual
+} from './FeedbackState.js';
+import {
+  calculateAndroidHomeLayout,
+  calculateHelpRowsLayout,
+  calculateHudLayout,
+  calculateModalRowsLayout,
+  calculateModalShellLayout,
+  calculateSettingsTabsLayout,
+  measureModalRowsHeight
+} from './LayoutMetrics.js';
 import { createSafeHitRect } from './SafeHitArea.js';
 import { getQualityProfile } from '../config/quality.js';
 import { createRenderPerfStats } from './RenderPerfStats.js';
@@ -98,6 +113,27 @@ function createStarPoints(screenWidth, screenHeight) {
   }));
 }
 
+function drawStarGlyph(ctx, cx, cy, radius) {
+  ctx.beginPath();
+  for (let point = 0; point < 10; point += 1) {
+    const angle = -Math.PI / 2 + (point * Math.PI) / 5;
+    const distance = point % 2 === 0 ? radius : radius * 0.45;
+    const x = cx + Math.cos(angle) * distance;
+    const y = cy + Math.sin(angle) * distance;
+    if (point === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+const MODAL_PANEL_TOP = 'rgba(19, 46, 86, 0.97)';
+const MODAL_PANEL_BOTTOM = 'rgba(11, 26, 52, 0.97)';
+const MODAL_BORDER = 'rgba(132, 218, 255, 0.34)';
+
 export default class Renderer {
   constructor(ctx, screenInfo, safeAreaInfo) {
     this.ctx = ctx;
@@ -111,6 +147,10 @@ export default class Renderer {
     this.layout = this.getLayout(screenInfo, safeAreaInfo);
     this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
     this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+    this.bgGradientKey = '';
+    this.bgGlow = null;
+    this.bgVignette = null;
+    this.state = null;
     this.resetHitAreas();
   }
 
@@ -120,6 +160,7 @@ export default class Renderer {
     this.layout = this.getLayout(screenInfo, safeAreaInfo);
     this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
     this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+    this.bgGradientKey = '';
     this.resetHitAreas();
   }
 
@@ -262,18 +303,20 @@ export default class Renderer {
   }
 
   render(state) {
+    this.state = state;
     this.perfStats.beginFrame(globalThis.performance?.now?.() ?? Date.now());
     this.perfStats.recordFullRender();
     const nextLayoutKey = JSON.stringify({ screenInfo: this.screenInfo, safeAreaInfo: this.safeAreaInfo });
     if (nextLayoutKey !== this.layoutKey) {
       this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
       this.layoutKey = nextLayoutKey;
+      this.bgGradientKey = '';
     }
     state.setLayout(this.layout);
     this.resetHitAreas();
 
     this.clearCanvas();
-    this.drawBackground(state.dragState.isDragging);
+    this.drawBackground(state.screen !== 'playing', state.dragState.isDragging);
 
     if (state.screen === 'home' || state.screen === 'help') {
       this.drawHome(state);
@@ -286,7 +329,7 @@ export default class Renderer {
     }
 
     if (state.screen === 'help') {
-      this.drawHelpModal();
+      this.drawHelpModal(state);
     }
 
     if (state.screen === 'gameover') {
@@ -314,6 +357,8 @@ export default class Renderer {
     } else if (typeof globalThis.__syncKeyboardInputPosition === 'function') {
       globalThis.__syncKeyboardInputPosition(null);
     }
+
+    this.drawClosingModal(state);
     this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
   }
 
@@ -339,7 +384,94 @@ export default class Renderer {
     return width;
   }
 
-  drawBackground(isDragging = false) {
+  getPressVisual(pressKey) {
+    if (!pressKey || !this.state || !this.state.feedbackState) {
+      return null;
+    }
+
+    return getUiPressVisual(this.state.feedbackState, pressKey);
+  }
+
+  getPanelMotion(state, kind) {
+    if (!state || !state.feedbackState) {
+      return null;
+    }
+
+    return getModalMotion(state.feedbackState, kind);
+  }
+
+  // Wraps a modal panel draw with the shared open/close motion (alpha,
+  // scale, vertical offset). Hit rects stay registered at final coordinates.
+  withPanelMotion(motion, panel, drawFn) {
+    const { ctx } = this;
+    if (!motion || (motion.alpha >= 1 && motion.scale === 1 && !motion.offsetY)) {
+      drawFn();
+      return;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = clamp(motion.alpha, 0, 1);
+    const centerX = panel.x + panel.width / 2;
+    const centerY = panel.y + panel.height / 2;
+    ctx.translate(centerX, centerY + motion.offsetY);
+    ctx.scale(motion.scale, motion.scale);
+    ctx.translate(-centerX, -centerY);
+    drawFn();
+    ctx.restore();
+  }
+
+  drawModalPanel(panel, radius = UI_TOKENS.radius.large) {
+    const { ctx } = this;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 10;
+    roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, radius);
+    const gradient = this.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+    gradient.addColorStop(0, MODAL_PANEL_TOP);
+    gradient.addColorStop(1, MODAL_PANEL_BOTTOM);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = MODAL_BORDER;
+    roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, radius);
+    ctx.stroke();
+  }
+
+  drawModalTitle(text, shell) {
+    const { ctx } = this;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = TEXT_PRIMARY;
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(text, shell.panel.x + shell.panel.width / 2, shell.titleBaselineY);
+  }
+
+  drawClosingModal(state) {
+    const modal = state.feedbackState && state.feedbackState.uiMotion
+      ? state.feedbackState.uiMotion.modal
+      : null;
+    if (!modal || !modal.active || modal.phase !== 'close' || modal.kind === 'gameover') {
+      return;
+    }
+
+    if (modal.kind === 'settings') {
+      this.drawSettingsPanel(state);
+    } else if (modal.kind === 'pause') {
+      this.drawPausePanel(state);
+    } else if (modal.kind === 'help') {
+      this.drawHelpModal(state);
+    } else if (modal.kind === 'revive') {
+      this.drawRevivePrompt(state);
+    } else if (modal.kind === 'membership') {
+      this.drawMembershipPanel(state);
+    } else if (modal.kind === 'admin') {
+      this.drawAdminPanel(state);
+    }
+  }
+
+  drawBackground(isHomeScene, isDragging = false) {
     const { ctx, layout } = this;
     const gradient = this.createLinearGradient(0, 0, 0, layout.screenHeight);
     gradient.addColorStop(0, BACKGROUND_TOP);
@@ -347,6 +479,41 @@ export default class Renderer {
     gradient.addColorStop(1, BACKGROUND_BOTTOM);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+
+    if (isHomeScene) {
+      const bgKey = `${layout.screenWidth}x${layout.screenHeight}`;
+      if (this.bgGradientKey !== bgKey) {
+        const glow = this.createRadialGradient(
+          layout.screenWidth / 2,
+          layout.screenHeight * 0.3,
+          0,
+          layout.screenWidth / 2,
+          layout.screenHeight * 0.3,
+          Math.max(layout.screenWidth, layout.screenHeight) * 0.75
+        );
+        glow.addColorStop(0, 'rgba(130, 205, 255, 0.1)');
+        glow.addColorStop(0.5, 'rgba(130, 205, 255, 0.04)');
+        glow.addColorStop(1, 'rgba(130, 205, 255, 0)');
+        const vignette = this.createRadialGradient(
+          layout.screenWidth / 2,
+          layout.screenHeight / 2,
+          Math.min(layout.screenWidth, layout.screenHeight) * 0.45,
+          layout.screenWidth / 2,
+          layout.screenHeight / 2,
+          Math.max(layout.screenWidth, layout.screenHeight) * 0.78
+        );
+        vignette.addColorStop(0, 'rgba(2, 8, 20, 0)');
+        vignette.addColorStop(1, 'rgba(2, 8, 20, 0.32)');
+        this.bgGlow = glow;
+        this.bgVignette = vignette;
+        this.bgGradientKey = bgKey;
+      }
+
+      ctx.fillStyle = this.bgGlow;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      ctx.fillStyle = this.bgVignette;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+    }
 
     const stars = isDragging ? [] : this.stars;
     stars.forEach((star) => {
@@ -387,8 +554,8 @@ export default class Renderer {
     ctx.fill();
     ctx.restore();
 
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = 'rgba(120, 214, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = UI_TOKENS.border.subtle;
     roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, 26);
     ctx.stroke();
 
@@ -400,11 +567,11 @@ export default class Renderer {
     ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, homeLayout.title.y + homeLayout.title.height - 16);
 
     const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
-    const decoLineWidth = homeLayout.title.width * 0.4;
+    const decoLineWidth = homeLayout.title.width * 0.32;
     const decoLineX = layout.screenWidth / 2 - decoLineWidth / 2;
     const decoGrad = this.createLinearGradient(decoLineX, 0, decoLineX + decoLineWidth, 0);
     decoGrad.addColorStop(0, 'rgba(120, 214, 255, 0)');
-    decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.5)');
+    decoGrad.addColorStop(0.5, 'rgba(120, 214, 255, 0.35)');
     decoGrad.addColorStop(1, 'rgba(120, 214, 255, 0)');
     ctx.strokeStyle = decoGrad;
     ctx.lineWidth = 2;
@@ -426,23 +593,35 @@ export default class Renderer {
     }
 
     this.homeActionRects.difficulty = homeLayout.difficultyButton;
-    this.drawSecondaryChip(homeLayout.difficultyButton, `难度：${difficultyLabel}`);
+    this.drawSecondaryChip(
+      homeLayout.difficultyButton,
+      `难度：${difficultyLabel}`,
+      'home:difficulty'
+    );
 
     const scoreCard = homeLayout.highScoreCard;
-    roundedRect(ctx, scoreCard.x, scoreCard.y, scoreCard.width, scoreCard.height, 14);
-    ctx.fillStyle = 'rgba(11, 28, 52, 0.65)';
+    roundedRect(ctx, scoreCard.x, scoreCard.y, scoreCard.width, scoreCard.height, UI_TOKENS.radius.medium);
+    ctx.fillStyle = 'rgba(10, 25, 48, 0.66)';
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(120, 202, 255, 0.18)';
+    ctx.strokeStyle = UI_TOKENS.border.subtle;
     ctx.stroke();
 
+    const scoreLabel = `${difficultyLabel} · 最高分`;
+    const labelWidth = this.measureCanvasText(scoreLabel, 13);
+    const labelCenterY = scoreCard.y + scoreCard.height / 2 - 8;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 214, 10, 0.78)';
+    drawStarGlyph(ctx, layout.screenWidth / 2 - labelWidth / 2 - 13, labelCenterY - 4, 6);
+    ctx.restore();
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText(`★ ${difficultyLabel}最高分`, layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 - 4);
+    ctx.font = '13px sans-serif';
+    ctx.fillText(scoreLabel, layout.screenWidth / 2, labelCenterY);
+
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 18px sans-serif';
-    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 + 18);
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(String(difficultyBestScore), layout.screenWidth / 2, scoreCard.y + scoreCard.height / 2 + 20);
 
     const startRect = homeLayout.startButton;
     const helpRect = homeLayout.helpButton;
@@ -452,9 +631,9 @@ export default class Renderer {
     this.homeActionRects.help = helpRect;
     this.homeActionRects.settings = settingsRect;
 
-    this.drawActionButton(startRect, '开始游戏', 'primary');
-    this.drawActionButton(helpRect, '怎么玩', 'secondary');
-    this.drawActionButton(settingsRect, '设置', 'secondary');
+    this.drawActionButton(startRect, '开始游戏', 'primary', { pressKey: 'home:start' });
+    this.drawActionButton(helpRect, '怎么玩', 'secondary', { pressKey: 'home:help' });
+    this.drawActionButton(settingsRect, '设置', 'secondary', { pressKey: 'home:settings' });
   }
 
   drawPlayingScene(state) {
@@ -526,8 +705,16 @@ export default class Renderer {
     ctx.restore();
 
     const clearFeedbackVisible = clearScore.active && clearScore.clearedLines > 0;
+    const clearFeedbackAlpha = clearFeedbackVisible
+      ? clamp(clearScore.remaining / 200, 0, 1)
+      : 0;
+    const clearAge = clearFeedbackVisible
+      ? clamp((clearScore.duration - clearScore.remaining) / 180, 0, 1)
+      : 0;
+
     ctx.save();
-    ctx.globalAlpha = clearFeedbackVisible ? clamp(clearScore.remaining / 200, 0, 1) : 1;
+    ctx.globalAlpha = clearFeedbackVisible ? clearFeedbackAlpha : 1;
+    ctx.textAlign = 'center';
     ctx.fillStyle = clearFeedbackVisible ? '#FFD60A' : TEXT_SECONDARY;
     ctx.font = `${hudLayout.bestScoreFontSize}px sans-serif`;
     ctx.fillText(
@@ -535,11 +722,17 @@ export default class Renderer {
         ? `${getClearFeedbackLabel(clearScore.clearedLines)}  +${clearScore.totalAdded}`
         : `${difficultyLabel}最高分：${state.bestScore}`,
       centerX,
-      hudLayout.bestBaselineY
+      clearFeedbackVisible
+        ? hudLayout.bestBaselineY - 6 * (1 - clearFeedbackAlpha) - 3 * clearAge * (1 - clearAge) * 4
+        : hudLayout.bestBaselineY
     );
     ctx.restore();
 
     if (highScore.active && !state.isAdminModeActive()) {
+      const recordAlpha = clamp(highScore.remaining / 200, 0, 1);
+      const recordPulse = Math.sin(
+        clamp((highScore.duration - highScore.remaining) / 300, 0, 1) * Math.PI
+      );
       const recordRect = {
         x: Math.min(centerX + 58, layout.headerRect.x + layout.headerRect.width - 88),
         y: layout.headerRect.y + 14,
@@ -548,7 +741,12 @@ export default class Renderer {
       };
 
       ctx.save();
-      ctx.globalAlpha = clamp(highScore.remaining / 200, 0, 1);
+      ctx.globalAlpha = recordAlpha;
+      const badgeCenterX = recordRect.x + recordRect.width / 2;
+      const badgeCenterY = recordRect.y + recordRect.height / 2;
+      ctx.translate(badgeCenterX, badgeCenterY);
+      ctx.scale(1 + recordPulse * 0.05, 1 + recordPulse * 0.05);
+      ctx.translate(-badgeCenterX, -badgeCenterY);
       roundedRect(ctx, recordRect.x, recordRect.y, recordRect.width, recordRect.height, 12);
       ctx.fillStyle = 'rgba(92, 70, 18, 0.88)';
       ctx.fill();
@@ -579,30 +777,63 @@ export default class Renderer {
 
     ctx.save();
     ctx.shadowColor = BOARD_PANEL_GLOW;
-    ctx.shadowBlur = 8;
-    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, 14);
-    ctx.fillStyle = BOARD_PANEL;
+    ctx.shadowBlur = 22 * this.quality.shadowBlurScale;
+    ctx.shadowOffsetY = 5;
+    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
+    const panelGrad = this.createLinearGradient(
+      boardPanelRect.x,
+      boardPanelRect.y,
+      boardPanelRect.x,
+      boardPanelRect.y + boardPanelRect.height
+    );
+    panelGrad.addColorStop(0, '#102A47');
+    panelGrad.addColorStop(1, BOARD_PANEL);
+    ctx.fillStyle = panelGrad;
     ctx.fill();
     ctx.restore();
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = BOARD_PANEL_BORDER;
-    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, 14);
+    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
+    ctx.stroke();
+
+    // Empty cells are batched into two flat fills with a single grid stroke,
+    // so the resting board stays visually quiet and cheap to draw.
+    for (let parity = 0; parity < 2; parity += 1) {
+      ctx.beginPath();
+      for (let row = 0; row < BOARD_SIZE; row += 1) {
+        for (let col = 0; col < BOARD_SIZE; col += 1) {
+          if ((row + col) % 2 !== parity) {
+            continue;
+          }
+          const x = Math.round(boardRect.x + col * cellSize);
+          const y = Math.round(boardRect.y + row * cellSize);
+          ctx.rect(x, y, cellSize, cellSize);
+        }
+      }
+      ctx.fillStyle = parity === 0 ? BOARD_CELL : BOARD_CELL_ALT;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    for (let line = 0; line <= BOARD_SIZE; line += 1) {
+      const gridX = Math.round(boardRect.x + line * cellSize) + 0.5;
+      const gridY = Math.round(boardRect.y + line * cellSize) + 0.5;
+      ctx.moveTo(gridX, boardRect.y);
+      ctx.lineTo(gridX, boardRect.y + boardRect.height);
+      ctx.moveTo(boardRect.x, gridY);
+      ctx.lineTo(boardRect.x + boardRect.width, gridY);
+    }
+    ctx.strokeStyle = BOARD_GRID;
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     for (let row = 0; row < BOARD_SIZE; row += 1) {
       for (let col = 0; col < BOARD_SIZE; col += 1) {
-        const x = Math.round(boardRect.x + col * cellSize);
-        const y = Math.round(boardRect.y + row * cellSize);
-        roundedRect(ctx, x + 0.5, y + 0.5, cellSize - 1, cellSize - 1, 2.5);
-        ctx.fillStyle = BOARD_CELL;
-        ctx.fill();
-        ctx.strokeStyle = BOARD_GRID;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
         const tile = state.board.grid[row][col];
         if (tile) {
+          const x = Math.round(boardRect.x + col * cellSize);
+          const y = Math.round(boardRect.y + row * cellSize);
           this.drawBlockCell(x + 0.5, y + 0.5, cellSize - 1, tile.color, {
             pulse: this.getPulseAlpha(state, row, col),
             clearing: this.isClearingCell(state, row, col)
@@ -615,7 +846,7 @@ export default class Renderer {
 
     if (state.toolState.clearMode) {
       ctx.save();
-      roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, 14);
+      roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
       ctx.fillStyle = 'rgba(110, 214, 255, 0.08)';
       ctx.fill();
       ctx.restore();
@@ -688,6 +919,8 @@ export default class Renderer {
 
     const { ctx, layout } = this;
     const { boardRect, cellSize } = layout;
+    const lineBoost = Math.min(0.3, Math.max(0, effect.lineCount - 1) * 0.15);
+    const impactAlpha = Math.min(1, visual.impactAlpha * (1 + lineBoost));
     const center = effect.cells.reduce((sum, cell) => ({
       row: sum.row + cell.row / effect.cells.length,
       col: sum.col + cell.col / effect.cells.length
@@ -698,7 +931,7 @@ export default class Renderer {
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = visual.impactAlpha * (effect.crossCells.length > 0 ? 0.72 : 0.54);
+    ctx.globalAlpha = impactAlpha * (effect.crossCells.length > 0 ? 0.72 : 0.54);
     const bloom = this.createRadialGradient(x, y, 0, x, y, radius);
     bloom.addColorStop(0, 'rgba(255, 246, 196, 0.92)');
     bloom.addColorStop(0.32, 'rgba(255, 224, 92, 0.44)');
@@ -708,7 +941,7 @@ export default class Renderer {
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = visual.impactAlpha * 0.72;
+    ctx.globalAlpha = impactAlpha * 0.72;
     ctx.strokeStyle = 'rgba(255, 246, 196, 0.82)';
     ctx.lineWidth = Math.max(1, cellSize * 0.08);
     ctx.beginPath();
@@ -719,7 +952,7 @@ export default class Renderer {
       const cross = effect.crossCells[0];
       const crossX = boardRect.x + (cross.col + 0.5) * cellSize;
       const crossY = boardRect.y + (cross.row + 0.5) * cellSize;
-      ctx.globalAlpha = visual.impactAlpha * 0.9;
+      ctx.globalAlpha = impactAlpha * 0.9;
       ctx.lineWidth = Math.max(1, cellSize * 0.1);
       ctx.beginPath();
       ctx.moveTo(crossX - cellSize * 1.25, crossY);
@@ -738,7 +971,8 @@ export default class Renderer {
 
     const { ctx, layout } = this;
     const { boardRect, cellSize } = layout;
-    const alpha = Math.min(0.95, Math.max(0, visual.laserAlpha));
+    const lineBoost = Math.min(0.25, Math.max(0, effect.lineCount - 1) * 0.12);
+    const alpha = Math.min(0.95, Math.max(0, visual.laserAlpha * (1 + lineBoost)));
     const beamWidth = Math.max(3, cellSize * 0.16);
     const glowWidth = Math.max(cellSize * 0.85, beamWidth * 3.4);
 
@@ -748,42 +982,70 @@ export default class Renderer {
       this.perfStats.recordLaser();
       if (laser.kind === 'row') {
         const y = boardRect.y + (laser.index + 0.5) * cellSize;
-        const headX = boardRect.x + boardRect.width * visual.laserProgress;
-        const trailStart = Math.max(boardRect.x, headX - boardRect.width * 0.32);
-        const trail = this.createLinearGradient(trailStart, y, headX, y);
-        trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-        trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
-        trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
-        ctx.fillStyle = trail;
-        ctx.fillRect(trailStart, y - glowWidth / 2, headX - trailStart, glowWidth);
-        ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
-        ctx.fillRect(headX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
-        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
-        ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
-        ctx.beginPath();
-        ctx.moveTo(trailStart, y);
-        ctx.lineTo(headX, y);
-        ctx.stroke();
+        const origin = Number.isFinite(laser.origin) ? laser.origin : 0.5;
+        const centerX = boardRect.x + boardRect.width * origin;
+        const extent = boardRect.width * 0.5 * visual.laserProgress;
+        [-1, 1].forEach((side) => {
+          if (extent <= 1) {
+            return;
+          }
+          const headX = centerX + side * extent;
+          const trailLength = Math.min(extent, boardRect.width * 0.32);
+          const trailStart = headX - side * trailLength;
+          const trail = this.createLinearGradient(trailStart, y, headX, y);
+          trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+          trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
+          trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
+          ctx.fillStyle = trail;
+          ctx.fillRect(
+            Math.min(trailStart, headX),
+            y - glowWidth / 2,
+            Math.abs(headX - trailStart),
+            glowWidth
+          );
+          ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
+          ctx.fillRect(headX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
+          ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
+          ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
+          ctx.beginPath();
+          ctx.moveTo(trailStart, y);
+          ctx.lineTo(headX, y);
+          ctx.stroke();
+        });
         return;
       }
 
       const x = boardRect.x + (laser.index + 0.5) * cellSize;
-      const headY = boardRect.y + boardRect.height * visual.laserProgress;
-      const trailStart = Math.max(boardRect.y, headY - boardRect.height * 0.32);
-      const trail = this.createLinearGradient(x, trailStart, x, headY);
-      trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-      trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
-      trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
-      ctx.fillStyle = trail;
-      ctx.fillRect(x - glowWidth / 2, trailStart, glowWidth, headY - trailStart);
-      ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
-      ctx.fillRect(x - cellSize * 0.55, headY - beamWidth, cellSize * 1.1, beamWidth * 2);
-      ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
-      ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
-      ctx.beginPath();
-      ctx.moveTo(x, trailStart);
-      ctx.lineTo(x, headY);
-      ctx.stroke();
+      const origin = Number.isFinite(laser.origin) ? laser.origin : 0.5;
+      const centerY = boardRect.y + boardRect.height * origin;
+      const extent = boardRect.height * 0.5 * visual.laserProgress;
+      [-1, 1].forEach((side) => {
+        if (extent <= 1) {
+          return;
+        }
+        const headY = centerY + side * extent;
+        const trailLength = Math.min(extent, boardRect.height * 0.32);
+        const trailStart = headY - side * trailLength;
+        const trail = this.createLinearGradient(x, trailStart, x, headY);
+        trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
+        trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
+        trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
+        ctx.fillStyle = trail;
+        ctx.fillRect(
+          x - glowWidth / 2,
+          Math.min(trailStart, headY),
+          glowWidth,
+          Math.abs(headY - trailStart)
+        );
+        ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
+        ctx.fillRect(x - cellSize * 0.55, headY - beamWidth, cellSize * 1.1, beamWidth * 2);
+        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
+        ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(x, trailStart);
+        ctx.lineTo(x, headY);
+        ctx.stroke();
+      });
     });
     ctx.restore();
   }
@@ -841,16 +1103,17 @@ export default class Renderer {
       const drawY = boardRect.y + (row + cell.y) * cellSize + 0.5;
 
       this.drawBlockCell(drawX, drawY, cellSize - 1, piece.color, {
-        alpha: canPlace ? 0.58 : 0.22,
+        alpha: canPlace ? 0.62 : 0.24,
         glow: canPlace ? 0.14 : 0,
         shadowAlpha: 0,
         borderBoost: canPlace ? 0.1 : 0,
         flatten: true
       });
 
-      roundedRect(this.ctx, drawX + 1, drawY + 1, cellSize - 3, cellSize - 3, 2.5);
+      const inset = canPlace ? 1 : 3;
+      roundedRect(this.ctx, drawX + inset, drawY + inset, cellSize - inset * 2 - 1, cellSize - inset * 2 - 1, 3);
       this.ctx.strokeStyle = canPlace ? PREVIEW_VALID : PREVIEW_INVALID;
-      this.ctx.lineWidth = 1.1;
+      this.ctx.lineWidth = 1.2;
       this.ctx.stroke();
     });
   }
@@ -861,9 +1124,24 @@ export default class Renderer {
     const gap = 8;
     const width = (rect.width - gap * 2) / 3;
     const items = [
-      { key: 'refresh', label: `刷新 ×${state.getToolCountLabel(state.toolState.refreshCount)}`, active: false },
-      { key: 'clear', label: `清除 ×${state.getToolCountLabel(state.toolState.clearCount)}`, active: state.toolState.clearMode },
-      { key: 'undo', label: `撤回 ×${state.getToolCountLabel(state.toolState.undoCount)}`, active: false }
+      {
+        key: 'refresh',
+        label: `刷新 ×${state.getToolCountLabel(state.toolState.refreshCount)}`,
+        active: false,
+        disabled: !state.isAdminModeActive() && state.toolState.refreshCount <= 0
+      },
+      {
+        key: 'clear',
+        label: `清除 ×${state.getToolCountLabel(state.toolState.clearCount)}`,
+        active: state.toolState.clearMode,
+        disabled: !state.isAdminModeActive() && state.toolState.clearCount <= 0
+      },
+      {
+        key: 'undo',
+        label: `撤回 ×${state.getToolCountLabel(state.toolState.undoCount)}`,
+        active: false,
+        disabled: !state.isAdminModeActive() && state.toolState.undoCount <= 0
+      }
     ];
 
     const visualRects = items.map((item, index) => ({
@@ -897,21 +1175,70 @@ export default class Renderer {
         slotGap: 1
       });
 
-      roundedRect(ctx, buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height, 14);
-      ctx.fillStyle = item.active ? 'rgba(61, 124, 185, 0.96)' : 'rgba(9, 29, 55, 0.82)';
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = item.active ? 'rgba(192, 240, 255, 0.72)' : 'rgba(125, 200, 255, 0.28)';
-      ctx.stroke();
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = TEXT_PRIMARY;
-      ctx.font = rect.height < 40 ? 'bold 14px sans-serif' : 'bold 15px sans-serif';
-      ctx.fillText(item.label, buttonRect.x + buttonRect.width / 2, buttonRect.y + buttonRect.height / 2 + 5);
+      this.drawToolButton(buttonRect, item.label, {
+        active: item.active,
+        disabled: item.disabled,
+        pressKey: `tool:${item.key}`
+      });
     });
   }
 
+  drawToolButton(rect, label, { active, disabled, pressKey }) {
+    const { ctx } = this;
+    const press = this.getPressVisual(pressKey);
+
+    ctx.save();
+    if (press) {
+      const centerX = rect.x + rect.width / 2;
+      const centerY = rect.y + rect.height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.scale(press.scale, press.scale);
+      ctx.translate(-centerX, -centerY);
+    }
+    if (disabled) {
+      ctx.globalAlpha = 0.55;
+    }
+
+    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
+    if (active) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(110, 214, 255, 0.32)';
+      ctx.shadowBlur = 10;
+    }
+    ctx.fillStyle = active ? 'rgba(63, 130, 190, 0.96)' : 'rgba(10, 28, 52, 0.84)';
+    ctx.fill();
+    if (active) {
+      ctx.restore();
+    }
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = active ? 'rgba(192, 240, 255, 0.72)' : UI_TOKENS.border.subtle;
+    ctx.stroke();
+
+    if (press && press.strength > 0) {
+      roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.08 * press.strength})`;
+      ctx.fill();
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = active || !disabled ? TEXT_PRIMARY : TEXT_MUTED;
+    ctx.font = rect.height < 40 ? 'bold 14px sans-serif' : 'bold 15px sans-serif';
+    ctx.fillText(label, rect.x + rect.width / 2, rect.y + rect.height / 2 + 5);
+    ctx.restore();
+  }
+
   drawRack(state) {
+    const { ctx } = this;
+
+    this.layout.rackSlots.forEach((slot) => {
+      roundedRect(ctx, slot.x + 3, slot.y + 4, slot.width - 6, slot.height - 10, UI_TOKENS.radius.medium);
+      ctx.fillStyle = 'rgba(9, 24, 47, 0.45)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(130, 205, 255, 0.09)';
+      ctx.stroke();
+    });
+
     for (let index = 0; index < state.rackPieces.length; index += 1) {
       const piece = state.rackPieces[index];
       const slot = this.layout.rackSlots[index];
@@ -947,44 +1274,59 @@ export default class Renderer {
 
       piece.cells.forEach((cell) => {
         this.drawBlockCell(x + cell.x * cellSize, y + cell.y * cellSize, cellSize, piece.color, {
-          shadowAlpha: 0.05
+          shadowAlpha: 0.14
         });
       });
     }
   }
 
-  drawSettingsButton() {
-    const rect = this.settingsButtonVisualRect || this.settingsButtonRect;
+  drawMiniButton(rect, label, pressKey) {
     const { ctx } = this;
+    const press = this.getPressVisual(pressKey);
 
-    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
-    ctx.fillStyle = 'rgba(10, 24, 44, 0.74)';
+    ctx.save();
+    if (press) {
+      const centerX = rect.x + rect.width / 2;
+      const centerY = rect.y + rect.height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.scale(press.scale, press.scale);
+      ctx.translate(-centerX, -centerY);
+    }
+
+    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.small);
+    ctx.fillStyle = 'rgba(12, 30, 56, 0.78)';
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(135, 216, 255, 0.32)';
+    ctx.strokeStyle = press && press.strength > 0 ? UI_TOKENS.border.strong : UI_TOKENS.border.subtle;
     ctx.stroke();
+
+    if (press && press.strength > 0) {
+      roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.small);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.16 * press.strength})`;
+      ctx.fill();
+    }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '14px sans-serif';
-    ctx.fillText('设置', rect.x + rect.width / 2, rect.y + 20);
+    ctx.fillText(label, rect.x + rect.width / 2, rect.y + 20);
+    ctx.restore();
+  }
+
+  drawSettingsButton() {
+    this.drawMiniButton(
+      this.settingsButtonVisualRect || this.settingsButtonRect,
+      '设置',
+      'hud:settings'
+    );
   }
 
   drawPauseButton() {
-    const rect = this.pauseButtonVisualRect || this.pauseButtonRect;
-    const { ctx } = this;
-
-    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
-    ctx.fillStyle = 'rgba(10, 24, 44, 0.74)';
-    ctx.fill();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(135, 216, 255, 0.32)';
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '14px sans-serif';
-    ctx.fillText('暂停', rect.x + rect.width / 2, rect.y + 20);
+    this.drawMiniButton(
+      this.pauseButtonVisualRect || this.pauseButtonRect,
+      '暂停',
+      'hud:pause'
+    );
   }
 
   drawDraggingPiece(state) {
@@ -1013,14 +1355,16 @@ export default class Renderer {
     ctx.translate(-cx, -cy);
 
     piece.cells.forEach((cell) => {
+      const invalid = drag.phase === 'invalid';
       this.drawBlockCell(
         visual.x + cell.x * displayCellSize,
         visual.y + cell.y * displayCellSize,
         displayCellSize,
-        piece.color,
+        invalid ? '#FF6B86' : piece.color,
         {
+          alpha: invalid ? 0.82 : 1,
           glow: 0,
-          borderBoost: 0.02,
+          borderBoost: invalid ? 0.04 : 0.02,
           shadowAlpha: 0,
           flatten: true
         }
@@ -1029,270 +1373,367 @@ export default class Renderer {
     ctx.restore();
   }
 
-  drawHelpModal() {
+  drawHelpModal(state) {
     const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
-
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2;
-    const panelHeight = clamp(layout.screenHeight * 0.64, 436, 520);
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = (layout.screenHeight - panelHeight) / 2;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 10;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 24);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 24);
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('怎么玩', layout.screenWidth / 2, panelY + 40);
-
-    const lines = [
-      '基础玩法',
-      '拖动方块放入棋盘。',
-      '填满整行或整列即可消除。',
-      '无处可放时游戏结束。',
-      '',
-      '道具说明',
-      '刷新：更换当前候选方块。',
-      '清除：清掉局部区域。',
-      '撤回：回到上一步。',
-      '',
-      '难度说明',
-      '简单：小块更多，适合轻松游玩。',
-      '普通：形状更丰富，默认推荐。',
-      '大师：复杂方块更多，挑战更高。',
-      '',
-      '输入会员码后，每局获得 2 次免死机会。'
-    ];
-
-    ctx.textAlign = 'left';
-    lines.forEach((line, index) => {
-      if (!line) {
-        return;
-      }
-
-      const isSection = line === '基础玩法' || line === '道具说明' || line === '难度说明';
-      ctx.fillStyle = isSection ? TEXT_PRIMARY : TEXT_SECONDARY;
-      ctx.font = isSection ? 'bold 17px sans-serif' : '16px sans-serif';
-      ctx.fillText(line, panelX + 28, panelY + 84 + index * 24);
+    const motion = this.getPanelMotion(state, 'help');
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin,
+      preferredContentHeight: null
     });
 
-    const closeRect = {
-      x: panelX + 28,
-      y: panelY + panelHeight - 62,
-      width: panelWidth - 56,
-      height: 46
-    };
-    this.helpActionRects.close = closeRect;
-    this.drawActionButton(closeRect, '关闭', 'primary');
+    this.withPanelMotion(motion, shell.panel, () => {
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel, 24);
+      this.drawModalTitle('怎么玩', shell);
+
+      const helpRows = [
+        { text: '基础玩法', isSection: true },
+        { text: '拖动方块放入棋盘，填满整行或整列即可消除。' },
+        { text: '棋盘放不下任何候选方块时，本局结束。' },
+        { text: '道具', isSection: true },
+        { text: '刷新：更换当前三个候选方块。' },
+        { text: '清除：点选棋盘位置，清除附近 3×3 区域。' },
+        { text: '撤回：撤销上一次成功放置。' },
+        { text: '难度', isSection: true },
+        { text: '简单：小块更多，适合轻松游玩。' },
+        { text: '普通：形状更丰富，默认推荐。' },
+        { text: '大师：复杂方块更多，挑战更高。' },
+        { text: '输入福利码后，每局获得 2 次免死机会。' }
+      ];
+      const lines = calculateHelpRowsLayout({ contentRect: shell.content, rows: helpRows });
+
+      ctx.textAlign = 'left';
+      lines.lineRects.forEach((line) => {
+        ctx.fillStyle = line.isSection ? TEXT_PRIMARY : TEXT_SECONDARY;
+        ctx.font = line.isSection
+          ? `bold ${line.fontSize}px sans-serif`
+          : `${line.fontSize}px sans-serif`;
+        ctx.fillText(line.text, line.x + 4, line.y + line.height - 7);
+      });
+
+      const closeRect = shell.footerButton;
+      this.helpActionRects.close = closeRect;
+      this.drawActionButton(closeRect, '关闭', 'primary', { pressKey: 'help:close' });
+    });
   }
 
-  drawSettingsPanel(state) {
-    const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+  getSettingsRows(state, tab) {
+    if (tab === 'account') {
+      const rows = [
+        { type: 'section', label: '福利状态' },
+        { key: 'memberStatus', label: '福利状态', value: state.getMemberStatusLabel() }
+      ];
 
-    const smallScreen = layout.screenHeight < 760;
-    const rowHeight = smallScreen ? 38 : 42;
-    const rowGap = smallScreen ? 8 : 10;
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 6;
-    const topGap = smallScreen ? 18 : 22;
-    const panelMaxHeight = layout.screenHeight - topGap * 2 - layout.bottomInset;
+      if (state.settings.localMembershipEnabled) {
+        rows.push({ key: 'memberBenefit', label: '会员福利', value: state.getMembershipBenefitLabel() });
+      }
+      rows.push({ key: 'openMembership', label: '输入福利码', value: '' });
+      if (state.settings.localMembershipEnabled) {
+        rows.push({ key: 'disableMembership', label: '关闭福利', value: '' });
+      }
+      rows.push({ type: 'section', label: '数据' });
+      rows.push({ key: 'reset', label: '重置当前难度最高分', value: '' });
 
-    this.settingsActionRects = {};
-
-    if (state.ui.isResetConfirmOpen) {
-      const panelHeight = Math.min(panelMaxHeight, smallScreen ? 250 : 274);
-      const panelX = (layout.screenWidth - panelWidth) / 2;
-      const panelY = Math.max(topGap, (layout.screenHeight - panelHeight - layout.bottomInset) / 2);
-
-      ctx.save();
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.26)';
-      ctx.shadowBlur = 18;
-      ctx.shadowOffsetY = 8;
-      roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-      ctx.fillStyle = PANEL;
-      ctx.fill();
-      ctx.restore();
-
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = PANEL_BORDER;
-      roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-      ctx.stroke();
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = TEXT_PRIMARY;
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText('游戏设置', layout.screenWidth / 2, panelY + 38);
-
-      ctx.fillStyle = TEXT_SECONDARY;
-      ctx.font = '18px sans-serif';
-      ctx.fillText('确认重置当前难度最高分？', layout.screenWidth / 2, panelY + 84);
-
-      const cancelRect = {
-        x: panelX + 24,
-        y: panelY + 128,
-        width: (panelWidth - 64) / 2,
-        height: smallScreen ? 46 : 50
-      };
-      const confirmRect = {
-        x: cancelRect.x + cancelRect.width + 16,
-        y: cancelRect.y,
-        width: cancelRect.width,
-        height: cancelRect.height
-      };
-      const continueRect = {
-        x: panelX + 24,
-        y: panelY + panelHeight - 64,
-        width: panelWidth - 48,
-        height: smallScreen ? 46 : 48
-      };
-
-      this.settingsActionRects.cancelReset = cancelRect;
-      this.settingsActionRects.confirmReset = confirmRect;
-      this.settingsActionRects.continue = continueRect;
-
-      this.drawActionButton(cancelRect, '取消', 'secondary');
-      this.drawActionButton(confirmRect, '确认重置', 'primary');
-      this.drawActionButton(continueRect, '继续游戏', 'primary');
-      return;
+      if (state.isAdminModeActive()) {
+        rows.push({ type: 'section', label: '管理员模式' });
+        rows.push({ key: 'adminStatus', label: '管理员状态', value: state.getAdminStatusLabel() });
+        rows.push({ key: 'disableAdmin', label: '关闭管理员模式', value: '' });
+      }
+      return rows;
     }
 
-    const rows = [
+    return [
       { type: 'section', label: '游戏设置' },
       { key: 'sound', label: '音效', value: state.settings.soundEnabled ? '开启' : '关闭' },
       { key: 'bgm', label: '背景音乐', value: state.settings.bgmEnabled ? '开启' : '关闭' },
       { key: 'bgmTrack', label: '背景音乐选择', value: this.getBgmLabel(state) },
       { key: 'vibration', label: '震动反馈', value: state.settings.vibrationEnabled ? '开启' : '关闭' },
-      { key: 'difficulty', label: '难度', value: getDifficultyLabel(state.settings.difficulty) },
-      { type: 'section', label: '福利状态' },
-      { key: 'memberStatus', label: '福利状态', value: state.getMemberStatusLabel() },
-      { key: 'openMembership', label: '输入福利码', value: '' },
-      { type: 'section', label: '数据' },
-      { key: 'reset', label: '重置当前难度最高分', value: '' }
+      { key: 'difficulty', label: '难度', value: getDifficultyLabel(state.settings.difficulty) }
     ];
+  }
 
-    if (state.settings.localMembershipEnabled) {
-      rows.splice(8, 0, { key: 'memberBenefit', label: '会员福利', value: state.getMembershipBenefitLabel() });
-      rows.splice(9, 0, { key: 'disableMembership', label: '关闭福利', value: '' });
-    }
+  drawSettingsPanel(state) {
+    const { ctx, layout } = this;
+    const motion = this.getPanelMotion(state, 'settings');
+    const confirmOpen = state.ui.isResetConfirmOpen;
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 3,
+      preferredContentHeight: confirmOpen ? 130 : null
+    });
 
-    if (state.isAdminModeActive()) {
-      rows.push({ type: 'section', label: '管理员模式' });
-      rows.push({ key: 'adminStatus', label: '管理员状态', value: state.getAdminStatusLabel() });
-      rows.push({ key: 'disableAdmin', label: '关闭管理员模式', value: '' });
-    }
+    this.withPanelMotion(motion, shell.panel, () => {
+      this.settingsActionRects = {};
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
+      this.drawModalTitle('游戏设置', shell);
 
-    const panelHeight = Math.min(
-      panelMaxHeight,
-      86 + rows.length * rowHeight + (rows.length - 1) * rowGap + 72
-    );
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = Math.max(topGap, (layout.screenHeight - panelHeight - layout.bottomInset) / 2);
-    const startY = panelY + 64;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.26)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 8;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('游戏设置', layout.screenWidth / 2, panelY + 38);
-
-    rows.forEach((row, index) => {
-      const rect = {
-        x: panelX + 20,
-        y: startY + index * (rowHeight + rowGap),
-        width: panelWidth - 40,
-        height: rowHeight
-      };
-
-      if (row.type === 'section') {
-        this.drawSectionLabel(rect, row.label);
+      if (confirmOpen) {
+        this.drawResetConfirm(state, shell);
         return;
       }
 
-      this.settingsActionRects[row.key] = rect;
-      this.drawSettingRow(rect, row.label, row.value);
-    });
+      const tab = state.ui.settingsTab === 'account' ? 'account' : 'game';
+      const tabs = calculateSettingsTabsLayout({
+        contentRect: shell.content,
+        tabs: ['game', 'account']
+      });
+      const tabsMeta = [
+        { key: 'game', label: '游戏' },
+        { key: 'account', label: '账号与数据' }
+      ];
+      tabsMeta.forEach((meta, index) => {
+        const tabRect = tabs.tabRects[index];
+        this.settingsActionRects[`tab:${meta.key}`] = tabRect;
+        const active = tab === meta.key;
+        const press = this.getPressVisual(`settings:tab:${meta.key}`);
 
-    const continueRect = {
-      x: panelX + 20,
-      y: panelY + panelHeight - (smallScreen ? 58 : 62),
-      width: panelWidth - 40,
-      height: smallScreen ? 44 : 46
+        roundedRect(ctx, tabRect.x, tabRect.y, tabRect.width, tabRect.height, UI_TOKENS.radius.small);
+        ctx.fillStyle = active ? 'rgba(61, 124, 185, 0.9)' : 'rgba(10, 26, 50, 0.6)';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = active ? 'rgba(192, 240, 255, 0.6)' : UI_TOKENS.border.subtle;
+        ctx.stroke();
+        if (press && press.strength > 0) {
+          roundedRect(ctx, tabRect.x, tabRect.y, tabRect.width, tabRect.height, UI_TOKENS.radius.small);
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.08 * press.strength})`;
+          ctx.fill();
+        }
+        ctx.textAlign = 'center';
+        ctx.fillStyle = active ? TEXT_PRIMARY : TEXT_SECONDARY;
+        ctx.font = `${active ? 'bold ' : ''}15px sans-serif`;
+        ctx.fillText(meta.label, tabRect.x + tabRect.width / 2, tabRect.y + tabRect.height / 2 + 5);
+      });
+
+      const rows = this.getSettingsRows(state, tab);
+      const layoutRows = calculateModalRowsLayout({ contentRect: tabs.contentBelow, rows });
+      this.drawSettingGroupSurfaces(layoutRows.rects);
+      this.drawSettingsRows(layoutRows.rects);
+
+      const continueRect = shell.footerButton;
+      this.settingsActionRects.continue = continueRect;
+      this.drawActionButton(continueRect, '继续游戏', 'primary', { pressKey: 'settings:continue' });
+    });
+  }
+
+  drawSettingGroupSurfaces(rects) {
+    const { ctx } = this;
+    let group = [];
+
+    const flushGroup = () => {
+      if (group.length === 0) {
+        return;
+      }
+      const firstRect = group[0];
+      const lastRect = group[group.length - 1];
+      roundedRect(
+        ctx,
+        firstRect.x - 6,
+        firstRect.y - 4,
+        firstRect.width + 12,
+        lastRect.y + lastRect.height - firstRect.y + 8,
+        UI_TOKENS.radius.small
+      );
+      ctx.fillStyle = 'rgba(10, 25, 48, 0.5)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(130, 205, 255, 0.1)';
+      ctx.stroke();
+      group = [];
     };
-    this.settingsActionRects.continue = continueRect;
-    this.drawActionButton(continueRect, '继续游戏', 'primary');
+
+    rects.forEach((rowRect) => {
+      if (rowRect.type === 'section') {
+        flushGroup();
+        return;
+      }
+      group.push(rowRect);
+    });
+    flushGroup();
+  }
+
+  drawSettingsRows(rects) {
+    const { ctx } = this;
+    rects.forEach((rowRect, index) => {
+      if (rowRect.type === 'section') {
+        this.drawSectionLabel(rowRect, rowRect.label);
+        return;
+      }
+
+      this.settingsActionRects[rowRect.key] = rowRect;
+
+      if (index > 0 && rects[index - 1].type !== 'section') {
+        ctx.beginPath();
+        ctx.moveTo(rowRect.x + 12, rowRect.y + 0.5);
+        ctx.lineTo(rowRect.x + rowRect.width - 12, rowRect.y + 0.5);
+        ctx.strokeStyle = 'rgba(130, 205, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = TEXT_PRIMARY;
+      ctx.font = rowRect.label && rowRect.label.length > 10 ? '15px sans-serif' : '16px sans-serif';
+      ctx.fillText(rowRect.label, rowRect.x + 16, rowRect.y + rowRect.height / 2 + 6);
+      if (rowRect.value) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = TEXT_SECONDARY;
+        ctx.font = rowRect.value.length > 10 ? '14px sans-serif' : '15px sans-serif';
+        ctx.fillText(rowRect.value, rowRect.x + rowRect.width - 16, rowRect.y + rowRect.height / 2 + 5);
+      }
+    });
+  }
+
+  drawResetConfirm(state, shell) {
+    const { ctx } = this;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = TEXT_SECONDARY;
+    ctx.font = '17px sans-serif';
+    ctx.fillText('确认重置当前难度最高分？', shell.panel.x + shell.panel.width / 2, shell.content.y + 34);
+
+    const buttonWidth = (shell.content.width - 16) / 2;
+    const cancelRect = {
+      x: shell.content.x,
+      y: shell.content.y + 62,
+      width: buttonWidth,
+      height: 46
+    };
+    const confirmRect = {
+      x: cancelRect.x + cancelRect.width + 16,
+      y: cancelRect.y,
+      width: cancelRect.width,
+      height: cancelRect.height
+    };
+
+    this.settingsActionRects.cancelReset = cancelRect;
+    this.settingsActionRects.confirmReset = confirmRect;
+    this.settingsActionRects.continue = shell.footerButton;
+
+    this.drawActionButton(cancelRect, '取消', 'secondary', { pressKey: 'settings:cancelReset' });
+    this.drawActionButton(confirmRect, '确认重置', 'danger', { pressKey: 'settings:confirmReset' });
+    this.drawActionButton(shell.footerButton, '继续游戏', 'primary', { pressKey: 'settings:continue' });
   }
 
   drawPausePanel(state) {
     const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+    const motion = this.getPanelMotion(state, 'pause');
+    const confirmOpen = state.ui.isPauseConfirmOpen;
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 5,
+      preferredContentHeight: confirmOpen ? 116 : 236
+    });
 
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 10;
-    const panelHeight = state.ui.isPauseConfirmOpen ? 260 : 292;
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = (layout.screenHeight - panelHeight) / 2;
+    this.withPanelMotion(motion, shell.panel, () => {
+      this.pauseActionRects = {};
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
+      this.drawModalTitle('暂停', shell);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 10;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
+      if (confirmOpen) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = TEXT_PRIMARY;
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText('确认返回主页？', layout.screenWidth / 2, shell.content.y + 26);
+        ctx.fillStyle = TEXT_SECONDARY;
+        ctx.font = '15px sans-serif';
+        ctx.fillText('当前这一局将结束。', layout.screenWidth / 2, shell.content.y + 58);
 
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
+        const buttonWidth = (shell.content.width - 16) / 2;
+        const cancelRect = {
+          x: shell.content.x,
+          y: shell.content.y + 92,
+          width: buttonWidth,
+          height: 46
+        };
+        const confirmRect = {
+          x: cancelRect.x + cancelRect.width + 16,
+          y: cancelRect.y,
+          width: cancelRect.width,
+          height: cancelRect.height
+        };
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('暂停', layout.screenWidth / 2, panelY + 40);
+        this.pauseActionRects.cancelHome = cancelRect;
+        this.pauseActionRects.confirmHome = confirmRect;
+        this.drawActionButton(cancelRect, '取消', 'secondary', { pressKey: 'pause:cancelHome' });
+        this.drawActionButton(confirmRect, '确认返回', 'danger', { pressKey: 'pause:confirmHome' });
+        return;
+      }
 
-    this.pauseActionRects = {};
-
-    if (state.ui.isPauseConfirmOpen) {
-      ctx.fillStyle = TEXT_PRIMARY;
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText('确认返回主页？', layout.screenWidth / 2, panelY + 86);
+      ctx.textAlign = 'center';
       ctx.fillStyle = TEXT_SECONDARY;
-      ctx.font = '16px sans-serif';
-      ctx.fillText('当前这一局将结束。', layout.screenWidth / 2, panelY + 116);
+      ctx.font = '15px sans-serif';
+      ctx.fillText('当前游戏已暂停', layout.screenWidth / 2, shell.content.y + 16);
 
-      const cancelRect = {
-        x: panelX + 24,
-        y: panelY + 146,
-        width: (panelWidth - 64) / 2,
+      const continueRect = {
+        x: shell.content.x,
+        y: shell.content.y + 36,
+        width: shell.content.width,
         height: 48
+      };
+      const restartRect = {
+        x: continueRect.x,
+        y: continueRect.y + 60,
+        width: continueRect.width,
+        height: 48
+      };
+      const homeRect = {
+        x: continueRect.x,
+        y: restartRect.y + 60,
+        width: continueRect.width,
+        height: 44
+      };
+
+      this.pauseActionRects.continue = continueRect;
+      this.pauseActionRects.restart = restartRect;
+      this.pauseActionRects.home = homeRect;
+
+      this.drawActionButton(continueRect, '继续游戏', 'primary', { pressKey: 'pause:continue' });
+      this.drawActionButton(restartRect, '重新开始', 'secondary', { pressKey: 'pause:restart' });
+      this.drawActionButton(homeRect, '返回主页', 'dangerOutline', { pressKey: 'pause:home' });
+    });
+  }
+
+  drawAdminPanel(state) {
+    const { ctx, layout } = this;
+    const motion = this.getPanelMotion(state, 'admin');
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 12,
+      preferredContentHeight: 118
+    });
+
+    this.withPanelMotion(motion, shell.panel, () => {
+      this.adminActionRects = {};
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
+      this.drawModalTitle('管理员模式', shell);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = TEXT_SECONDARY;
+      ctx.font = '15px sans-serif';
+      ctx.fillText('此入口仅用于本机测试。', shell.panel.x + shell.panel.width / 2, shell.content.y + 22);
+      ctx.fillText('开启后本局分数不会写入正式最高分。', shell.panel.x + shell.panel.width / 2, shell.content.y + 48);
+
+      const buttonWidth = (shell.content.width - 16) / 2;
+      const cancelRect = {
+        x: shell.content.x,
+        y: shell.content.y + shell.content.height - 50,
+        width: buttonWidth,
+        height: 46
       };
       const confirmRect = {
         x: cancelRect.x + cancelRect.width + 16,
@@ -1300,179 +1741,90 @@ export default class Renderer {
         width: cancelRect.width,
         height: cancelRect.height
       };
-
-      this.pauseActionRects.cancelHome = cancelRect;
-      this.pauseActionRects.confirmHome = confirmRect;
-      this.drawActionButton(cancelRect, '取消', 'secondary');
-      this.drawActionButton(confirmRect, '确认返回', 'danger');
-      return;
-    }
-
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText('当前游戏已暂停', layout.screenWidth / 2, panelY + 70);
-
-    const continueRect = {
-      x: panelX + 28,
-      y: panelY + 90,
-      width: panelWidth - 56,
-      height: 48
-    };
-    const restartRect = {
-      x: continueRect.x,
-      y: continueRect.y + 62,
-      width: continueRect.width,
-      height: 48
-    };
-    const homeRect = {
-      x: continueRect.x,
-      y: restartRect.y + 62,
-      width: continueRect.width,
-      height: 48
-    };
-
-    this.pauseActionRects.continue = continueRect;
-    this.pauseActionRects.restart = restartRect;
-    this.pauseActionRects.home = homeRect;
-
-    this.drawActionButton(continueRect, '继续游戏', 'primary');
-    this.drawActionButton(restartRect, '重新开始', 'secondary');
-    this.drawActionButton(homeRect, '返回主页', 'dangerOutline');
-  }
-
-  drawAdminPanel(state) {
-    const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
-
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 24;
-    const panelHeight = 256;
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = (layout.screenHeight - panelHeight) / 2;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 10;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('管理员模式', layout.screenWidth / 2, panelY + 42);
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '16px sans-serif';
-    ctx.fillText('此入口仅用于本机测试。', layout.screenWidth / 2, panelY + 88);
-    ctx.fillText('开启后本局分数不会写入正式最高分。', layout.screenWidth / 2, panelY + 116);
-
-    const cancelRect = {
-      x: panelX + 24,
-      y: panelY + panelHeight - 72,
-      width: (panelWidth - 64) / 2,
-      height: 48
-    };
-    const confirmRect = {
-      x: cancelRect.x + cancelRect.width + 16,
-      y: cancelRect.y,
-      width: cancelRect.width,
-      height: cancelRect.height
-    };
-    this.adminActionRects.cancel = cancelRect;
-    this.adminActionRects.confirm = confirmRect;
-    this.drawActionButton(cancelRect, '取消', 'secondary');
-    this.drawActionButton(confirmRect, '开启', 'primary');
+      this.adminActionRects.cancel = cancelRect;
+      this.adminActionRects.confirm = confirmRect;
+      this.drawActionButton(cancelRect, '取消', 'secondary', { pressKey: 'admin:cancel' });
+      this.drawActionButton(confirmRect, '开启', 'primary', { pressKey: 'admin:confirm' });
+    });
   }
 
   drawMembershipPanel(state) {
     const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+    const motion = this.getPanelMotion(state, 'membership');
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 12,
+      preferredContentHeight: 226
+    });
 
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 24;
-    const panelHeight = 370;
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = Math.max(20, (layout.screenHeight - panelHeight) / 2);
+    this.withPanelMotion(motion, shell.panel, () => {
+      this.membershipActionRects = {};
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
+      this.drawModalTitle('输入福利码', shell);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 10;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
+      const inputRect = {
+        x: shell.content.x,
+        y: shell.content.y,
+        width: shell.content.width,
+        height: 46
+      };
+      this.membershipActionRects.input = inputRect;
 
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
+      roundedRect(ctx, inputRect.x, inputRect.y, inputRect.width, inputRect.height, UI_TOKENS.radius.small);
+      ctx.fillStyle = UI_TOKENS.surface.input;
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = UI_TOKENS.border.strong;
+      ctx.stroke();
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('输入福利码', layout.screenWidth / 2, panelY + 42);
-
-    const inputRect = {
-      x: panelX + 24,
-      y: panelY + 58,
-      width: panelWidth - 48,
-      height: 46
-    };
-    this.membershipActionRects.input = inputRect;
-
-    roundedRect(ctx, inputRect.x, inputRect.y, inputRect.width, inputRect.height, 14);
-    ctx.fillStyle = 'rgba(11, 28, 52, 0.92)';
-    ctx.fill();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(120,202,255,0.28)';
-    ctx.stroke();
-
-    ctx.textAlign = 'left';
-    ctx.font = '17px sans-serif';
-    if (state.membershipInput) {
-      ctx.fillStyle = TEXT_PRIMARY;
-      ctx.fillText(state.membershipInput, inputRect.x + 16, inputRect.y + 30);
-    } else {
-      ctx.fillStyle = 'rgba(185, 210, 255, 0.6)';
-      ctx.fillText('请输入福利码', inputRect.x + 16, inputRect.y + 30);
-    }
-
-    if (state.membershipError) {
-      ctx.fillStyle = '#FFB4A4';
       ctx.textAlign = 'left';
-      ctx.font = '15px sans-serif';
-      ctx.fillText(state.membershipError, inputRect.x + 2, inputRect.y + 62);
-    }
+      ctx.font = '16px sans-serif';
+      if (state.membershipInput) {
+        ctx.fillStyle = TEXT_PRIMARY;
+        ctx.fillText(state.membershipInput, inputRect.x + 14, inputRect.y + 29);
+      } else {
+        ctx.fillStyle = TEXT_MUTED;
+        ctx.fillText('请输入福利码', inputRect.x + 14, inputRect.y + 29);
+      }
 
-    this.drawMembershipKeyboard(panelX, panelY, panelWidth, panelY + 118);
+      if (state.membershipError) {
+        ctx.fillStyle = '#FFB4A4';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(state.membershipError, inputRect.x + 2, inputRect.y + 66);
+      }
 
-    const cancelRect = {
-      x: panelX + 24,
-      y: panelY + panelHeight - 58,
-      width: (panelWidth - 64) / 2,
-      height: 44
-    };
-    const confirmRect = {
-      x: cancelRect.x + cancelRect.width + 16,
-      y: cancelRect.y,
-      width: cancelRect.width,
-      height: cancelRect.height
-    };
-    this.membershipActionRects.cancel = cancelRect;
-    this.membershipActionRects.confirm = confirmRect;
-    this.drawActionButton(cancelRect, '取消', 'secondary');
-    this.drawActionButton(confirmRect, '确认', 'primary');
+      this.drawMembershipKeyboard(
+        shell.content.x - 4,
+        shell.content.y,
+        shell.content.width + 8,
+        shell.content.y + (state.membershipError ? 72 : 56)
+      );
+
+      const buttonWidth = (shell.content.width - 16) / 2;
+      const cancelRect = {
+        x: shell.content.x,
+        y: shell.footerButton.y,
+        width: buttonWidth,
+        height: shell.footerButton.height
+      };
+      const confirmRect = {
+        x: cancelRect.x + cancelRect.width + 16,
+        y: cancelRect.y,
+        width: cancelRect.width,
+        height: cancelRect.height
+      };
+      this.membershipActionRects.cancel = cancelRect;
+      this.membershipActionRects.confirm = confirmRect;
+      this.drawActionButton(cancelRect, '取消', 'secondary', { pressKey: 'membership:cancel' });
+      this.drawActionButton(confirmRect, '确认', 'primary', { pressKey: 'membership:confirm' });
+    });
   }
 
-  drawMembershipKeyboard(panelX, panelY, panelWidth, keyboardTopY) {
+  drawMembershipKeyboard(keyboardX, keyboardY, keyboardWidth, keyboardTopY) {
     const { ctx } = this;
     this.membershipKeyboardKeyRects = {};
 
@@ -1485,8 +1837,8 @@ export default class Renderer {
 
     const keyH = 36;
     const gap = 3;
-    const contentX = panelX + 24;
-    const contentW = panelWidth - 48;
+    const contentX = keyboardX + 8;
+    const contentW = keyboardWidth - 16;
 
     rows.forEach((row, rowIdx) => {
       const n = row.length;
@@ -1497,19 +1849,38 @@ export default class Renderer {
       row.forEach((label, colIdx) => {
         const x = contentX + colIdx * (keyW + gap);
         const isDel = label === 'DEL';
+        const press = this.getPressVisual(`membership:key:${label}`);
+
+        ctx.save();
+        if (press) {
+          const centerX = x + keyW / 2;
+          const centerY = y + keyH / 2;
+          ctx.translate(centerX, centerY);
+          ctx.scale(press.scale, press.scale);
+          ctx.translate(-centerX, -centerY);
+        }
 
         roundedRect(ctx, x, y, keyW, keyH, 8);
-        ctx.fillStyle = isDel ? 'rgba(180,60,60,0.35)' : 'rgba(30,60,110,0.65)';
+        ctx.fillStyle = isDel ? 'rgba(120, 52, 48, 0.55)' : 'rgba(24, 50, 92, 0.72)';
         ctx.fill();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = isDel ? 'rgba(255,120,120,0.35)' : 'rgba(120,200,255,0.2)';
+        ctx.strokeStyle = isDel
+          ? 'rgba(255, 140, 130, 0.4)'
+          : press && press.strength > 0 ? 'rgba(140, 215, 255, 0.6)' : 'rgba(120, 200, 255, 0.2)';
         ctx.stroke();
+
+        if (press && press.strength > 0) {
+          roundedRect(ctx, x, y, keyW, keyH, 8);
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.1 * press.strength})`;
+          ctx.fill();
+        }
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = isDel ? '#FFB0B0' : TEXT_PRIMARY;
         ctx.font = isDel ? 'bold 13px sans-serif' : 'bold 16px sans-serif';
         ctx.fillText(label, x + keyW / 2, y + keyH / 2 + 1);
+        ctx.restore();
 
         this.membershipKeyboardKeyRects[label + '_' + rowIdx + '_' + colIdx] = {
           x, y, width: keyW, height: keyH, key: label
@@ -1533,150 +1904,171 @@ export default class Renderer {
 
   drawRevivePrompt(state) {
     const { ctx, layout } = this;
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+    const motion = this.getPanelMotion(state, 'revive');
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 9,
+      preferredContentHeight: 152
+    });
 
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 18;
-    const panelHeight = 248;
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = (layout.screenHeight - panelHeight) / 2;
+    this.withPanelMotion(motion, shell.panel, () => {
+      this.reviveActionRects = {};
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
+      this.drawModalTitle('使用免死金牌？', shell);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 10;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
+      const reviveCountLabel = state.getReviveCountLabel();
+      const prefix = '本局还可免死 ';
+      const suffix = ' 次';
+      const prefixWidth = this.measureCanvasText(prefix, 16);
+      const countWidth = this.measureCanvasText(reviveCountLabel, 19, 'sans-serif', 'bold');
+      const suffixWidth = this.measureCanvasText(suffix, 16);
+      const totalWidth = prefixWidth + countWidth + suffixWidth;
+      const textStartX = shell.panel.x + shell.panel.width / 2 - totalWidth / 2;
+      const textBaseline = shell.content.y + 30;
 
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
+      ctx.textAlign = 'left';
+      ctx.fillStyle = TEXT_SECONDARY;
+      ctx.font = '16px sans-serif';
+      ctx.fillText(prefix, textStartX, textBaseline);
+      ctx.fillStyle = '#FFD60A';
+      ctx.font = 'bold 19px sans-serif';
+      ctx.fillText(reviveCountLabel, textStartX + prefixWidth, textBaseline);
+      ctx.fillStyle = TEXT_SECONDARY;
+      ctx.font = '16px sans-serif';
+      ctx.fillText(suffix, textStartX + prefixWidth + countWidth, textBaseline);
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('使用免死金牌？', layout.screenWidth / 2, panelY + 44);
+      const useRect = {
+        x: shell.content.x,
+        y: shell.content.y + 48,
+        width: shell.content.width,
+        height: 48
+      };
+      const giveUpRect = {
+        x: shell.content.x,
+        y: useRect.y + 58,
+        width: shell.content.width,
+        height: 42
+      };
 
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '17px sans-serif';
-    ctx.fillText(`本局还可免死 ${state.getReviveCountLabel()} 次`, layout.screenWidth / 2, panelY + 94);
-
-    const useRect = {
-      x: panelX + 24,
-      y: panelY + 132,
-      width: panelWidth - 48,
-      height: 48
-    };
-    const giveUpRect = {
-      x: panelX + 24,
-      y: useRect.y + 58,
-      width: panelWidth - 48,
-      height: 42
-    };
-
-    this.reviveActionRects.use = useRect;
-    this.reviveActionRects.giveUp = giveUpRect;
-    this.drawActionButton(useRect, '使用', 'primary');
-    this.drawActionButton(giveUpRect, '放弃', 'dangerOutline');
+      this.reviveActionRects.use = useRect;
+      this.reviveActionRects.giveUp = giveUpRect;
+      this.drawActionButton(useRect, '使用', 'primary', { pressKey: 'revive:use' });
+      this.drawActionButton(giveUpRect, '放弃', 'dangerOutline', { pressKey: 'revive:giveUp' });
+    });
   }
 
   drawGameOver(state) {
     const { ctx, layout } = this;
     const difficultyLabel = getDifficultyLabel(state.activeDifficulty);
+    const motion = this.getPanelMotion(state, 'gameover');
+    const showAdminNote = !state.bestScoreEligible;
+    const showRecord = state.bestScoreEligible && state.hasShownNewRecord;
+    const shell = calculateModalShellLayout({
+      viewportWidth: layout.screenWidth,
+      viewportHeight: layout.screenHeight,
+      bottomInset: layout.bottomInset,
+      sideInset: layout.sideMargin + 4,
+      preferredContentHeight: showAdminNote ? 218 : 188
+    });
 
-    ctx.fillStyle = OVERLAY;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+    this.withPanelMotion(motion, shell.panel, () => {
+      ctx.fillStyle = OVERLAY;
+      ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
+      this.drawModalPanel(shell.panel);
 
-    const panelWidth = layout.screenWidth - layout.sideMargin * 2 - 8;
-    const panelHeight = state.bestScoreEligible ? 256 : 286;
-    const panelX = (layout.screenWidth - panelWidth) / 2;
-    const panelY = layout.screenHeight * 0.25;
+      const centerX = shell.panel.x + shell.panel.width / 2;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = TEXT_PRIMARY;
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('游戏结束', centerX, shell.panel.y + 44);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetY = 8;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.fillStyle = PANEL;
-    ctx.fill();
-    ctx.restore();
+      if (showRecord) {
+        const badgeWidth = 88;
+        const badgeRect = {
+          x: centerX - badgeWidth / 2,
+          y: shell.panel.y + 58,
+          width: badgeWidth,
+          height: 22
+        };
+        roundedRect(ctx, badgeRect.x, badgeRect.y, badgeRect.width, badgeRect.height, 11);
+        ctx.fillStyle = 'rgba(92, 70, 18, 0.88)';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255, 214, 10, 0.72)';
+        ctx.stroke();
+        ctx.fillStyle = '#FFF1A8';
+        ctx.font = '13px sans-serif';
+        ctx.fillText('新纪录', centerX, badgeRect.y + 16);
+      }
 
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = PANEL_BORDER;
-    roundedRect(ctx, panelX, panelY, panelWidth, panelHeight, 22);
-    ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = 'bold 30px sans-serif';
-    ctx.fillText('游戏结束', layout.screenWidth / 2, panelY + 48);
-
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = '18px sans-serif';
-    ctx.fillText(`本局得分 ${state.score}`, layout.screenWidth / 2, panelY + 96);
-    ctx.fillText(`${difficultyLabel}最高分 ${state.bestScore}`, layout.screenWidth / 2, panelY + 130);
-
-    const extraText = state.getGameOverExtraText();
-    if (extraText) {
-      ctx.fillText(extraText, layout.screenWidth / 2, panelY + 164);
-    }
-
-    if (!state.bestScoreEligible) {
-      ctx.fillStyle = '#F1B2A4';
-      ctx.font = '15px sans-serif';
-      ctx.fillText('管理员模式分数不计入正式最高分', layout.screenWidth / 2, panelY + (extraText ? 194 : 164));
-    }
-
-    const buttonRect = {
-      x: panelX + 36,
-      y: panelY + panelHeight - 76,
-      width: panelWidth - 72,
-      height: 52
-    };
-    this.restartButtonRect = buttonRect;
-    this.drawActionButton(buttonRect, '重新开始', 'primary');
-  }
-
-  drawSettingRow(rect, label, value) {
-    const { ctx } = this;
-    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 14);
-    ctx.fillStyle = 'rgba(11, 28, 52, 0.92)';
-    ctx.fill();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(120, 202, 255, 0.24)';
-    ctx.stroke();
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = value && value.length > 10 ? '15px sans-serif' : '17px sans-serif';
-    ctx.fillText(label, rect.x + 16, rect.y + rect.height / 2 + 6);
-
-    if (value) {
-      ctx.textAlign = 'right';
       ctx.fillStyle = TEXT_SECONDARY;
-      ctx.font = value.length > 10 ? '14px sans-serif' : '16px sans-serif';
-      ctx.fillText(value, rect.x + rect.width - 16, rect.y + rect.height / 2 + 5);
-    }
+      ctx.font = '13px sans-serif';
+      ctx.fillText('本局得分', centerX, shell.panel.y + 106);
+      ctx.fillStyle = TEXT_PRIMARY;
+      ctx.font = 'bold 34px sans-serif';
+      ctx.fillText(String(state.score), centerX, shell.panel.y + 142);
+
+      ctx.fillStyle = TEXT_SECONDARY;
+      ctx.font = '15px sans-serif';
+      ctx.fillText(`${difficultyLabel}最高分 ${state.bestScore}`, centerX, shell.panel.y + 170);
+
+      const extraText = state.getGameOverExtraText();
+      let noteBaseline = shell.panel.y + 192;
+      if (extraText) {
+        ctx.fillText(extraText, centerX, noteBaseline);
+        noteBaseline += 22;
+      }
+
+      if (showAdminNote) {
+        ctx.fillStyle = 'rgba(241, 178, 164, 0.9)';
+        ctx.font = '13px sans-serif';
+        ctx.fillText('管理员模式分数不计入正式最高分', centerX, noteBaseline);
+      }
+
+      const buttonRect = shell.footerButton;
+      this.restartButtonRect = buttonRect;
+      this.drawActionButton(buttonRect, '重新开始', 'primary', { pressKey: 'gameover:restart' });
+    });
   }
 
   drawSectionLabel(rect, label) {
     const { ctx } = this;
     ctx.textAlign = 'left';
-    ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillText(label, rect.x + 4, rect.y + rect.height / 2 + 6);
+    ctx.fillStyle = TEXT_MUTED;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(label, rect.x + 6, rect.y + rect.height / 2 + 4);
   }
 
-  drawActionButton(rect, label, variant = 'secondary') {
+  drawActionButton(rect, label, variant = 'secondary', options = {}) {
     const { ctx } = this;
     const isPrimary = variant === 'primary' || variant === true;
     const isDanger = variant === 'danger';
     const isDangerOutline = variant === 'dangerOutline';
+    const press = this.getPressVisual(options.pressKey);
 
-    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 16);
+    ctx.save();
+    if (options.disabled) {
+      ctx.globalAlpha = 0.55;
+    }
+    if (press) {
+      const centerX = rect.x + rect.width / 2;
+      const centerY = rect.y + rect.height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.scale(press.scale, press.scale);
+      ctx.translate(-centerX, -centerY);
+    }
+
+    if (isPrimary && !options.disabled) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(80, 182, 255, 0.28)';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 3;
+    }
+    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
     if (isPrimary) {
       ctx.fillStyle = BUTTON_FILL;
     } else if (isDanger) {
@@ -1685,15 +2077,25 @@ export default class Renderer {
       ctx.fillStyle = 'rgba(11, 28, 52, 0.92)';
     }
     ctx.fill();
+    if (isPrimary && !options.disabled) {
+      ctx.restore();
+    }
+
     ctx.lineWidth = 1.25;
     if (isPrimary) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
     } else if (isDanger || isDangerOutline) {
       ctx.strokeStyle = 'rgba(237, 133, 113, 0.72)';
     } else {
-      ctx.strokeStyle = 'rgba(120,202,255,0.28)';
+      ctx.strokeStyle = UI_TOKENS.border.subtle;
     }
     ctx.stroke();
+
+    if (press && press.strength > 0) {
+      roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
+      ctx.fillStyle = `rgba(${isPrimary ? '255, 255, 255' : '0, 0, 0'}, ${0.12 * press.strength})`;
+      ctx.fill();
+    }
 
     if (isPrimary) {
       const hlPadX = 16;
@@ -1712,23 +2114,42 @@ export default class Renderer {
 
     ctx.textAlign = 'center';
     ctx.fillStyle = isDangerOutline ? '#F1B2A4' : '#FFFFFF';
-    ctx.font = 'bold 18px sans-serif';
+    ctx.font = 'bold 17px sans-serif';
     ctx.fillText(label, rect.x + rect.width / 2, rect.y + rect.height / 2 + 6);
+    ctx.restore();
   }
 
-  drawSecondaryChip(rect, label) {
+  drawSecondaryChip(rect, label, pressKey) {
     const { ctx } = this;
-    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 16);
+    const press = this.getPressVisual(pressKey);
+
+    ctx.save();
+    if (press) {
+      const centerX = rect.x + rect.width / 2;
+      const centerY = rect.y + rect.height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.scale(press.scale, press.scale);
+      ctx.translate(-centerX, -centerY);
+    }
+
+    roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
     ctx.fillStyle = 'rgba(11, 28, 52, 0.78)';
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(120,202,255,0.28)';
+    ctx.strokeStyle = UI_TOKENS.border.subtle;
     ctx.stroke();
+
+    if (press && press.strength > 0) {
+      roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, UI_TOKENS.radius.medium);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.16 * press.strength})`;
+      ctx.fill();
+    }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_SECONDARY;
     ctx.font = '16px sans-serif';
     ctx.fillText(label, rect.x + rect.width / 2, rect.y + rect.height / 2 + 6);
+    ctx.restore();
   }
 
   drawStatusTag(rect, label, variant = 'secondary') {
@@ -1739,7 +2160,7 @@ export default class Renderer {
     ctx.lineWidth = 1;
     ctx.strokeStyle = variant === 'danger'
       ? 'rgba(237, 133, 113, 0.72)'
-      : 'rgba(120,202,255,0.28)';
+      : UI_TOKENS.border.subtle;
     ctx.stroke();
 
     ctx.textAlign = 'center';
@@ -1755,11 +2176,11 @@ export default class Renderer {
     const x = (layout.screenWidth - width) / 2;
     const y = layout.toolRect.y - 38;
 
-    roundedRect(ctx, x, y, width, height, 16);
-    ctx.fillStyle = 'rgba(8, 18, 36, 0.8)';
+    roundedRect(ctx, x, y, width, height, UI_TOKENS.radius.small);
+    ctx.fillStyle = 'rgba(8, 18, 36, 0.86)';
     ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(151, 226, 255, 0.28)';
+    ctx.strokeStyle = UI_TOKENS.border.subtle;
     ctx.stroke();
 
     ctx.textAlign = 'center';
@@ -1774,25 +2195,35 @@ export default class Renderer {
     const drawSize = size - inset * 2;
     const drawX = x + inset;
     const drawY = y + inset;
-    const radius = clamp(size * 0.08, 2, 4);
+    const radius = clamp(size * 0.1, 2, 5);
     const alpha = options.alpha == null ? 1 : options.alpha;
     const pulse = options.pulse || 0;
     const glow = options.glow || 0;
     const borderBoost = options.borderBoost || 0;
-    const shadowAlpha = options.shadowAlpha == null ? 0.08 : options.shadowAlpha;
+    const shadowAlpha = options.shadowAlpha == null ? 0 : options.shadowAlpha;
     const flatten = !!options.flatten;
     const clearing = !!options.clearing;
+    const pulseSquash = pulse > 0 ? 1 - 0.05 * Math.sin(pulse * Math.PI) : 1;
 
-    const topColor = tintColor(color, flatten ? 0.16 : 0.22 + pulse * 0.08);
+    const topColor = tintColor(color, flatten ? 0.14 : 0.16 + pulse * 0.1);
     const midColor = clearing ? tintColor(color, 0.1) : color;
-    const bottomColor = shadeColor(color, flatten ? 0.14 : 0.28);
+    const bottomColor = shadeColor(color, flatten ? 0.14 : 0.24);
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.shadowColor = rgba(tintColor(color, 0.2), glow > 0 ? 0.14 : shadowAlpha);
-    ctx.shadowBlur = glow > 0 ? 3 : 0.8;
-    ctx.shadowOffsetY = glow > 0 ? 1 : 0.5;
-    roundedRect(ctx, drawX, drawY, drawSize, drawSize, radius);
+    if (shadowAlpha > 0 || glow > 0) {
+      ctx.shadowColor = rgba(tintColor(color, 0.2), glow > 0 ? 0.16 : shadowAlpha);
+      ctx.shadowBlur = glow > 0 ? 4 : 3;
+      ctx.shadowOffsetY = glow > 0 ? 1 : 2;
+    }
+    roundedRect(
+      ctx,
+      drawX + (drawSize * (1 - pulseSquash)) / 2,
+      drawY + (drawSize * (1 - pulseSquash)) / 2,
+      drawSize * pulseSquash,
+      drawSize * pulseSquash,
+      radius
+    );
     const gradient = this.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
     gradient.addColorStop(0, topColor);
     gradient.addColorStop(0.45, midColor);
@@ -1804,31 +2235,29 @@ export default class Renderer {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.lineWidth = 1;
-    ctx.strokeStyle = rgba(tintColor(color, 0.38 + borderBoost), 0.78);
-    roundedRect(ctx, drawX + 0.5, drawY + 0.5, drawSize - 1, drawSize - 1, radius);
+    ctx.strokeStyle = rgba(tintColor(color, 0.4 + borderBoost), 0.6);
+    roundedRect(
+      ctx,
+      drawX + (drawSize * (1 - pulseSquash)) / 2 + 0.5,
+      drawY + (drawSize * (1 - pulseSquash)) / 2 + 0.5,
+      drawSize * pulseSquash - 1,
+      drawSize * pulseSquash - 1,
+      radius
+    );
     ctx.stroke();
 
-    ctx.strokeStyle = rgba('#FFFFFF', flatten ? 0.12 : 0.24 + pulse * 0.08);
+    // Thin specular edge instead of a plastic shine bar.
+    ctx.strokeStyle = rgba('#FFFFFF', flatten ? 0.16 : 0.26 + pulse * 0.08);
     ctx.beginPath();
-    ctx.moveTo(drawX + 2, drawY + drawSize - 2);
-    ctx.lineTo(drawX + 2, drawY + 2);
-    ctx.lineTo(drawX + drawSize - 2, drawY + 2);
+    ctx.moveTo(drawX + radius - 1, drawY + 1.5);
+    ctx.lineTo(drawX + drawSize - radius + 1, drawY + 1.5);
     ctx.stroke();
 
-    ctx.strokeStyle = rgba(shadeColor(color, 0.48), 0.5);
+    ctx.strokeStyle = rgba(shadeColor(color, 0.45), 0.42);
     ctx.beginPath();
-    ctx.moveTo(drawX + drawSize - 1, drawY + 3);
-    ctx.lineTo(drawX + drawSize - 1, drawY + drawSize - 1);
-    ctx.lineTo(drawX + 3, drawY + drawSize - 1);
+    ctx.moveTo(drawX + radius - 1, drawY + drawSize - 1.5);
+    ctx.lineTo(drawX + drawSize - radius + 1, drawY + drawSize - 1.5);
     ctx.stroke();
-
-    if (!flatten) {
-      const shineHeight = Math.max(2, Math.floor(drawSize * 0.16));
-      const shineWidth = Math.max(8, drawSize - 6);
-      ctx.fillStyle = 'rgba(255,255,255,0.14)';
-      roundedRect(ctx, drawX + 2, drawY + 2, shineWidth, shineHeight, 2);
-      ctx.fill();
-    }
     ctx.restore();
   }
 

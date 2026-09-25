@@ -223,3 +223,14 @@ Current expected automated baseline after this change:
 - New coverage includes clear effect event creation, row and column semantics, deterministic particles, phase transitions, expiry, bounded effect list size, pause timer behavior through existing update rules, and undo cleanup.
 - `game-state.test.mjs` confirms a real clearing placement creates a clear effect and undo clears it without replaying it.
 - Pixel-perfect Canvas output is still a manual verification item; automated tests assert semantic state and module behavior.
+
+## UI motion and modal layout test baseline (2026-09-25)
+
+UI/UX/Motion polish round. Gameplay rules, scoring, storage, and platform boundaries are unchanged.
+
+- `npm test`: 184 tests, 184 passing, 0 failing, 0 TODO (run twice consecutively).
+- New `tests/parity/modal-layout.test.mjs`: modal shell, settings tab pages, and help rows are asserted for wechat/android/web across 320×560, 360×640, 375×667, 390×844, and 412×915. Covers panel bounds, footer visibility, content/footer non-overlap, row bounds, tab layout, and compact dialogs.
+- New `tests/parity/ui-motion.test.mjs`: `FeedbackState` uiMotion contract shared byte-identically by all three targets. Covers press feedback creation/decay/cleanup, multi-press independence, modal open/close progress and finish, per-kind keying, unknown-kind rejection, independence from gameplay feedback freezing, and reset with `clearFeedbackState`.
+- `main-runtime.test.mjs` contract update (approved UI change): modal open/close motion and the gameover open motion legitimately keep at most one frame alive for their duration (~140–180ms); the loop clamps per-frame delta to 32ms, so tests advance several ticks. Idle-after-finish and background/foreground idle assertions are unchanged.
+- Settings is split into two tab pages (游戏 / 账号与数据) via `GameState.ui.settingsTab`; the previous fixed-row Settings/Help overflow on short screens is fixed by `calculateModalShellLayout`/`calculateModalRowsLayout`/`calculateHelpRowsLayout` in both `LayoutMetrics.js` copies.
+- Android debug build for this round was produced through the temporary English drive-letter mapping approach documented in section 10.

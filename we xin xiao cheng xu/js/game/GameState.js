@@ -12,6 +12,8 @@ import {
   triggerClearScore,
   triggerLineClearEffect,
   triggerHighScore,
+  triggerModalClose,
+  triggerModalOpen,
   updateDragFeedback
 } from './FeedbackState.js';
 import {
@@ -78,7 +80,8 @@ function createUiState() {
     isPauseConfirmOpen: false,
     isAdminPanelOpen: false,
     isMembershipPanelOpen: false,
-    isRevivePromptOpen: false
+    isRevivePromptOpen: false,
+    settingsTab: 'game'
   };
 }
 
@@ -419,22 +422,31 @@ export default class GameState {
   openHelp() {
     this.clearDrag();
     this.setScreen('help');
+    triggerModalOpen(this.feedbackState, 'help');
   }
 
   closeHelp() {
     this.setScreen('home');
+    triggerModalClose(this.feedbackState, 'help');
   }
 
   openSettings() {
     this.clearDrag();
     this.ui.isSettingsOpen = true;
     this.ui.isResetConfirmOpen = false;
+    this.ui.settingsTab = 'game';
+    triggerModalOpen(this.feedbackState, 'settings');
   }
 
   closeSettings() {
     this.ui.isSettingsOpen = false;
     this.ui.isResetConfirmOpen = false;
     this.ui.isMembershipPanelOpen = false;
+    triggerModalClose(this.feedbackState, 'settings');
+  }
+
+  setSettingsTab(tab) {
+    this.ui.settingsTab = tab === 'account' ? 'account' : 'game';
   }
 
   openMembershipPanel() {
@@ -445,6 +457,7 @@ export default class GameState {
     this.membershipInput = '';
     this.membershipError = '';
     this.ui.isMembershipPanelOpen = true;
+    triggerModalOpen(this.feedbackState, 'membership');
     return true;
   }
 
@@ -452,6 +465,7 @@ export default class GameState {
     this.membershipInput = '';
     this.membershipError = '';
     this.ui.isMembershipPanelOpen = false;
+    triggerModalClose(this.feedbackState, 'membership');
   }
 
   openPause() {
@@ -467,11 +481,13 @@ export default class GameState {
     this.clearDrag();
     this.ui.isPauseOpen = true;
     this.ui.isPauseConfirmOpen = false;
+    triggerModalOpen(this.feedbackState, 'pause');
   }
 
   closePause() {
     this.ui.isPauseOpen = false;
     this.ui.isPauseConfirmOpen = false;
+    triggerModalClose(this.feedbackState, 'pause');
   }
 
   requestReturnHome() {
@@ -523,6 +539,7 @@ export default class GameState {
     this.adminInput = '';
     this.adminError = '';
     this.ui.isAdminPanelOpen = true;
+    triggerModalOpen(this.feedbackState, 'admin');
     return true;
   }
 
@@ -530,6 +547,7 @@ export default class GameState {
     this.adminInput = '';
     this.adminError = '';
     this.ui.isAdminPanelOpen = false;
+    triggerModalClose(this.feedbackState, 'admin');
   }
 
   setAdminInput(value) {
@@ -590,11 +608,13 @@ export default class GameState {
       remainingCount: this.isAdminModeActive() ? Infinity : this.reviveCount
     };
     this.ui.isRevivePromptOpen = true;
+    triggerModalOpen(this.feedbackState, 'revive');
   }
 
   closeRevivePrompt() {
     this.pendingRevive = null;
     this.ui.isRevivePromptOpen = false;
+    triggerModalClose(this.feedbackState, 'revive');
   }
 
   acceptRevive() {
@@ -1203,6 +1223,7 @@ export default class GameState {
     this.ui.isRevivePromptOpen = false;
     this.pendingRevive = null;
     this.setScreen('gameover');
+    triggerModalOpen(this.feedbackState, 'gameover');
     if (!wasGameOver) {
       this.emitEvent('gameOver');
     }

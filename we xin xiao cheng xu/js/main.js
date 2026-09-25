@@ -4,6 +4,7 @@ import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
+import { advanceUiMotion } from './game/FeedbackState.js';
 import AuthClient, { initCloud } from './api/AuthClient.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
@@ -122,6 +123,9 @@ export default class Main {
   update(deltaTime) {
     this.inputManager.flushPendingInput();
     this.gameState.update(deltaTime);
+    // UI motion (button press, modal transitions) advances independently of
+    // gameplay freeze rules so open modals can still animate.
+    advanceUiMotion(this.gameState.feedbackState, deltaTime);
     const events = this.gameState.consumeEvents();
     events.forEach((event) => {
       switch (event.type) {
