@@ -1031,6 +1031,9 @@ export default class GameState {
     this.inputLocked = false;
     this.activeDifficulty = snapshot.activeDifficulty;
     this.lastRackHadSnake = !!snapshot.lastRackHadSnake;
+    this.recentRackBaseIds = Array.isArray(snapshot.recentRackBaseIds)
+      ? snapshot.recentRackBaseIds.slice()
+      : [];
     this.toolState = {
       ...snapshot.toolState,
       clearMode: false
@@ -1243,6 +1246,7 @@ export default class GameState {
       inputLocked: false,
       activeDifficulty: this.activeDifficulty,
       lastRackHadSnake: this.lastRackHadSnake,
+      recentRackBaseIds: this.recentRackBaseIds ? this.recentRackBaseIds.slice() : [],
       reviveCount: this.reviveCount,
       reviveUsedCount: this.reviveUsedCount,
       bestScoreEligible: this.bestScoreEligible,

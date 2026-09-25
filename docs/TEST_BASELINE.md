@@ -234,3 +234,15 @@ UI/UX/Motion polish round. Gameplay rules, scoring, storage, and platform bounda
 - `main-runtime.test.mjs` contract update (approved UI change): modal open/close motion and the gameover open motion legitimately keep at most one frame alive for their duration (~140–180ms); the loop clamps per-frame delta to 32ms, so tests advance several ticks. Idle-after-finish and background/foreground idle assertions are unchanged.
 - Settings is split into two tab pages (游戏 / 账号与数据) via `GameState.ui.settingsTab`; the previous fixed-row Settings/Help overflow on short screens is fixed by `calculateModalShellLayout`/`calculateModalRowsLayout`/`calculateHelpRowsLayout` in both `LayoutMetrics.js` copies.
 - Android debug build for this round was produced through the temporary English drive-letter mapping approach documented in section 10.
+
+## Candidate piece generation round (2026-09-25, audit repair)
+
+Generation maturity round on top of the UI polish branch. Gameplay rules, scoring, tool counts, revive rules, storage, and rendering are unchanged.
+
+- `npm test`: 213 tests, 213 passing, 0 failing (includes 14 piece-family-sampling tests and 6 rack-history-consistency tests across wechat/android/web).
+- `tests/parity/piece-family-sampling.test.mjs`: family-first sampling keeps rotation count out of base frequency, rotations stay uniform inside a family, recent history is soft, per-difficulty same-base caps hold, the viability evaluator agrees with real Board placements (including clear-reopen and forced-zero fixtures), and pressure buckets behave.
+- `tests/parity/rack-history-consistency.test.mjs`: `consumeRevive()` re-points `recentRackBaseIds` at the regenerated rack on all three targets, and `useUndoTool()` restores the history captured with the snapshot (audit repair).
+- Generation changes: family-first sampling (base weight, then uniform rotation), light recent-rack soft penalty (x0.65), in-rack duplicate soft penalty (x0.5), same-base hard caps (easy 1, normal/master 2), 3-piece viability evaluator reusing real Board rules with a 10000-placement budget, four board-pressure buckets driving per-difficulty category adjustments, and the last 3 attempts bypass the viability gate so failure rates never exceed the previous generator.
+- Duplicate policy is uniform across categories: every family stays selectable at the reduced weight up to the hard cap; another category is only used when the picked category's pool is empty. Measured rack duplicate rate at 20k samples across pressure-heavy fixtures: easy 0%, normal 42%, master 23% (pairs only; triples remain hard-capped out).
+- `scripts/simulate-piece-generation.mjs` reports category/base/rotation distributions, duplicate and consecutive-repeat rates, per-base droughts, viability quality, and generation timing (avg/p95/worst) across 8 deterministic board fixtures; `--piece <path>` replays a baseline generator through the same evaluator for before/after comparisons.
+- Android debug build for this round was produced through the temporary English drive-letter mapping approach documented in section 10.

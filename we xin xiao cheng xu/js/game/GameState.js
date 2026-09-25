@@ -1065,6 +1065,9 @@ export default class GameState {
     this.inputLocked = false;
     this.activeDifficulty = snapshot.activeDifficulty;
     this.lastRackHadSnake = !!snapshot.lastRackHadSnake;
+    this.recentRackBaseIds = Array.isArray(snapshot.recentRackBaseIds)
+      ? snapshot.recentRackBaseIds.slice()
+      : [];
     this.toolState = {
       ...snapshot.toolState,
       clearMode: false
@@ -1181,12 +1184,14 @@ export default class GameState {
     this.syncRoundRuntimeState();
 
     const result = createRack(this.board, this.activeDifficulty, {
-      previousHadSnake: this.lastRackHadSnake
+      previousHadSnake: this.lastRackHadSnake,
+      recentBaseIds: this.recentRackBaseIds
     });
 
     if (result.success) {
       this.rackPieces = result.pieces;
       this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
+      this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
       this.showNotice(isAdmin ? '管理员模式已继续当前局' : '已使用免死金牌');
       this.closeRevivePrompt();
       this.setScreen('playing');
@@ -1203,7 +1208,8 @@ export default class GameState {
     }
 
     const retry = createRack(this.board, this.activeDifficulty, {
-      previousHadSnake: this.lastRackHadSnake
+      previousHadSnake: this.lastRackHadSnake,
+      recentBaseIds: this.recentRackBaseIds
     });
 
     if (!retry.success) {
@@ -1212,6 +1218,7 @@ export default class GameState {
 
     this.rackPieces = retry.pieces;
     this.lastRackHadSnake = !!(retry.meta && retry.meta.hasSnake);
+    this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
     this.showNotice(isAdmin ? '管理员模式已继续当前局' : '已使用免死金牌');
     this.closeRevivePrompt();
     this.setScreen('playing');
@@ -1274,6 +1281,7 @@ export default class GameState {
       inputLocked: false,
       activeDifficulty: this.activeDifficulty,
       lastRackHadSnake: this.lastRackHadSnake,
+      recentRackBaseIds: this.recentRackBaseIds ? this.recentRackBaseIds.slice() : [],
       reviveCount: this.reviveCount,
       reviveUsedCount: this.reviveUsedCount,
       bestScoreEligible: this.bestScoreEligible,

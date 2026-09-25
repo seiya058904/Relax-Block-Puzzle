@@ -511,41 +511,31 @@ function getCategoryWeights(difficulty, pressure = 'low') {
   return weights;
 }
 
-// Picks the family pool for a slot. When the picked category has no fresh
-// family left (every candidate already appears in this rack), the generator
-// prefers another category that still offers a fresh shape; duplicates only
-// happen when no fresh family exists anywhere. The same fallback covers the
-// case where the same-base cap filtered a category out entirely.
+// Picks the family pool for a slot. The duplicate policy is uniform for
+// every category: a family already present in the rack stays selectable at
+// the reduced in-rack weight, up to the same-base hard cap. Another category
+// is used only when the picked category's pool is empty (cap filtered every
+// family out), so single-family categories like simple behave exactly like
+// multi-family ones.
 function pickAvailableFamilyPool(category, difficulty, pieces, options) {
   const rules = DIFFICULTY_RULES[difficulty];
-  const attempt = (candidateCategory) => {
-    const pool = buildFamilyPoolForCategory(candidateCategory, difficulty, pieces, options);
-    if (!pool) {
-      return null;
-    }
-    const hasFresh = pool.some(
-      (family) => countCellsByBaseId(pieces, family.baseId) === 0
-    );
-    return { category: candidateCategory, pool, hasFresh };
-  };
-
-  const fallbackOrder = ['rescue', 'simple', 'medium', 'hard'];
-  const primary = attempt(category);
-  if (primary && primary.hasFresh) {
-    return primary;
+  let pool = buildFamilyPoolForCategory(category, difficulty, pieces, options);
+  if (pool) {
+    return { category, pool };
   }
 
+  const fallbackOrder = ['rescue', 'simple', 'medium', 'hard'];
   for (const fallbackCategory of fallbackOrder) {
     if (!rules.allowHard && fallbackCategory === 'hard') {
       continue;
     }
-    const candidate = attempt(fallbackCategory);
-    if (candidate && candidate.hasFresh) {
-      return candidate;
+    pool = buildFamilyPoolForCategory(fallbackCategory, difficulty, pieces, options);
+    if (pool) {
+      return { category: fallbackCategory, pool };
     }
   }
 
-  return primary || null;
+  return null;
 }
 
 // Returns the weighted family pool for a category, or null when every
@@ -749,9 +739,12 @@ function enumeratePlacements(board, piece, visit) {
 }
 
 // Bounded depth-first search over all piece orders (the player chooses the
-// order, so up to 3! = 6 permutations). Placement and line clears reuse the
-// real Board methods on a snapshot copy; each step restores the grid rows it
-// borrowed, so no second clear-rule implementation exists.
+// order, so 3! = 6 sequences). At each depth every remaining piece is tried
+// exactly once as the next placement, so no ordered sequence is searched
+// twice and the placement budget is never wasted on duplicate permutations.
+// Placement and line clears reuse the real Board methods on a snapshot copy;
+// each step restores the grid rows it borrowed, so no second clear-rule
+// implementation exists.
 function searchRackSequence(sim, remainingPieces, depth, state) {
   if (remainingPieces.length === 0) {
     state.bestSequenceDepth = Math.max(state.bestSequenceDepth, depth);
@@ -759,20 +752,10 @@ function searchRackSequence(sim, remainingPieces, depth, state) {
     return true;
   }
 
-  let found = false;
-  const order = remainingPieces.map((_, index) => index);
-  const permutations = order.length === 1
-    ? [order]
-    : order.length === 2
-      ? [[0, 1], [1, 0]]
-      : [
-          [0, 1, 2], [0, 2, 1], [1, 0, 2],
-          [1, 2, 0], [2, 0, 1], [2, 1, 0]
-        ];
-
-  for (const permutation of permutations) {
-    const piece = remainingPieces[permutation[0]];
-    const rest = permutation.slice(1).map((index) => remainingPieces[index]);
+  for (let index = 0; index < remainingPieces.length; index += 1) {
+    const piece = remainingPieces[index];
+    const rest = remainingPieces.filter((_, itemIndex) => itemIndex !== index);
+    let found = false;
     let placed = false;
 
     enumeratePlacements(sim, piece, (row, col) => {
@@ -809,7 +792,7 @@ function searchRackSequence(sim, remainingPieces, depth, state) {
   if (depth > state.bestSequenceDepth) {
     state.bestSequenceDepth = depth;
   }
-  return found;
+  return false;
 }
 
 // Quality summary for a candidate rack. Returns null when the board does not
