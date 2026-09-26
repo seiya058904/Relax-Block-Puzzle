@@ -1,3 +1,4 @@
+// GENERATED FILE - edit shared/js source and run npm run sync.
 import { COLORS, RACK_SIZE } from './coreConstants.js';
 import Board from './Board.js';
 import { normalizeDifficulty } from '../utils/storage.js';
