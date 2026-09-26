@@ -53,6 +53,12 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.10`
+
+- Refined home, board, candidate pieces, dialogs, and interaction motion / 全面优化首页、棋盘、候选块、弹层与交互动效
+- Improved candidate generation with family-first sampling, recent-history soft weighting, board-pressure adaptation, and three-piece viability checks / 改进候选方块生成：family-first sampling、recent-history soft weighting、board-pressure adaptation、three-piece viability
+- Fixed rack history consistency after revival and undo; verified Web / Android / WeChat parity and a live GitHub Pages smoke / 修复复活、撤回后的候选历史一致性，完成 Web / Android / 微信三端同步验证与线上 Pages smoke
+
 `v1.0.9`
 
 - Fixed Android WebView timer restoration across Activity recreation by keeping the app-owned pause state at process scope / 修复 Activity 重建后 Android WebView 计时器未恢复的问题，将应用持有的暂停状态提升到进程级
