@@ -79,6 +79,7 @@ export function loadBestScores() {
 export function saveBestScores(bestScores) {
   try {
     wx.setStorageSync(BEST_SCORES_KEY, sanitizeBestScores(bestScores));
+    return true;
   } catch (error) {
     // Ignore storage failures so the local game keeps running.
   }
@@ -92,8 +93,12 @@ export function loadBestScore(difficulty = 'normal') {
 export function saveBestScore(difficulty, score) {
   const bestScores = loadWritableBestScores();
   if (!bestScores) return;
-  bestScores[normalizeDifficulty(difficulty)] = Number.isFinite(score) ? score : 0;
-  saveBestScores(bestScores);
+  const key = normalizeDifficulty(difficulty);
+  const previous = bestScores[key];
+  const next = Math.max(previous, Number.isFinite(score) ? score : 0);
+  if (next === previous) return { previous, score: previous };
+  bestScores[key] = next;
+  return { previous, score: saveBestScores(bestScores) ? next : previous };
 }
 
 export function resetBestScore(difficulty = 'normal') {
