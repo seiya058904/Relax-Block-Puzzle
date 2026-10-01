@@ -1,0 +1,30 @@
+name: Browser regression
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install isolated browser test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/browser-tools" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/browser-tools/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Run real two-page browser regression
+        env:
+          QA_PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/browser-tools/node_modules/playwright
+          QA_SCREENSHOTS: ${{ runner.temp }}/browser-evidence
+        run: node tests/browser/high-score.mjs
+      - name: Preserve desktop and mobile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: high-score-browser-evidence
+          path: ${{ runner.temp }}/browser-evidence
+          if-no-files-found: ignore

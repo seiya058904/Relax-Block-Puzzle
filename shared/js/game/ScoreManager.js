@@ -47,13 +47,17 @@ export default class ScoreManager {
     }
 
     const difficulty = state.activeDifficulty || 'normal';
-    if (state.score > state.bestScore) {
-      state.bestScore = state.score;
-      state.bestScores = {
-        ...state.bestScores,
-        [difficulty]: state.score
-      };
-      saveBestScore(difficulty, state.score);
+    const result = saveBestScore(difficulty, state.score);
+    if (!result) return;
+    // An external higher record changes the threshold; our own earlier writes
+    // must not turn a first-ever game into a new-record celebration.
+    if (result.previous > state.bestScore) {
+      state.startingHighScore = Math.max(state.startingHighScore || 0, result.previous);
     }
+    state.bestScore = Math.max(state.bestScore, result.score);
+    state.bestScores = {
+      ...state.bestScores,
+      [difficulty]: state.bestScore
+    };
   }
 }
