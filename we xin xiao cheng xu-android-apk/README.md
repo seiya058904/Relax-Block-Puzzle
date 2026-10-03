@@ -53,6 +53,11 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.11`
+
+- Includes PR #9: stale pages cannot reduce the persistent high score; independent higher scores merge without changing gameplay or save keys.
+- Android versionName 1.0.11 / versionCode 11; existing signing identity retained.
+
 `v1.0.10`
 
 - Refined home, board, candidate pieces, dialogs, and interaction motion / 全面优化首页、棋盘、候选块、弹层与交互动效
