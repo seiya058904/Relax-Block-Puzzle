@@ -10,6 +10,7 @@
     "game/FrameInputQueue.js",
     "game/SafeHitArea.js",
     "game/RenderPerfStats.js",
+    "game/Presentation.js",
     "config/quality.js"
   ],
   "platformSpecific": {
@@ -62,6 +63,7 @@
     "game/FrameInputQueue.js",
     "game/SafeHitArea.js",
     "game/RenderPerfStats.js",
+    "game/Presentation.js",
     "config/quality.js"
   ],
   "targets": {

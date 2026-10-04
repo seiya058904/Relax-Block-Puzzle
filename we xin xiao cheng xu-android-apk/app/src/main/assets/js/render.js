@@ -1,11 +1,13 @@
+import { getQualityProfile } from './config/quality.js';
+import { getCanvasPixelRatio } from './game/Presentation.js';
+
 export function readCanvasMetrics() {
   const systemInfo = wx.getSystemInfoSync();
   const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : systemInfo;
   const width = windowInfo.screenWidth;
   const height = windowInfo.screenHeight;
   const rawPixelRatio = systemInfo.pixelRatio || window.devicePixelRatio || 1;
-  const pixelRatioFromPixels = Math.sqrt(5_000_000 / Math.max(1, width * height));
-  const effectiveDpr = Math.max(1, Math.min(rawPixelRatio, 1.5, pixelRatioFromPixels, 1.75));
+  const effectiveDpr = getCanvasPixelRatio(width, height, rawPixelRatio, getQualityProfile('full'));
   return {
     width, height, effectiveDpr,
     screenInfo: { screenWidth: width, screenHeight: height },
@@ -27,8 +29,8 @@ export function createCanvasSizeController(canvas, ctx) {
       if (changed) {
         canvas.style.width = `${metrics.width}px`;
         canvas.style.height = `${metrics.height}px`;
-        canvas.width = Math.round(metrics.width * metrics.effectiveDpr);
-        canvas.height = Math.round(metrics.height * metrics.effectiveDpr);
+        canvas.width = Math.floor(metrics.width * metrics.effectiveDpr);
+        canvas.height = Math.floor(metrics.height * metrics.effectiveDpr);
         ctx.setTransform(metrics.effectiveDpr, 0, 0, metrics.effectiveDpr, 0, 0);
         ctx.imageSmoothingEnabled = true;
         sizeKey = nextKey;

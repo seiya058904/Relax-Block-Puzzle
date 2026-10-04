@@ -17,11 +17,13 @@ function createEmptyStats() {
     maxGradientCreatesPerFrame: 0,
     maxLaserDrawsPerFrame: 0,
     maxFullRendersPerFrame: 0,
+    maxPartialRendersPerFrame: 0,
     maxActiveEffects: 0,
     frameParticles: 0,
     frameGradientCreates: 0,
     frameLaserDraws: 0,
     frameFullRenders: 0,
+    framePartialRenders: 0,
     activeEffects: 0,
     frameStart: null
   };
@@ -40,6 +42,7 @@ export function createRenderPerfStats({ enabled = false, logger = console.log } 
         maxGradientCreatesPerFrame: 0,
         maxLaserDrawsPerFrame: 0,
         maxFullRendersPerFrame: 0,
+        maxPartialRendersPerFrame: 0,
         maxActiveEffects: stats.maxActiveEffects
       } : null;
     }
@@ -52,6 +55,7 @@ export function createRenderPerfStats({ enabled = false, logger = console.log } 
       maxGradientCreatesPerFrame: stats.maxGradientCreatesPerFrame,
       maxLaserDrawsPerFrame: stats.maxLaserDrawsPerFrame,
       maxFullRendersPerFrame: stats.maxFullRendersPerFrame,
+      maxPartialRendersPerFrame: stats.maxPartialRendersPerFrame,
       maxActiveEffects: stats.maxActiveEffects
     };
   }
@@ -61,6 +65,7 @@ export function createRenderPerfStats({ enabled = false, logger = console.log } 
     stats.frameGradientCreates = 0;
     stats.frameLaserDraws = 0;
     stats.frameFullRenders = 0;
+    stats.framePartialRenders = 0;
   }
 
   return {
@@ -74,12 +79,14 @@ export function createRenderPerfStats({ enabled = false, logger = console.log } 
       if (!enabled || stats.frameStart === null) return;
       const duration = Math.max(0, (Number(timestamp) || 0) - stats.frameStart);
       stats.frameDurations.push(duration);
+      if (stats.frameDurations.length > 180) stats.frameDurations.shift();
       stats.totalFrames += 1;
       stats.maxFrameMs = Math.max(stats.maxFrameMs, duration);
       stats.maxParticlesPerFrame = Math.max(stats.maxParticlesPerFrame, stats.frameParticles);
       stats.maxGradientCreatesPerFrame = Math.max(stats.maxGradientCreatesPerFrame, stats.frameGradientCreates);
       stats.maxLaserDrawsPerFrame = Math.max(stats.maxLaserDrawsPerFrame, stats.frameLaserDraws);
       stats.maxFullRendersPerFrame = Math.max(stats.maxFullRendersPerFrame, stats.frameFullRenders);
+      stats.maxPartialRendersPerFrame = Math.max(stats.maxPartialRendersPerFrame, stats.framePartialRenders);
       stats.frameStart = null;
     },
 
@@ -97,6 +104,10 @@ export function createRenderPerfStats({ enabled = false, logger = console.log } 
 
     recordFullRender() {
       if (enabled) stats.frameFullRenders += 1;
+    },
+
+    recordPartialRender() {
+      if (enabled) stats.framePartialRenders += 1;
     },
 
     setActiveEffects(count) {

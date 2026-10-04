@@ -1,6 +1,7 @@
 package com.blockpuzzle.android
 
 import android.annotation.SuppressLint
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -26,6 +27,9 @@ class MainActivity : AppCompatActivity() {
 
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
+    WebView.setWebContentsDebuggingEnabled(
+      (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    )
 
     val assetLoader = WebViewAssetLoader.Builder()
       .addPathHandler("/assets/", AssetsPathHandler(this))

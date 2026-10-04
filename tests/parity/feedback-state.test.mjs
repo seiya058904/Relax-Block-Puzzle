@@ -121,8 +121,8 @@ for (const version of versions) {
       { kind: 'col', index: 5, origin: 0.5 }
     ]);
     assert.equal(effect.bursts, undefined);
-    assert.equal(effect.particles.length, 16);
-    assert.equal(feedback.CLEAR_EFFECT_LIMITS.maxParticles, version === 'wechat' ? 20 : 40);
+    assert.equal(effect.particles.length, 4);
+    assert.equal(feedback.CLEAR_EFFECT_LIMITS.maxParticles, version === 'wechat' ? 6 : 12);
     assert.equal(effect.particles.length <= feedback.CLEAR_EFFECT_LIMITS.maxParticles, true);
     assert.deepEqual(effect.particles, feedback.createLineClearParticles(effect.particleCells, effect.id, effect.lineCount));
     assert.deepEqual(effect.impact, {
@@ -149,8 +149,8 @@ for (const version of versions) {
     assert.deepEqual(columnEffect.lasers, [
       { kind: 'col', index: 4, origin: 0.5 }
     ]);
-    const columnParticle = columnEffect.particles[columnEffect.particleCells.findIndex((cell) => cell.axis === 'col')];
-    const rowParticle = multiEffect.particles[multiEffect.particleCells.findIndex((cell) => cell.axis === 'row')];
+    const columnParticle = columnEffect.particles.find((particle) => particle.axis === 'col');
+    const rowParticle = multiEffect.particles.find((particle) => particle.axis === 'row');
     assert.equal(Math.abs(columnParticle.velocityY) > Math.abs(columnParticle.velocityX), true);
     assert.equal(Math.abs(rowParticle.velocityX) > Math.abs(rowParticle.velocityY), true);
     assert.equal(columnEffect.impact.intensity, 1);
@@ -158,8 +158,8 @@ for (const version of versions) {
     assert.equal(multiEffect.impact.intensity, 5);
     assert.equal(multiEffect.impact.shakePixels, 0);
     assert.equal(multiEffect.impact.pulseScale, 1);
-    assert.equal(multiEffect.particles.length, feedback.CLEAR_EFFECT_LIMITS.maxParticles);
-    assert.equal(multiEffect.particles.length <= 40, true);
+    assert.equal(multiEffect.particles.length, Math.min(10, feedback.CLEAR_EFFECT_LIMITS.maxParticles));
+    assert.equal(multiEffect.particles.length <= 12, true);
     assert.equal(multiEffect.particles.some((particle) => particle.shape === 'spark'), true);
     assert.equal(multiEffect.particles.every((particle) => ['dot', 'spark'].includes(particle.shape)), true);
     assert.deepEqual(multiEffect.particles, feedback.createLineClearParticles(multiEffect.particleCells, multiEffect.id, multiEffect.lineCount));

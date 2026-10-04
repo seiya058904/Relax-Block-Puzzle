@@ -13,10 +13,22 @@ export default class InputManager {
     this.homeTitleTapCount = 0;
     this.homeTitleTapStartTime = 0;
 
-    wx.onTouchStart(this.handleTouchStart.bind(this));
-    wx.onTouchMove(this.handleTouchMove.bind(this));
-    wx.onTouchEnd(this.handleTouchEnd.bind(this));
-    wx.onTouchCancel(this.handleTouchCancel.bind(this));
+    wx.onTouchStart((event) => {
+      this.handleTouchStart(event);
+      this.requestInputFrame();
+    });
+    wx.onTouchMove((event) => {
+      this.handleTouchMove(event);
+      this.requestInputFrame();
+    });
+    wx.onTouchEnd((event) => {
+      this.handleTouchEnd(event);
+      this.requestInputFrame();
+    });
+    wx.onTouchCancel((event) => {
+      this.handleTouchCancel(event);
+      this.requestInputFrame();
+    });
     this.bindKeyboard();
   }
 
@@ -311,7 +323,7 @@ export default class InputManager {
     }
 
     triggerUiPress(this.gameState.feedbackState, `revive:${action}`);
-    this.soundManager.playClick();
+    if (action !== 'use') this.soundManager.playClick();
 
     if (action === 'use') {
       this.gameState.acceptRevive();
@@ -375,9 +387,7 @@ export default class InputManager {
     triggerUiPress(this.gameState.feedbackState, `tool:${action}`);
 
     if (action === 'refresh') {
-      if (this.gameState.useRefreshTool()) {
-        this.soundManager.playClick();
-      }
+      this.gameState.useRefreshTool();
       return;
     }
 
@@ -389,9 +399,7 @@ export default class InputManager {
       return;
     }
 
-    if (action === 'undo' && this.gameState.useUndoTool()) {
-      this.soundManager.playClick();
-    }
+    if (action === 'undo') this.gameState.useUndoTool();
   }
 
   handleSettingsTouch(point) {
@@ -487,6 +495,7 @@ export default class InputManager {
     wx.onKeyboardInput((event) => {
       if (this.gameState.ui.isMembershipPanelOpen) {
         this.gameState.setMembershipInput(event.value || '');
+        this.requestInputFrame();
         return;
       }
 
@@ -494,11 +503,13 @@ export default class InputManager {
         return;
       }
       this.gameState.setAdminInput(event.value || '');
+      this.requestInputFrame();
     });
 
     wx.onKeyboardConfirm((event) => {
       if (this.gameState.ui.isMembershipPanelOpen) {
         this.gameState.setMembershipInput(event.value || '');
+        this.requestInputFrame();
         return;
       }
 
@@ -506,12 +517,14 @@ export default class InputManager {
         return;
       }
       this.gameState.setAdminInput(event.value || '');
+      this.requestInputFrame();
     });
 
     if (wx.onKeyboardComplete) {
       wx.onKeyboardComplete((event) => {
         if (this.gameState.ui.isMembershipPanelOpen) {
           this.gameState.setMembershipInput(event.value || '');
+          this.requestInputFrame();
           return;
         }
 
@@ -519,6 +532,7 @@ export default class InputManager {
           return;
         }
         this.gameState.setAdminInput(event.value || '');
+        this.requestInputFrame();
       });
     }
   }

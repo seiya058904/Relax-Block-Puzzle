@@ -1,5 +1,6 @@
 import { QUALITY_PROFILE } from './constants.js';
 import { getQualityProfile } from '../config/quality.js';
+import { getDragPose, getDisplayedScore } from './Presentation.js';
 
 const QUALITY = getQualityProfile(QUALITY_PROFILE);
 
@@ -13,6 +14,7 @@ export const FEEDBACK_EVENTS = Object.freeze({
   itemUsed: 'itemUsed',
   gameOver: 'gameOver',
   reviveStarted: 'reviveStarted',
+  reviveCompleted: 'reviveCompleted',
   feedbackCleared: 'feedbackCleared'
 });
 
@@ -108,6 +110,8 @@ export function createFeedbackState() {
     nextClearEffectId: 1,
     scorePulse: createTimedState(FEEDBACK_DURATIONS.scorePulse),
     highScore: createTimedState(FEEDBACK_DURATIONS.highScore),
+    gain: { ...createTimedState(240), from: 0, to: 0, totalAdded: 0 },
+    action: { ...createTimedState(260), kind: '', cells: [], rack: false },
     drag: createDragState(),
     uiMotion: createUiMotionState()
   };
@@ -138,7 +142,7 @@ function normalizeCells(cells) {
     if (!Number.isInteger(row) || !Number.isInteger(col)) {
       return;
     }
-    unique.set(`${row}:${col}`, { row, col, ...(cell.axis ? { axis: cell.axis } : {}) });
+    unique.set(`${row}:${col}`, { row, col, ...(cell.axis ? { axis: cell.axis } : {}), ...(cell.color ? { color: cell.color } : {}) });
   });
   return Array.from(unique.values()).sort((a, b) => a.row - b.row || a.col - b.col);
 }
@@ -156,22 +160,24 @@ export function createLineClearParticles(cells, seed = 1, lineCount = 1) {
 
   const maxParticles = Math.min(
     CLEAR_EFFECT_LIMITS.maxParticles,
-    Math.max(12, lineCount * 8, Math.ceil(normalized.length * 1.1))
+    Math.max(3, lineCount * 2)
   );
   const particles = [];
 
   for (let index = 0; index < maxParticles; index += 1) {
-    const cell = normalized[index % normalized.length];
+    const sample = Math.floor(index * normalized.length / maxParticles);
+    const cell = normalized[sample];
     const particleSeed = seed * 97 + index * 31 + cell.row * 13 + cell.col * 17;
     const direction = cell.axis === 'row' ? 0 : cell.axis === 'col' ? Math.PI / 2 : seededUnit(particleSeed) * Math.PI * 2;
     const spread = (seededUnit(particleSeed + 7) - 0.5) * (cell.axis ? 0.85 : Math.PI * 2);
     const angle = direction + spread;
     const speed = 0.08 + seededUnit(particleSeed + 1) * 0.22;
-    const shapeRoll = seededUnit(particleSeed + 6);
+    const shapeRoll = index === 0 ? 0.8 : seededUnit(particleSeed + 6);
     particles.push({
       row: cell.row,
       col: cell.col,
       shape: shapeRoll < 0.62 ? 'dot' : 'spark',
+      axis: cell.axis,
       offsetX: seededUnit(particleSeed + 2) - 0.5,
       offsetY: seededUnit(particleSeed + 3) - 0.5,
       velocityX: Math.cos(angle) * speed,
@@ -195,10 +201,10 @@ function createImpact(lineCount) {
   };
 }
 
-function createLasers(rows, cols) {
+function createLasers(rows, cols, origin = { row: 4.5, col: 4.5 }) {
   return [
-    ...rows.map((row) => ({ kind: 'row', index: row, origin: 0.5 })),
-    ...cols.map((col) => ({ kind: 'col', index: col, origin: 0.5 }))
+    ...rows.map((row) => ({ kind: 'row', index: row, origin: Math.max(0, Math.min(1, (origin.col + 0.5) / 10)) })),
+    ...cols.map((col) => ({ kind: 'col', index: col, origin: Math.max(0, Math.min(1, (origin.row + 0.5) / 10)) }))
   ];
 }
 
@@ -241,11 +247,12 @@ export function triggerLineClearEffect(state, details) {
     clearedCols,
     cells,
     lineCount,
+    origin: details.origin ? { ...details.origin } : { row: 4.5, col: 4.5 },
     axes: { rows: clearedRows.length > 0, cols: clearedCols.length > 0 },
     crossCells,
     particleCells,
     impact: createImpact(lineCount),
-    lasers: createLasers(clearedRows, clearedCols),
+    lasers: createLasers(clearedRows, clearedCols, details.origin),
     particles: createLineClearParticles(particleCells, id, lineCount)
   };
 
@@ -324,6 +331,22 @@ export function triggerHighScore(state) {
   activateTimed(state.highScore, state.clock);
 }
 
+export function triggerScoreGain(state, from, to) {
+  const displayed = getDisplayedScore(from, state.gain);
+  Object.assign(state.gain, { from: displayed, to, totalAdded: Math.max(0, to - from) });
+  activateTimed(state.gain, state.clock);
+}
+
+export function triggerActionFeedback(state, kind, details = {}) {
+  state.action = {
+    ...createTimedState(260),
+    kind,
+    cells: normalizeCells(details.cells).slice(0, 100),
+    rack: !!details.rack
+  };
+  activateTimed(state.action, state.clock);
+}
+
 export function startDragFeedback(state, details) {
   state.drag = {
     ...createDragState(),
@@ -338,6 +361,9 @@ export function startDragFeedback(state, details) {
     startedAt: state.clock,
     duration: FEEDBACK_DURATIONS.dragLift,
     remaining: FEEDBACK_DURATIONS.dragLift,
+    originX: details.startX,
+    originY: details.startY,
+    originCellSize: details.originCellSize || details.displayCellSize,
     targetX: Number(details.visualX) || 0,
     targetY: Number(details.visualY) || 0
   };
@@ -365,12 +391,18 @@ export function releaseDragFeedback(state, phase, target = {}) {
   const duration = phase === 'settling'
     ? FEEDBACK_DURATIONS.dragSettle
     : FEEDBACK_DURATIONS.dragInvalid;
+  const pose = getDragVisual(state.drag);
   state.drag.phase = phase;
   state.drag.startedAt = state.clock;
   state.drag.duration = duration;
   state.drag.remaining = duration;
-  state.drag.startX = state.drag.visualX;
-  state.drag.startY = state.drag.visualY;
+  state.drag.startX = pose.x;
+  state.drag.startY = pose.y;
+  state.drag.releaseScale = pose.scale;
+  state.drag.releaseElevation = pose.elevation;
+  state.drag.targetCellSize = target.targetCellSize || (phase === 'invalid' ? state.drag.originCellSize : state.drag.displayCellSize);
+  state.drag.targetRow = target.row;
+  state.drag.targetCol = target.col;
   state.drag.targetX = Object.prototype.hasOwnProperty.call(target, 'targetX')
     ? target.targetX
     : state.drag.targetX;
@@ -397,6 +429,9 @@ export function advanceFeedbackState(state, deltaTime) {
   advanceTimed(state.clearScore, safeDelta);
   advanceTimed(state.scorePulse, safeDelta);
   advanceTimed(state.highScore, safeDelta);
+  advanceTimed(state.gain, safeDelta);
+  advanceTimed(state.action, safeDelta);
+  if (!state.action.active) state.action.cells = [];
   state.clearEffects = (state.clearEffects || [])
     .map((effect) => ({
       ...effect,
@@ -434,6 +469,8 @@ export function hasActiveFeedback(state) {
       (state.clearEffects && state.clearEffects.length > 0) ||
       state.scorePulse.active ||
       state.highScore.active ||
+      state.gain.active ||
+      state.action.active ||
       state.drag.active)
   );
 }
@@ -564,45 +601,6 @@ export function getClearFeedbackLabel(clearedLines) {
   if (clearedLines === 3) return '三线消除';
   return `清除 ${clearedLines} 线`;
 }
-function easeOutCubic(value) {
-  return 1 - Math.pow(1 - value, 3);
-}
-
-export function getDragVisual(drag) {
-  if (!drag || !drag.active) {
-    return null;
-  }
-
-  if (drag.phase === 'lifting') {
-    const progress = drag.duration > 0
-      ? 1 - drag.remaining / drag.duration
-      : 1;
-    const eased = easeOutCubic(Math.max(0, Math.min(1, progress)));
-    return {
-      x: drag.startX + (drag.visualX - drag.startX) * eased,
-      y: drag.startY + (drag.visualY - drag.startY) * eased,
-      scale: 1 + 0.08 * eased,
-      alpha: 1
-    };
-  }
-
-  if (drag.phase === 'invalid' || drag.phase === 'settling') {
-    const progress = drag.duration > 0
-      ? 1 - drag.remaining / drag.duration
-      : 1;
-    const eased = easeOutCubic(Math.max(0, Math.min(1, progress)));
-    return {
-      x: drag.startX + (drag.targetX - drag.startX) * eased,
-      y: drag.startY + (drag.targetY - drag.startY) * eased,
-      scale: 1.08 - 0.08 * eased,
-      alpha: drag.phase === 'settling' ? 1 - eased : 1
-    };
-  }
-
-  return {
-    x: drag.visualX,
-    y: drag.visualY,
-    scale: 1.08,
-    alpha: 1
-  };
+export function getDragVisual(drag, reducedMotion = false) {
+  return getDragPose(drag, reducedMotion);
 }

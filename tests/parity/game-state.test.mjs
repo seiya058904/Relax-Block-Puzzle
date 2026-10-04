@@ -473,6 +473,11 @@ for (const version of versions) {
       game.state.update(100);
       assert.equal(game.state.feedbackState.clearScore.remaining, 600);
       await withRandomSequence(Array(100).fill(0), () => game.state.startNewGame());
+      assert.equal(game.state.feedbackState.clearScore.active, false);
+      assert.equal(game.state.feedbackState.highScore.active, false);
+      assert.deepEqual(game.state.feedbackState.clearEffects, []);
+      assert.equal(game.state.feedbackState.action.kind, 'refill');
+      game.state.update(260);
       assert.equal(game.feedback.hasActiveFeedback(game.state.feedbackState), false);
     } finally {
       game.restore();

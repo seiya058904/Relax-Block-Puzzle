@@ -1,22 +1,23 @@
-import './render.js';
-import { DEVICE_PIXEL_RATIO, MENU_BUTTON, SCREEN_HEIGHT, SCREEN_WIDTH, SAFE_AREA } from './render.js';
+import { getFeedbackCue } from './game/Presentation.js';
+import { canvasSize } from './render.js';
 import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
 import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
-import { advanceUiMotion } from './game/FeedbackState.js';
+import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
 import AuthClient, { initCloud } from './api/AuthClient.js';
 import { loadSettings, saveSettings } from './utils/storage.js';
 
 const ctx = canvas.getContext('2d');
-ctx.setTransform(DEVICE_PIXEL_RATIO, 0, 0, DEVICE_PIXEL_RATIO, 0, 0);
-ctx.imageSmoothingEnabled = true;
 
 export default class Main {
   constructor() {
     this.aniId = 0;
     this.lastTimestamp = 0;
     this.appLifecycleBound = false;
+    this.isPaused = false;
+    this.needsRender = true;
+    this.canvasSize = canvasSize;
     initCloud();
     this.gameState = new GameState();
     this.authClient = new AuthClient();
@@ -25,34 +26,25 @@ export default class Main {
     this.gameState.setSettings(this.settings);
     this.soundManager = new SoundManager();
     this.soundManager.setSettings(this.settings);
-    this.renderer = new Renderer(
-      ctx,
-      {
-        screenWidth: SCREEN_WIDTH,
-        screenHeight: SCREEN_HEIGHT
-      },
-      {
-        menuButton: MENU_BUTTON,
-        safeArea: SAFE_AREA
-      }
-    );
+    const metrics = this.canvasSize.refresh();
+    this.renderer = new Renderer(ctx, metrics.screenInfo, metrics.safeAreaInfo);
     this.inputManager = new InputManager(
       this.gameState,
       this.renderer,
       this.soundManager,
-      this.applySettings.bind(this)
+      this.applySettings.bind(this),
+      this.requestRender.bind(this)
     );
 
     this.bindAppLifecycle();
+    wx.onWindowResize?.(() => this.handleViewportChange());
     this.renderer.render(this.gameState);
     this.start();
-    this.initializeAuth();
+    this.initializeAuth().finally(() => this.requestRender());
   }
 
   start() {
-    cancelAnimationFrame(this.aniId);
-    this.lastTimestamp = 0;
-    this.aniId = requestAnimationFrame(this.loop.bind(this));
+    this.requestRender();
   }
 
   async initializeAuth() {
@@ -81,6 +73,7 @@ export default class Main {
     this.gameState.setSettings(this.settings);
     saveSettings(this.settings);
     this.soundManager.setSettings(this.settings);
+    this.requestRender();
   }
 
   bindAppLifecycle() {
@@ -92,25 +85,24 @@ export default class Main {
 
     if (wx.onHide) {
       wx.onHide(() => {
-        this.inputManager.cancelInputSession();
-        this.soundManager.handleAppHide();
+        this.handleAppBackground();
       });
     }
 
     if (wx.onShow) {
       wx.onShow(() => {
-        this.soundManager.handleAppShow();
+        this.handleAppForeground();
       });
     }
   }
 
-  triggerVibration() {
+  triggerVibration(type = 'light') {
     if (!this.settings.vibrationEnabled || !wx.vibrateShort) {
       return;
     }
 
     try {
-      wx.vibrateShort({ type: 'light' });
+      wx.vibrateShort({ type });
     } catch (error) {
       try {
         wx.vibrateShort();
@@ -121,43 +113,22 @@ export default class Main {
   }
 
   update(deltaTime) {
+    if (this.isPaused) return;
     this.inputManager.flushPendingInput();
     this.gameState.update(deltaTime);
     // UI motion (button press, modal transitions) advances independently of
     // gameplay freeze rules so open modals can still animate.
     advanceUiMotion(this.gameState.feedbackState, deltaTime);
+    this.consumeGameEvents();
+  }
+
+  consumeGameEvents() {
     const events = this.gameState.consumeEvents();
     events.forEach((event) => {
-      switch (event.type) {
-        case 'pickup':
-          this.soundManager.playPickup();
-          break;
-        case 'place':
-          this.soundManager.playPlace();
-          this.triggerVibration();
-          break;
-        case 'invalid':
-          this.soundManager.playInvalid();
-          this.triggerVibration();
-          break;
-        case 'clear':
-          this.soundManager.playClear();
-          this.triggerVibration();
-          break;
-        case 'combo':
-          this.soundManager.playCombo();
-          this.triggerVibration();
-          break;
-        case 'combo3':
-          this.soundManager.playCombo3();
-          this.triggerVibration();
-          break;
-        case 'gameOver':
-          this.soundManager.playGameOver();
-          break;
-        default:
-          break;
-      }
+      const cue = getFeedbackCue(event);
+      if (!cue) return;
+      this.soundManager[cue.sound]();
+      if (cue.vibration) this.triggerVibration(cue.vibration);
     });
   }
 
@@ -166,7 +137,67 @@ export default class Main {
     this.renderer.render(this.gameState);
   }
 
+  requestRender() {
+    this.needsRender = true;
+    this.ensureFrame();
+  }
+
+  requestImmediateRender() {
+    if (this.isPaused) return;
+    this.consumeGameEvents();
+    this.render();
+    this.needsRender = false;
+    if (this.hasActiveAnimation()) this.ensureFrame();
+    else this.stopLoop();
+  }
+
+  hasActiveAnimation() {
+    return hasActiveUiMotion(this.gameState.feedbackState) || (this.gameState.canAdvanceTime() && !!(
+      this.gameState.dragState.isDragging || this.gameState.pendingClear || this.gameState.placementPulse.length ||
+      this.gameState.notice || hasActiveFeedback(this.gameState.feedbackState)
+    ));
+  }
+
+  ensureFrame() {
+    if (this.isPaused || this.aniId) return;
+    this.lastTimestamp = 0;
+    this.aniId = requestAnimationFrame(this.loop.bind(this));
+  }
+
+  stopLoop() {
+    if (this.aniId) cancelAnimationFrame(this.aniId);
+    this.aniId = 0;
+  }
+
+  handleAppBackground() {
+    if (this.isPaused) return;
+    this.isPaused = true;
+    this.inputManager.cancelInputSession();
+    this.gameState.consumeEvents();
+    this.stopLoop();
+    this.soundManager.handleAppHide();
+  }
+
+  handleViewportChange() {
+    this.inputManager.cancelInputSession();
+    this.needsRender = true;
+    if (this.isPaused) return;
+    const metrics = this.canvasSize.refresh();
+    this.renderer.setViewport(metrics.screenInfo, metrics.safeAreaInfo);
+    this.gameState.setLayout(this.renderer.layout);
+    this.requestImmediateRender();
+  }
+
+  handleAppForeground() {
+    const wasPaused = this.isPaused;
+    this.isPaused = false;
+    if (wasPaused) this.soundManager.handleAppShow();
+    this.handleViewportChange();
+  }
+
   loop(timestamp) {
+    this.aniId = 0;
+    if (this.isPaused) return;
     if (!this.lastTimestamp) {
       this.lastTimestamp = timestamp;
     }
@@ -174,9 +205,15 @@ export default class Main {
     const deltaTime = Math.min(32, timestamp - this.lastTimestamp);
     this.lastTimestamp = timestamp;
 
+    const animating = this.hasActiveAnimation();
     this.update(deltaTime);
-    this.render();
+    if (this.needsRender || animating) {
+      this.render();
+      this.needsRender = false;
+    }
 
-    this.aniId = requestAnimationFrame(this.loop.bind(this));
+    if (this.needsRender || this.hasActiveAnimation()) {
+      this.aniId = requestAnimationFrame(this.loop.bind(this));
+    }
   }
 }

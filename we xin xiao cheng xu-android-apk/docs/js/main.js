@@ -1,3 +1,4 @@
+import { getFeedbackCue } from './game/Presentation.js';
 import { createCanvasSizeController } from './render.js';
 import GameState from './game/GameState.js';
 import Renderer from './game/Renderer.js';
@@ -34,6 +35,12 @@ export default class Main {
       this.ensureFrame.bind(this)
     );
 
+    this.motionQuery = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+    this.renderer.reducedMotion = !!this.motionQuery?.matches;
+    this.motionQuery?.addEventListener?.('change', () => {
+      this.renderer.reducedMotion = !!this.motionQuery.matches;
+      this.requestImmediateRender();
+    });
     this.bindAppLifecycle();
     if (wx.onWindowResize) wx.onWindowResize(() => this.handleViewportChange());
     this.start();
@@ -85,13 +92,13 @@ export default class Main {
     };
   }
 
-  triggerVibration() {
+  triggerVibration(type = 'light') {
     if (!this.settings.vibrationEnabled || !wx.vibrateShort) {
       return;
     }
 
     try {
-      wx.vibrateShort({ type: 'light' });
+      wx.vibrateShort({ type });
     } catch (error) {
       try {
         wx.vibrateShort();
@@ -112,36 +119,10 @@ export default class Main {
   consumeGameEvents() {
     const events = this.gameState.consumeEvents();
     events.forEach((event) => {
-      switch (event.type) {
-        case 'pickup':
-          this.soundManager.playPickup();
-          break;
-        case 'place':
-          this.soundManager.playPlace();
-          this.triggerVibration();
-          break;
-        case 'invalid':
-          this.soundManager.playInvalid();
-          this.triggerVibration();
-          break;
-        case 'clear':
-          this.soundManager.playClear();
-          this.triggerVibration();
-          break;
-        case 'combo':
-          this.soundManager.playCombo();
-          this.triggerVibration();
-          break;
-        case 'combo3':
-          this.soundManager.playCombo3();
-          this.triggerVibration();
-          break;
-        case 'gameOver':
-          this.soundManager.playGameOver();
-          break;
-        default:
-          break;
-      }
+      const cue = getFeedbackCue(event);
+      if (!cue) return;
+      this.soundManager[cue.sound]();
+      if (cue.vibration) this.triggerVibration(cue.vibration);
     });
   }
 

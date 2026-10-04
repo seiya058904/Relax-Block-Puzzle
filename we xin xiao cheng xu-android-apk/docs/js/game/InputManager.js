@@ -331,7 +331,7 @@ export default class InputManager {
     }
 
     triggerUiPress(this.gameState.feedbackState, `revive:${action}`);
-    this.soundManager.playClick();
+    if (action !== 'use') this.soundManager.playClick();
 
     if (action === 'use') {
       this.gameState.acceptRevive();
@@ -419,9 +419,7 @@ export default class InputManager {
     triggerUiPress(this.gameState.feedbackState, `tool:${action}`);
 
     if (action === 'refresh') {
-      if (this.gameState.useRefreshTool()) {
-        this.soundManager.playClick();
-      }
+      this.gameState.useRefreshTool();
       this.requestImmediateRender();
       return;
     }
@@ -436,9 +434,7 @@ export default class InputManager {
     }
 
     if (action === 'undo') {
-      if (this.gameState.useUndoTool()) {
-        this.soundManager.playClick();
-      }
+      this.gameState.useUndoTool();
       this.requestImmediateRender();
     }
   }

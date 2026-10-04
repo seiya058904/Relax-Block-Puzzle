@@ -72,11 +72,10 @@ export function calculateWechatHomeLayout({
   const sideMargin = clamp(width * 0.04, 14, 24);
   const topInset = Math.max(44, finite(safeInsets.top, 44));
   const bottomInset = Math.max(12, finite(safeInsets.bottom, 18));
-  const panelX = sideMargin + 8;
-  const panelY = clamp(height * 0.095, topInset + 8, topInset + 24);
-  const panelWidth = width - panelX * 2;
-  const panelBottomLimit = height - bottomInset - 12;
-  const panelHeight = Math.max(420, panelBottomLimit - panelY);
+  const panelWidth = Math.min(420, width - (sideMargin + 8) * 2);
+  const panelX = (width - panelWidth) / 2;
+  const panelHeight = Math.min(adminVisible ? 510 : 470, height - topInset - bottomInset - 24);
+  const panelY = Math.max(topInset + 8, (height - panelHeight - bottomInset) * 0.42);
   const availableHeight = Math.max(360, panelHeight - 40);
   const compactScale = clamp(availableHeight / 490, 0.82, 1);
   const minimumGap = Math.round(clamp(8 * compactScale, 6, 10));
@@ -92,27 +91,27 @@ export function calculateWechatHomeLayout({
   const startHeight = clamp(58 * compactScale, 50, 58);
   const secondaryHeight = clamp(48 * compactScale, 44, 48);
 
-  let cursorY = panelY + clamp(24 * compactScale, 18, 26);
+  let cursorY = Math.ceil(panelY + clamp(24 * compactScale, 18, 26));
   const title = rect(panelX + 32, cursorY - 6, panelWidth - 64, titleHeight);
-  cursorY = bottom(title) + minimumGap;
+  cursorY = Math.ceil(bottom(title) + minimumGap);
   const subtitle = rect(panelX + 24, cursorY, panelWidth - 48, subtitleHeight);
-  cursorY = bottom(subtitle) + minimumGap;
+  cursorY = Math.ceil(bottom(subtitle) + minimumGap);
 
   const adminButton = adminVisible
     ? rect(panelX + panelWidth / 2 - 54, cursorY, 108, adminHeight)
     : null;
   if (adminButton) {
-    cursorY = bottom(adminButton) + minimumGap;
+    cursorY = Math.ceil(bottom(adminButton) + minimumGap);
   }
 
   const difficultyButton = rect(innerX, cursorY, innerWidth, difficultyHeight);
-  cursorY = bottom(difficultyButton) + minimumGap;
+  cursorY = Math.ceil(bottom(difficultyButton) + minimumGap);
   const highScoreCard = rect(innerX, cursorY, innerWidth, scoreHeight);
-  cursorY = bottom(highScoreCard) + minimumGap + 2;
+  cursorY = Math.ceil(bottom(highScoreCard) + minimumGap + 2);
   const startButton = rect(buttonX, cursorY, buttonWidth, startHeight);
-  cursorY = bottom(startButton) + minimumGap;
+  cursorY = Math.ceil(bottom(startButton) + minimumGap);
   const helpButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
-  cursorY = bottom(helpButton) + minimumGap;
+  cursorY = Math.ceil(bottom(helpButton) + minimumGap);
   const settingsButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
 
   const panel = rect(panelX, panelY, panelWidth, Math.max(panelHeight, bottom(settingsButton) - panelY + 22));
@@ -221,6 +220,7 @@ export function calculateModalShellLayout({
   viewportHeight,
   bottomInset = 18,
   topGap = 16,
+  topInset = 0,
   sideInset = 17,
   headerHeight = 46,
   footerHeight = 64,
@@ -233,7 +233,8 @@ export function calculateModalShellLayout({
   const width = Math.max(320, finite(viewportWidth, 360));
   const height = Math.max(560, finite(viewportHeight, 640));
   const safeBottom = Math.max(12, finite(bottomInset, 18));
-  const panelWidth = width - Math.max(0, sideInset) * 2;
+  topGap = Math.max(topGap, finite(topInset, 0));
+  const panelWidth = Math.min(440, width - Math.max(0, sideInset) * 2);
   const maxPanelHeight = height - topGap * 2 - safeBottom;
   const availableContentHeight = Math.max(
     minContentHeight,

@@ -3,21 +3,25 @@ export const QUALITY_PROFILES = Object.freeze({
   light: Object.freeze({
     clearEffectMs: 560,
     dragSettleMs: 140,
-    maxParticles: 20,
+    maxParticles: 6,
     maxLaserDraws: 4,
     maxStackedEffects: 4,
     shadowBlurScale: 0.6,
     canvasPixelMax: 4000000,
+    surfaceCachePixelMax: 750000,
+    maxDpr: 2,
     highCostEffects: false
   }),
   full: Object.freeze({
     clearEffectMs: 560,
     dragSettleMs: 140,
-    maxParticles: 40,
+    maxParticles: 12,
     maxLaserDraws: 8,
     maxStackedEffects: 6,
     shadowBlurScale: 1,
     canvasPixelMax: 5000000,
+    surfaceCachePixelMax: 1250000,
+    maxDpr: 2.5,
     highCostEffects: true
   })
 });

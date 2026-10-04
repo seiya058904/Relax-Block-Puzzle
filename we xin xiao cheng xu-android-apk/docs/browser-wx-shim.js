@@ -362,6 +362,21 @@ globalThis.GameGlobal = globalThis.GameGlobal || {};
 globalThis.canvas = canvas;
 globalThis.GameGlobal.canvas = canvas;
 
+let safeAreaProbe;
+function readSafeInsets() {
+  if (!document.createElement || !document.body || !globalThis.getComputedStyle) {
+    return { top: 0, right: 0, bottom: 0, left: 0 };
+  }
+  if (!safeAreaProbe) {
+    safeAreaProbe = document.createElement('div');
+    safeAreaProbe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.appendChild(safeAreaProbe);
+  }
+  const style = getComputedStyle(safeAreaProbe);
+  return { top: parseFloat(style.paddingTop) || 0, right: parseFloat(style.paddingRight) || 0,
+    bottom: parseFloat(style.paddingBottom) || 0, left: parseFloat(style.paddingLeft) || 0 };
+}
+
 globalThis.wx = {
   createCanvas() {
     syncCanvasMetrics();
@@ -375,18 +390,19 @@ globalThis.wx = {
     const width = metrics.width || window.innerWidth || document.documentElement.clientWidth || 360;
     const height = metrics.height || window.innerHeight || document.documentElement.clientHeight || 640;
     const pixelRatio = metrics.pixelRatio || window.devicePixelRatio || 1;
+    const insets = readSafeInsets();
     return {
       screenWidth: width,
       screenHeight: height,
       windowWidth: width,
       windowHeight: height,
       safeArea: {
-        left: 0,
-        top: 0,
-        right: width,
-        bottom: height,
-        width,
-        height
+        left: insets.left,
+        top: insets.top,
+        right: width - insets.right,
+        bottom: height - insets.bottom,
+        width: width - insets.left - insets.right,
+        height: height - insets.top - insets.bottom
       },
       pixelRatio
     };
@@ -430,9 +446,9 @@ globalThis.wx = {
   setStorageSync(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   },
-  vibrateShort() {
+  vibrateShort({ type = 'light' } = {}) {
     if (navigator.vibrate) {
-      navigator.vibrate(20);
+      navigator.vibrate(type === 'heavy' ? 32 : type === 'medium' ? 24 : 12);
     }
   },
   onKeyboardInput(handler) {

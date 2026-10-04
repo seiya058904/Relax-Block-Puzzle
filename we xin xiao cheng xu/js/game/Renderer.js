@@ -4,11 +4,8 @@ import {
   BACKGROUND_TOP,
   BOARD_CELL,
   BOARD_CELL_ALT,
-  BOARD_GRID,
   BOARD_PADDING,
   BOARD_PANEL,
-  BOARD_PANEL_BORDER,
-  BOARD_PANEL_GLOW,
   BOARD_SIZE,
   QUALITY_PROFILE,
   BUTTON_FILL,
@@ -39,11 +36,13 @@ import {
   calculateModalShellLayout,
   calculateSettingsTabsLayout,
   calculateWechatHomeLayout,
-  measureModalRowsHeight
+  measureModalRowsHeight,
+  fitTextSize
 } from './LayoutMetrics.js';
 import { createSafeHitRect } from './SafeHitArea.js';
 import { getQualityProfile } from '../config/quality.js';
 import { createRenderPerfStats } from './RenderPerfStats.js';
+import { getActionVisual, getClearCellVisual, getDisplayedScore, unionDamageRects } from './Presentation.js';
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -151,6 +150,21 @@ export default class Renderer {
     this.bgGlow = null;
     this.bgVignette = null;
     this.state = null;
+    this.surfaceCache = new Map();
+    this.surfacePixels = 0;
+    this.lastDragBounds = null;
+    this.lastScene = null;
+    this.reducedMotion = false;
+    this.resetHitAreas();
+  }
+
+  setViewport(screenInfo, safeAreaInfo) {
+    this.screenInfo = screenInfo;
+    this.safeAreaInfo = safeAreaInfo;
+    this.layout = this.getLayout(screenInfo, safeAreaInfo);
+    this.layoutKey = JSON.stringify({ screenInfo, safeAreaInfo });
+    this.stars = createStarPoints(screenInfo.screenWidth, screenInfo.screenHeight);
+    this.clearSurfaceCache();
     this.resetHitAreas();
   }
 
@@ -175,15 +189,18 @@ export default class Renderer {
     const screenHeight = screenInfo.screenHeight;
     const menuButton = safeAreaInfo.menuButton;
     const safeArea = safeAreaInfo.safeArea;
-    const sideMargin = clamp(screenWidth * 0.04, MIN_SIDE_MARGIN, MAX_SIDE_MARGIN);
-    const topInset = menuButton ? menuButton.top + menuButton.height + 8 : 44;
+    const sideMargin = Math.max(clamp(screenWidth * 0.04, MIN_SIDE_MARGIN, MAX_SIDE_MARGIN),
+      safeArea?.left || 0, screenWidth - (safeArea?.right || screenWidth));
+    const contentWidth = Math.min(560, screenWidth - sideMargin * 2);
+    const contentX = (screenWidth - contentWidth) / 2;
+    const topInset = Math.max(menuButton ? menuButton.top + menuButton.height + 8 : 44, (safeArea?.top || 0) + 8);
     const bottomInset = safeArea ? Math.max(screenHeight - safeArea.bottom, 16) : 18;
     const headerHeight = clamp(screenHeight * 0.11, 88, 114);
     const toolHeight = clamp(screenHeight * 0.055, 36, 42);
-    const rackHeight = clamp(screenHeight * 0.145, 104, 128);
+    const rackHeight = clamp(screenHeight * 0.145, screenHeight < 600 ? 80 : 104, 128);
     const toolGap = 10;
     const rackGap = 10;
-    const boardOuterWidth = screenWidth - sideMargin * 2;
+    const boardOuterWidth = contentWidth;
     const boardAvailableHeight =
       screenHeight -
       topInset -
@@ -215,21 +232,21 @@ export default class Renderer {
       height: cellSize * BOARD_SIZE
     };
     const headerRect = {
-      x: sideMargin,
+      x: contentX,
       y: topInset,
-      width: screenWidth - sideMargin * 2,
+      width: contentWidth,
       height: headerHeight
     };
     const toolRect = {
-      x: sideMargin,
+      x: contentX,
       y: boardPanelRect.y + boardPanelRect.height + toolGap,
-      width: screenWidth - sideMargin * 2,
+      width: contentWidth,
       height: toolHeight
     };
     const rackRect = {
-      x: sideMargin,
+      x: contentX,
       y: toolRect.y + toolRect.height + rackGap,
-      width: screenWidth - sideMargin * 2,
+      width: contentWidth,
       height: rackHeight
     };
     const rackSlots = Array.from({ length: 3 }, (_, index) => ({
@@ -279,14 +296,31 @@ export default class Renderer {
   render(state) {
     this.state = state;
     this.perfStats.beginFrame(globalThis.performance?.now?.() ?? Date.now());
-    this.perfStats.recordFullRender();
     const nextLayoutKey = JSON.stringify({ screenInfo: this.screenInfo, safeAreaInfo: this.safeAreaInfo });
     if (nextLayoutKey !== this.layoutKey) {
       this.layout = this.getLayout(this.screenInfo, this.safeAreaInfo);
       this.layoutKey = nextLayoutKey;
       this.bgGradientKey = '';
+      this.clearSurfaceCache();
     }
     state.setLayout(this.layout);
+    const damage = this.getFrameDamage(state);
+    this.ctx.save();
+    if (damage) {
+      // Clip on physical pixel boundaries; fractional DPR clips otherwise
+      // blend old and new background pixels into a faint persistent seam.
+      const dpr = Math.abs(this.ctx.getTransform?.().a) || 1;
+      const left = Math.floor(damage.x * dpr) / dpr;
+      const top = Math.floor(damage.y * dpr) / dpr;
+      const right = Math.ceil((damage.x + damage.width) * dpr) / dpr;
+      const bottom = Math.ceil((damage.y + damage.height) * dpr) / dpr;
+      this.ctx.beginPath();
+      this.ctx.rect(left, top, right - left, bottom - top);
+      this.ctx.clip();
+      this.perfStats.recordPartialRender();
+    } else {
+      this.perfStats.recordFullRender();
+    }
     this.resetHitAreas();
 
     this.clearCanvas();
@@ -331,7 +365,97 @@ export default class Renderer {
     }
 
     this.drawClosingModal(state);
+    this.ctx.restore();
     this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
+  }
+
+  clearSurfaceCache() {
+    this.surfaceCache.forEach((entry) => { entry.canvas.width = 0; entry.canvas.height = 0; });
+    this.surfaceCache.clear();
+    this.surfacePixels = 0;
+    this.lastDragBounds = null;
+  }
+
+  drawCachedSurface(name, key, rect, draw, maxDpr = this.quality.maxDpr) {
+    const transform = this.ctx.getTransform?.();
+    const budget = this.quality.surfaceCachePixelMax * (name === 'background' ? 0.25 : 0.75);
+    const dpr = Math.min(maxDpr, Math.abs(transform?.a) || 1, Math.sqrt(budget / Math.max(1, rect.width * rect.height)));
+    const width = Math.max(1, Math.floor(rect.width * dpr));
+    const height = Math.max(1, Math.floor(rect.height * dpr));
+    const pixels = width * height;
+    const cacheKey = `${key}:${width}:${height}`;
+    const old = this.surfaceCache.get(name);
+    if (old?.key === cacheKey) {
+      this.ctx.drawImage(old.canvas, rect.x, rect.y, rect.width, rect.height);
+      return;
+    }
+    if (old) {
+      this.surfacePixels -= old.pixels;
+      old.canvas.width = 0;
+      old.canvas.height = 0;
+      this.surfaceCache.delete(name);
+    }
+    if (pixels > this.quality.surfaceCachePixelMax) { draw(); return; }
+    let surface;
+    try {
+      surface = typeof document !== 'undefined' && document.createElement
+        ? document.createElement('canvas')
+        : globalThis.wx?.createOffscreenCanvas?.({ type: '2d', width, height });
+    } catch { /* Older WeChat versions can draw directly. */ }
+    if (!surface) { draw(); return; }
+    while (this.surfacePixels + pixels > this.quality.surfaceCachePixelMax && this.surfaceCache.size) {
+      const [oldName, entry] = this.surfaceCache.entries().next().value;
+      this.surfacePixels -= entry.pixels;
+      entry.canvas.width = 0;
+      entry.canvas.height = 0;
+      this.surfaceCache.delete(oldName);
+    }
+    surface.width = width;
+    surface.height = height;
+    const context = surface.getContext('2d');
+    if (!context) { surface.width = 0; surface.height = 0; draw(); return; }
+    context.setTransform(dpr, 0, 0, dpr, -rect.x * dpr, -rect.y * dpr);
+    const original = this.ctx;
+    this.ctx = context;
+    try { draw(); } finally { this.ctx = original; }
+    this.surfaceCache.set(name, { key: cacheKey, canvas: surface, pixels });
+    this.surfacePixels += pixels;
+    original.drawImage(surface, rect.x, rect.y, rect.width, rect.height);
+  }
+
+  getDragBounds(state) {
+    const drag = state.feedbackState.drag;
+    const pose = getDragVisual(drag, this.reducedMotion);
+    if (!pose || !drag.piece?.bounds) return null;
+    return {
+      x: pose.x - 24, y: pose.y - 24,
+      width: drag.piece.bounds.width * drag.displayCellSize * pose.scale + 48,
+      height: drag.piece.bounds.height * drag.displayCellSize * pose.scale + 48
+    };
+  }
+
+  getFrameDamage(state) {
+    const feedback = state.feedbackState;
+    const quiet = state.screen === 'playing' && !Object.values(state.ui).some((value) => value === true) &&
+      !state.pendingClear && !state.notice && !feedback.clearEffects.length && !feedback.clearScore.active &&
+      !feedback.scorePulse.active && !feedback.highScore.active && !feedback.gain.active && !feedback.action.active &&
+      !feedback.uiMotion.modal.active && !Object.keys(feedback.uiMotion.press).length;
+    const current = this.getDragBounds(state);
+    const previous = this.lastDragBounds;
+    const stable = this.lastScene?.screen === state.screen && this.lastScene?.score === state.score &&
+      this.lastScene?.rack === state.rackPieces && this.lastScene?.ui === JSON.stringify(state.ui) &&
+      this.lastScene?.clearMode === state.toolState.clearMode;
+    this.lastDragBounds = current;
+    this.lastScene = { screen: state.screen, score: state.score, rack: state.rackPieces,
+      ui: JSON.stringify(state.ui), clearMode: state.toolState.clearMode };
+    if (!quiet || !stable || (!current && !previous)) return null;
+    const panel = this.layout.boardPanelRect;
+    const rack = this.layout.rackRect;
+    return unionDamageRects([
+      { x: panel.x - 16, y: panel.y - 16, width: panel.width + 32, height: panel.height + 32 },
+      { x: rack.x - 8, y: rack.y - 8, width: rack.width + 16, height: rack.height + 16 },
+      current, previous
+    ], this.layout);
   }
 
   clearCanvas() {
@@ -361,7 +485,8 @@ export default class Renderer {
       return null;
     }
 
-    return getUiPressVisual(this.state.feedbackState, pressKey);
+    const press = getUiPressVisual(this.state.feedbackState, pressKey);
+    return this.reducedMotion ? { ...press, scale: 1 } : press;
   }
 
   getPanelMotion(state, kind) {
@@ -369,7 +494,8 @@ export default class Renderer {
       return null;
     }
 
-    return getModalMotion(state.feedbackState, kind);
+    const motion = getModalMotion(state.feedbackState, kind);
+    return motion && this.reducedMotion ? { ...motion, scale: 1, offsetY: 0 } : motion;
   }
 
   // Wraps a modal panel draw with the shared open/close motion (alpha,
@@ -444,58 +570,31 @@ export default class Renderer {
   }
 
   drawBackground(isHomeScene) {
-    const { ctx, layout } = this;
-    const gradient = this.createLinearGradient(0, 0, 0, layout.screenHeight);
-    gradient.addColorStop(0, BACKGROUND_TOP);
-    gradient.addColorStop(0.34, BACKGROUND_MID);
-    gradient.addColorStop(1, BACKGROUND_BOTTOM);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
-
-    if (isHomeScene) {
-      const bgKey = `${layout.screenWidth}x${layout.screenHeight}`;
-      if (this.bgGradientKey !== bgKey) {
-        const glow = this.createRadialGradient(
-          layout.screenWidth / 2,
-          layout.screenHeight * 0.3,
-          0,
-          layout.screenWidth / 2,
-          layout.screenHeight * 0.3,
-          Math.max(layout.screenWidth, layout.screenHeight) * 0.75
-        );
-        glow.addColorStop(0, 'rgba(130, 205, 255, 0.1)');
-        glow.addColorStop(0.5, 'rgba(130, 205, 255, 0.04)');
-        glow.addColorStop(1, 'rgba(130, 205, 255, 0)');
-        const vignette = this.createRadialGradient(
-          layout.screenWidth / 2,
-          layout.screenHeight / 2,
-          Math.min(layout.screenWidth, layout.screenHeight) * 0.45,
-          layout.screenWidth / 2,
-          layout.screenHeight / 2,
-          Math.max(layout.screenWidth, layout.screenHeight) * 0.78
-        );
-        vignette.addColorStop(0, 'rgba(2, 8, 20, 0)');
-        vignette.addColorStop(1, 'rgba(2, 8, 20, 0.32)');
-        this.bgGlow = glow;
-        this.bgVignette = vignette;
-        this.bgGradientKey = bgKey;
-      }
-
-      ctx.fillStyle = this.bgGlow;
+    const { layout } = this;
+    this.drawCachedSurface('background', `${layout.screenWidth}:${layout.screenHeight}:${isHomeScene}`, {
+      x: 0, y: 0, width: layout.screenWidth, height: layout.screenHeight
+    }, () => {
+      const { ctx } = this;
+      const gradient = this.createLinearGradient(0, 0, layout.screenWidth * 0.4, layout.screenHeight);
+      gradient.addColorStop(0, BACKGROUND_TOP);
+      gradient.addColorStop(0.4, BACKGROUND_MID);
+      gradient.addColorStop(1, BACKGROUND_BOTTOM);
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
-      ctx.fillStyle = this.bgVignette;
+      const light = this.createRadialGradient(layout.screenWidth * 0.35, layout.screenHeight * 0.15, 0,
+        layout.screenWidth * 0.35, layout.screenHeight * 0.15, Math.max(layout.screenWidth, layout.screenHeight) * 0.7);
+      light.addColorStop(0, 'rgba(142, 221, 255, 0.12)');
+      light.addColorStop(1, 'rgba(142, 221, 255, 0)');
+      ctx.fillStyle = light;
       ctx.fillRect(0, 0, layout.screenWidth, layout.screenHeight);
-    }
-
-    this.stars.forEach((star) => {
-      ctx.save();
-      ctx.globalAlpha = star.alpha;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
+      // A few quiet points of light remain fixed throughout a gesture.
+      this.stars.forEach((star) => {
+        ctx.fillStyle = `rgba(203, 234, 255, ${star.alpha * 0.55})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }, 1);
   }
 
   drawHome(state) {
@@ -531,7 +630,9 @@ export default class Renderer {
 
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
-    ctx.font = `bold ${homeLayout.titleFontSize}px sans-serif`;
+    const titleFit = fitTextSize({ text: '轻松俄罗斯方块', preferredSize: homeLayout.titleFontSize,
+      minimumSize: 24, maxWidth: homeLayout.title.width, fontWeight: 'bold', measureText: this.measureCanvasText.bind(this) });
+    ctx.font = `bold ${titleFit.fontSize}px sans-serif`;
     ctx.fillText('轻松俄罗斯方块', layout.screenWidth / 2, homeLayout.title.y + homeLayout.title.height - 16);
 
     const decoLineY = homeLayout.title.y + homeLayout.title.height - 6;
@@ -549,7 +650,9 @@ export default class Renderer {
     ctx.stroke();
 
     ctx.fillStyle = TEXT_SECONDARY;
-    ctx.font = `${homeLayout.subtitleFontSize}px sans-serif`;
+    const subtitleFit = fitTextSize({ text: '拖动方块，填满整行或整列即可消除', preferredSize: homeLayout.subtitleFontSize,
+      minimumSize: 12, maxWidth: homeLayout.subtitle.width, measureText: this.measureCanvasText.bind(this) });
+    ctx.font = `${subtitleFit.fontSize}px sans-serif`;
     ctx.fillText(
       '拖动方块，填满整行或整列即可消除',
       layout.screenWidth / 2,
@@ -566,6 +669,13 @@ export default class Renderer {
       `难度：${difficultyLabel}`,
       'home:difficulty'
     );
+    const difficultyIndex = ['easy', 'normal', 'master'].indexOf(state.settings.difficulty);
+    for (let index = 0; index < 3; index += 1) {
+      ctx.fillStyle = index === difficultyIndex ? '#9EDCFA' : 'rgba(158, 220, 250, 0.25)';
+      roundedRect(ctx, layout.screenWidth / 2 - 13 + index * 10,
+        homeLayout.difficultyButton.y + homeLayout.difficultyButton.height - 6, 6, 2, 1);
+      ctx.fill();
+    }
 
     const scoreCard = homeLayout.highScoreCard;
     roundedRect(ctx, scoreCard.x, scoreCard.y, scoreCard.width, scoreCard.height, UI_TOKENS.radius.medium);
@@ -661,7 +771,7 @@ export default class Renderer {
 
     ctx.save();
     ctx.translate(centerX, hudLayout.scoreBaselineY);
-    const scoreScale = 1 + scorePulseProgress * 0.08;
+    const scoreScale = this.reducedMotion ? 1 : 1 + scorePulseProgress * 0.06;
     ctx.scale(scoreScale, scoreScale);
     ctx.textAlign = 'center';
     ctx.fillStyle = TEXT_PRIMARY;
@@ -670,9 +780,11 @@ export default class Renderer {
       ctx.shadowColor = 'rgba(255, 214, 10, 0.72)';
       ctx.shadowBlur = 12 * scorePulseProgress;
     }
-    ctx.fillText(String(state.score), 0, 0);
+    ctx.fillText(String(getDisplayedScore(state.score, feedback.gain)), 0, 0);
     ctx.restore();
 
+    const combo = state.comboState.comboCount;
+    const recordVisible = highScore.active && state.bestScoreEligible && !state.isAdminModeActive();
     const clearFeedbackVisible = clearScore.active && clearScore.clearedLines > 0;
     const clearFeedbackAlpha = clearFeedbackVisible
       ? clamp(clearScore.remaining / 200, 0, 1)
@@ -684,50 +796,19 @@ export default class Renderer {
     ctx.save();
     ctx.globalAlpha = clearFeedbackVisible ? clearFeedbackAlpha : 1;
     ctx.textAlign = 'center';
-    ctx.fillStyle = clearFeedbackVisible ? '#FFD60A' : TEXT_SECONDARY;
+    ctx.fillStyle = clearFeedbackVisible || recordVisible ? '#FFE49A' : TEXT_SECONDARY;
     ctx.font = `${hudLayout.bestScoreFontSize}px sans-serif`;
     ctx.fillText(
       clearFeedbackVisible
-        ? `${getClearFeedbackLabel(clearScore.clearedLines)}  +${clearScore.totalAdded}`
-        : `${difficultyLabel}最高分：${state.bestScore}`,
+        ? `${getClearFeedbackLabel(clearScore.clearedLines)}${combo > 1 ? ` · 连击 ×${combo}` : ''}  +${clearScore.totalAdded}`
+        : recordVisible ? `新纪录 · ${state.bestScore}` : `${difficultyLabel}最高分：${state.bestScore}`,
       centerX,
       clearFeedbackVisible
         ? hudLayout.bestBaselineY - 6 * (1 - clearFeedbackAlpha) - 3 * clearAge * (1 - clearAge) * 4
-        : hudLayout.bestBaselineY
+        : hudLayout.bestBaselineY,
+      Math.max(80, hudLayout.scoreArea.width)
     );
     ctx.restore();
-
-    if (highScore.active && !state.isAdminModeActive()) {
-      const recordAlpha = clamp(highScore.remaining / 200, 0, 1);
-      const recordPulse = Math.sin(
-        clamp((highScore.duration - highScore.remaining) / 300, 0, 1) * Math.PI
-      );
-      const recordRect = {
-        x: Math.min(centerX + 58, layout.headerRect.x + layout.headerRect.width - 88),
-        y: layout.headerRect.y + 10,
-        width: 88,
-        height: 24
-      };
-
-      ctx.save();
-      ctx.globalAlpha = recordAlpha;
-      const badgeCenterX = recordRect.x + recordRect.width / 2;
-      const badgeCenterY = recordRect.y + recordRect.height / 2;
-      ctx.translate(badgeCenterX, badgeCenterY);
-      ctx.scale(1 + recordPulse * 0.05, 1 + recordPulse * 0.05);
-      ctx.translate(-badgeCenterX, -badgeCenterY);
-      roundedRect(ctx, recordRect.x, recordRect.y, recordRect.width, recordRect.height, 12);
-      ctx.fillStyle = 'rgba(92, 70, 18, 0.88)';
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = 'rgba(255, 214, 10, 0.72)';
-      ctx.stroke();
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#FFF1A8';
-      ctx.font = '13px sans-serif';
-      ctx.fillText('刷新最高分', recordRect.x + recordRect.width / 2, recordRect.y + 17);
-      ctx.restore();
-    }
 
     if (state.isAdminModeActive()) {
       const tagRect = {
@@ -741,281 +822,209 @@ export default class Renderer {
   }
 
   drawBoard(state) {
-    const { ctx, layout } = this;
-    const { boardPanelRect, boardRect, cellSize } = layout;
-
-    ctx.save();
-    ctx.shadowColor = BOARD_PANEL_GLOW;
-    ctx.shadowBlur = 22 * this.quality.shadowBlurScale;
-    ctx.shadowOffsetY = 5;
-    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
-    const panelGrad = this.createLinearGradient(
-      boardPanelRect.x,
-      boardPanelRect.y,
-      boardPanelRect.x,
-      boardPanelRect.y + boardPanelRect.height
-    );
-    panelGrad.addColorStop(0, '#102A47');
-    panelGrad.addColorStop(1, BOARD_PANEL);
-    ctx.fillStyle = panelGrad;
-    ctx.fill();
-    ctx.restore();
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = BOARD_PANEL_BORDER;
-    roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
-    ctx.stroke();
-
-    // Empty cells are batched into two flat fills with a single grid stroke,
-    // so the resting board stays visually quiet and cheap to draw.
-    for (let parity = 0; parity < 2; parity += 1) {
-      ctx.beginPath();
-      for (let row = 0; row < BOARD_SIZE; row += 1) {
-        for (let col = 0; col < BOARD_SIZE; col += 1) {
-          if ((row + col) % 2 !== parity) {
-            continue;
-          }
-          const x = Math.round(boardRect.x + col * cellSize);
-          const y = Math.round(boardRect.y + row * cellSize);
-          ctx.rect(x, y, cellSize, cellSize);
-        }
-      }
-      ctx.fillStyle = parity === 0 ? BOARD_CELL : BOARD_CELL_ALT;
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    for (let line = 0; line <= BOARD_SIZE; line += 1) {
-      const gridX = Math.round(boardRect.x + line * cellSize) + 0.5;
-      const gridY = Math.round(boardRect.y + line * cellSize) + 0.5;
-      ctx.moveTo(gridX, boardRect.y);
-      ctx.lineTo(gridX, boardRect.y + boardRect.height);
-      ctx.moveTo(boardRect.x, gridY);
-      ctx.lineTo(boardRect.x + boardRect.width, gridY);
-    }
-    ctx.strokeStyle = BOARD_GRID;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    for (let row = 0; row < BOARD_SIZE; row += 1) {
-      for (let col = 0; col < BOARD_SIZE; col += 1) {
-        const tile = state.board.grid[row][col];
-        if (tile) {
-          const pulse = this.getPulseAlpha(state, row, col);
-          const x = Math.round(boardRect.x + col * cellSize);
-          const y = Math.round(boardRect.y + row * cellSize);
-          this.drawBlockCell(x + 0.5, y + 0.5, cellSize - 1, tile.color, {
-            pulse,
-            clearing: this.isClearingCell(state, row, col)
-          });
-        }
-      }
-    }
-
-    this.drawLineClearEffects(state);
-
-    if (state.toolState.clearMode) {
+    const { layout } = this;
+    const { boardPanelRect: panel, boardRect, cellSize } = layout;
+    const drag = state.feedbackState.drag;
+    const settling = drag.active && drag.phase === 'settling';
+    const pending = state.pendingClear;
+    const omitted = (row, col) => (pending && (pending.rows.includes(row) || pending.cols.includes(col))) ||
+      (settling && drag.piece.cells.some((cell) => row === drag.targetRow + cell.y && col === drag.targetCol + cell.x));
+    const key = state.board.grid.map((line, row) => line.map((tile, col) =>
+      tile && !omitted(row, col) ? tile.color : '-').join(',')).join(';');
+    this.drawCachedSurface('board', `${this.layoutKey}:${key}`, {
+      x: panel.x - 12, y: panel.y - 12, width: panel.width + 24, height: panel.height + 24
+    }, () => {
+      const { ctx } = this;
       ctx.save();
-      roundedRect(ctx, boardPanelRect.x, boardPanelRect.y, boardPanelRect.width, boardPanelRect.height, UI_TOKENS.radius.medium);
-      ctx.fillStyle = 'rgba(110, 214, 255, 0.08)';
+      ctx.shadowColor = 'rgba(2, 9, 19, 0.32)';
+      ctx.shadowBlur = 12 * this.quality.shadowBlurScale;
+      ctx.shadowOffsetY = 5;
+      roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, UI_TOKENS.radius.medium);
+      const frame = this.createLinearGradient(panel.x, panel.y, panel.x, panel.y + panel.height);
+      frame.addColorStop(0, '#2A4F6E');
+      frame.addColorStop(0.025, '#142E48');
+      frame.addColorStop(0.98, BOARD_PANEL);
+      frame.addColorStop(1, '#31536B');
+      ctx.fillStyle = frame;
       ctx.fill();
       ctx.restore();
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(219, 244, 255, 0.88)';
-      ctx.font = '15px sans-serif';
-      ctx.fillText('点击棋盘位置，清除附近 3×3 区域', boardPanelRect.x + boardPanelRect.width / 2, boardPanelRect.y - 8);
+      roundedRect(ctx, boardRect.x, boardRect.y, boardRect.width, boardRect.height, 9);
+      ctx.fillStyle = '#0A1D30';
+      ctx.fill();
+      ctx.save();
+      ctx.clip();
+      for (let parity = 0; parity < 2; parity += 1) {
+        ctx.beginPath();
+        for (let row = 0; row < BOARD_SIZE; row += 1) {
+          for (let col = 0; col < BOARD_SIZE; col += 1) {
+            if ((row + col) % 2 !== parity) continue;
+            ctx.rect(boardRect.x + col * cellSize + 1, boardRect.y + row * cellSize + 1, cellSize - 2, cellSize - 2);
+          }
+        }
+        ctx.fillStyle = parity === 0 ? BOARD_CELL : BOARD_CELL_ALT;
+        ctx.fill();
+      }
+      // Inset wells: one batched highlight and one shadow, no per-cell gradients.
+      for (let edge = 0; edge < 2; edge += 1) {
+        ctx.beginPath();
+        for (let row = 0; row < BOARD_SIZE; row += 1) {
+          for (let col = 0; col < BOARD_SIZE; col += 1) {
+            const x = boardRect.x + col * cellSize + 1.5;
+            const y = boardRect.y + row * cellSize + (edge ? cellSize - 1.5 : 1.5);
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + cellSize - 3, y);
+          }
+        }
+        ctx.strokeStyle = edge ? 'rgba(153, 211, 244, 0.07)' : 'rgba(2, 10, 21, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      for (let row = 0; row < BOARD_SIZE; row += 1) {
+        for (let col = 0; col < BOARD_SIZE; col += 1) {
+          const tile = state.board.grid[row][col];
+          if (!tile || omitted(row, col)) continue;
+          this.drawBlockCell(boardRect.x + col * cellSize + 0.5, boardRect.y + row * cellSize + 0.5,
+            cellSize - 1, tile.color);
+        }
+      }
+      ctx.restore();
+    });
+    const { ctx } = this;
+    // Contact glints acknowledge the exact placed cells, with no board shake.
+    state.placementPulse.forEach((pulse) => {
+      if (!state.board.grid[pulse.row]?.[pulse.col]) return;
+      const strength = Math.sin(Math.PI * clamp(pulse.remainingTime / 140, 0, 1));
+      ctx.save();
+      ctx.globalAlpha *= strength * 0.6;
+      ctx.strokeStyle = '#E1F5FF';
+      ctx.lineWidth = 1.5;
+      roundedRect(ctx, boardRect.x + pulse.col * cellSize + 2, boardRect.y + pulse.row * cellSize + 2,
+        cellSize - 4, cellSize - 4, 4);
+      ctx.stroke();
+      ctx.restore();
+    });
+    this.drawLineClearEffects(state);
+    this.drawActionFeedback(state);
+    if (state.toolState.clearMode) {
+      ctx.save();
+      roundedRect(ctx, panel.x, panel.y, panel.width, panel.height, UI_TOKENS.radius.medium);
+      ctx.fillStyle = 'rgba(110, 214, 255, 0.06)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(133, 219, 255, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
     }
+  }
+
+  drawActionFeedback(state) {
+    const action = state.feedbackState.action;
+    if (!action.active || !action.cells.length) return;
+    const { ctx, layout: { boardRect, cellSize } } = this;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(boardRect.x, boardRect.y, boardRect.width, boardRect.height);
+    ctx.clip();
+    action.cells.forEach((cell) => {
+      const visual = getActionVisual(action.kind === 'revive' ? { ...action, kind: 'clear' } : action, 0, this.reducedMotion);
+      const x = boardRect.x + cell.col * cellSize;
+      const y = boardRect.y + cell.row * cellSize;
+      if ((action.kind === 'clear' || action.kind === 'revive') && !state.board.grid[cell.row][cell.col]) {
+        ctx.save();
+        ctx.globalAlpha *= visual.alpha * 0.75;
+        ctx.translate(x + cellSize / 2, y + cellSize / 2);
+        ctx.scale(visual.scale, visual.scale);
+        this.drawBlockCell(-cellSize / 2, -cellSize / 2, cellSize, cell.color || '#79B9DF');
+        ctx.restore();
+      } else {
+        ctx.strokeStyle = `rgba(164, 228, 255, ${visual.strength * 0.8})`;
+        ctx.lineWidth = 1.5;
+        roundedRect(ctx, x + 2, y + 2, cellSize - 4, cellSize - 4, 4);
+        ctx.stroke();
+      }
+    });
+    ctx.restore();
   }
 
   drawLineClearEffects(state) {
-    const effects = state.feedbackState && state.feedbackState.clearEffects;
-    this.perfStats.setActiveEffects(effects ? effects.length : 0);
-    if (!effects || effects.length === 0) {
-      return;
-    }
-
-    const { ctx, layout } = this;
-    const { boardRect, cellSize } = layout;
+    const effects = state.feedbackState.clearEffects;
+    this.perfStats.setActiveEffects(effects.length);
+    const { ctx, layout: { boardRect, cellSize } } = this;
+    if (!effects.length) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(boardRect.x, boardRect.y, boardRect.width, boardRect.height);
+    ctx.clip();
     effects.forEach((effect) => {
       const visual = getLineClearEffectVisual(effect);
-      if (!visual) {
-        return;
-      }
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(boardRect.x, boardRect.y, boardRect.width, boardRect.height);
-      ctx.clip();
-      const boardCenterX = boardRect.x + boardRect.width / 2;
-      const boardCenterY = boardRect.y + boardRect.height / 2;
-      ctx.translate(boardCenterX + visual.shakeX, boardCenterY + visual.shakeY);
-      ctx.scale(visual.boardScale, visual.boardScale);
-      ctx.translate(-boardCenterX, -boardCenterY);
-
-      this.drawLineClearLasers(effect, visual);
-      this.drawLineClearImpact(effect, visual);
+      const pendingMatches = state.pendingClear &&
+        state.pendingClear.rows.join(',') === effect.clearedRows.join(',') &&
+        state.pendingClear.cols.join(',') === effect.clearedCols.join(',');
       effect.cells.forEach((cell) => {
-        const centerX = boardRect.x + cell.col * cellSize + cellSize / 2;
-        const centerY = boardRect.y + cell.row * cellSize + cellSize / 2;
-        const size = (cellSize - 3) * visual.cellScale;
+        if (!pendingMatches && state.board.grid[cell.row]?.[cell.col]) return;
+        const drag = state.feedbackState.drag;
+        if (drag.active && drag.phase === 'settling' && drag.piece.cells.some((part) =>
+          cell.row === drag.targetRow + part.y && cell.col === drag.targetCol + part.x)) return;
+        const pose = getClearCellVisual(effect, cell, this.reducedMotion);
+        if (pose.alpha <= 0) return;
         ctx.save();
-        ctx.globalAlpha = Math.max(visual.cellFlashAlpha, visual.fadeAlpha * 0.16);
-        ctx.shadowColor = 'rgba(255, 214, 10, 0.42)';
-        ctx.shadowBlur = 7 * visual.highlightAlpha;
-        roundedRect(ctx, centerX - size / 2, centerY - size / 2, size, size, 4);
-        ctx.fillStyle = visual.impactAlpha > 0.05
-          ? 'rgba(255, 246, 196, 0.68)'
-          : 'rgba(255, 246, 196, 0.42)';
-        ctx.fill();
-        if (visual.residualAlpha > 0) {
-          ctx.globalAlpha = visual.residualAlpha * 0.3;
-          ctx.strokeStyle = 'rgba(110, 214, 255, 0.9)';
-          ctx.lineWidth = Math.max(1, cellSize * 0.06);
-          ctx.stroke();
-        }
+        ctx.globalAlpha *= pose.alpha;
+        const x = boardRect.x + (cell.col + 0.5 + pose.offsetX) * cellSize;
+        const y = boardRect.y + (cell.row + 0.5 + pose.offsetY) * cellSize;
+        ctx.translate(x, y);
+        ctx.scale(pose.scale, pose.scale);
+        this.drawBlockCell(-cellSize / 2 + 0.5, -cellSize / 2 + 0.5, cellSize - 1, cell.color || '#8BD6F3', { pulse: pose.highlight });
         ctx.restore();
       });
-      this.drawLineClearParticles(effect, visual);
-
-      ctx.restore();
+      if (!this.reducedMotion) {
+        this.drawLineClearLasers(effect, visual);
+        this.drawLineClearImpact(effect, visual);
+        this.drawLineClearParticles(effect, visual);
+      }
     });
+    ctx.restore();
   }
 
   drawLineClearImpact(effect, visual) {
-    if (visual.impactAlpha <= 0 || !effect.cells || effect.cells.length === 0) {
-      return;
-    }
-
-    const { ctx, layout } = this;
-    const { boardRect, cellSize } = layout;
-    const lineBoost = Math.min(0.3, Math.max(0, effect.lineCount - 1) * 0.15);
-    const impactAlpha = Math.min(1, visual.impactAlpha * (1 + lineBoost));
-    const center = effect.cells.reduce((sum, cell) => ({
-      row: sum.row + cell.row / effect.cells.length,
-      col: sum.col + cell.col / effect.cells.length
-    }), { row: 0, col: 0 });
-    const x = boardRect.x + (center.col + 0.5) * cellSize;
-    const y = boardRect.y + (center.row + 0.5) * cellSize;
-    const radius = cellSize * (1.3 + visual.impactProgress * 2.4 + Math.min(4, effect.lineCount) * 0.28);
-
+    if (!effect.crossCells.length || visual.impactAlpha <= 0) return;
+    const { ctx, layout: { boardRect, cellSize } } = this;
+    const cross = effect.crossCells[0];
+    const x = boardRect.x + (cross.col + 0.5) * cellSize;
+    const y = boardRect.y + (cross.row + 0.5) * cellSize;
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = impactAlpha * (effect.crossCells.length > 0 ? 0.72 : 0.54);
-    const bloom = this.createRadialGradient(x, y, 0, x, y, radius);
-    bloom.addColorStop(0, 'rgba(255, 246, 196, 0.92)');
-    bloom.addColorStop(0.32, 'rgba(255, 224, 92, 0.44)');
-    bloom.addColorStop(1, 'rgba(110, 214, 255, 0)');
-    ctx.fillStyle = bloom;
+    ctx.strokeStyle = `rgba(255, 239, 177, ${visual.impactAlpha * 0.45})`;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = impactAlpha * 0.72;
-    ctx.strokeStyle = 'rgba(255, 246, 196, 0.82)';
-    ctx.lineWidth = Math.max(1, cellSize * 0.08);
-    ctx.beginPath();
-    ctx.arc(x, y, radius * 0.52, 0, Math.PI * 2);
+    ctx.arc(x, y, cellSize * (0.25 + visual.impactProgress * 0.6), 0, Math.PI * 2);
     ctx.stroke();
-
-    if (effect.crossCells.length > 0) {
-      const cross = effect.crossCells[0];
-      const crossX = boardRect.x + (cross.col + 0.5) * cellSize;
-      const crossY = boardRect.y + (cross.row + 0.5) * cellSize;
-      ctx.globalAlpha = impactAlpha * 0.9;
-      ctx.lineWidth = Math.max(1, cellSize * 0.1);
-      ctx.beginPath();
-      ctx.moveTo(crossX - cellSize * 1.25, crossY);
-      ctx.lineTo(crossX + cellSize * 1.25, crossY);
-      ctx.moveTo(crossX, crossY - cellSize * 1.25);
-      ctx.lineTo(crossX, crossY + cellSize * 1.25);
-      ctx.stroke();
-    }
     ctx.restore();
   }
 
   drawLineClearLasers(effect, visual) {
-    if (!effect.lasers || effect.lasers.length === 0 || visual.laserProgress <= 0) {
-      return;
-    }
-
-    const { ctx, layout } = this;
-    const { boardRect, cellSize } = layout;
-    const lineBoost = Math.min(0.25, Math.max(0, effect.lineCount - 1) * 0.12);
-    const alpha = Math.min(0.95, Math.max(0, visual.laserAlpha * (1 + lineBoost)));
-    const beamWidth = Math.max(3, cellSize * 0.16);
-    const glowWidth = Math.max(cellSize * 0.85, beamWidth * 3.4);
-
+    if (visual.laserAlpha <= 0 || visual.laserProgress <= 0) return;
+    const { ctx, layout: { boardRect, cellSize } } = this;
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
     effect.lasers.slice(0, this.quality.maxLaserDraws).forEach((laser) => {
       this.perfStats.recordLaser();
-      if (laser.kind === 'row') {
-        const y = boardRect.y + (laser.index + 0.5) * cellSize;
-        const origin = Number.isFinite(laser.origin) ? laser.origin : 0.5;
-        const centerX = boardRect.x + boardRect.width * origin;
-        const extent = boardRect.width * 0.5 * visual.laserProgress;
-        [-1, 1].forEach((side) => {
-          if (extent <= 1) {
-            return;
-          }
-          const headX = centerX + side * extent;
-          const trailLength = Math.min(extent, boardRect.width * 0.32);
-          const trailStart = headX - side * trailLength;
-          const trail = this.createLinearGradient(trailStart, y, headX, y);
-          trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-          trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
-          trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
-          ctx.fillStyle = trail;
-          ctx.fillRect(
-            Math.min(trailStart, headX),
-            y - glowWidth / 2,
-            Math.abs(headX - trailStart),
-            glowWidth
-          );
-          ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
-          ctx.fillRect(headX - beamWidth, y - cellSize * 0.55, beamWidth * 2, cellSize * 1.1);
-          ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
-          ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
-          ctx.beginPath();
-          ctx.moveTo(trailStart, y);
-          ctx.lineTo(headX, y);
-          ctx.stroke();
-        });
-        return;
-      }
-
-      const x = boardRect.x + (laser.index + 0.5) * cellSize;
-      const origin = Number.isFinite(laser.origin) ? laser.origin : 0.5;
-      const centerY = boardRect.y + boardRect.height * origin;
-      const extent = boardRect.height * 0.5 * visual.laserProgress;
-      [-1, 1].forEach((side) => {
-        if (extent <= 1) {
-          return;
-        }
-        const headY = centerY + side * extent;
-        const trailLength = Math.min(extent, boardRect.height * 0.32);
-        const trailStart = headY - side * trailLength;
-        const trail = this.createLinearGradient(x, trailStart, x, headY);
-        trail.addColorStop(0, 'rgba(110, 214, 255, 0)');
-        trail.addColorStop(0.72, `rgba(110, 214, 255, ${alpha * 0.2})`);
-        trail.addColorStop(1, `rgba(255, 246, 196, ${alpha * 0.46})`);
-        ctx.fillStyle = trail;
-        ctx.fillRect(
-          x - glowWidth / 2,
-          Math.min(trailStart, headY),
-          glowWidth,
-          Math.abs(headY - trailStart)
-        );
-        ctx.fillStyle = `rgba(255, 246, 196, ${alpha})`;
-        ctx.fillRect(x - cellSize * 0.55, headY - beamWidth, cellSize * 1.1, beamWidth * 2);
-        ctx.strokeStyle = `rgba(255, 246, 196, ${alpha * 0.92})`;
-        ctx.lineWidth = Math.max(1.5, cellSize * 0.07);
+      const row = laser.kind === 'row';
+      const start = row ? boardRect.x : boardRect.y;
+      const length = row ? boardRect.width : boardRect.height;
+      const origin = start + length * laser.origin;
+      const cross = (row ? boardRect.y : boardRect.x) + (laser.index + 0.5) * cellSize;
+      for (const direction of [-1, 1]) {
+        const edge = start + (direction > 0 ? length : 0);
+        const head = origin + (edge - origin) * visual.laserProgress;
+        const tail = head - direction * Math.min(Math.abs(head - origin), cellSize * 1.5);
+        ctx.strokeStyle = `rgba(161, 230, 255, ${visual.laserAlpha * 0.36})`;
+        ctx.lineWidth = Math.max(1, cellSize * 0.06);
         ctx.beginPath();
-        ctx.moveTo(x, trailStart);
-        ctx.lineTo(x, headY);
+        ctx.moveTo(row ? tail : cross, row ? cross : tail);
+        ctx.lineTo(row ? head : cross, row ? cross : head);
         ctx.stroke();
-      });
+        ctx.fillStyle = `rgba(255, 241, 189, ${visual.laserAlpha * 0.8})`;
+        ctx.fillRect(row ? head - 1 : cross - cellSize * 0.25,
+          row ? cross - cellSize * 0.25 : head - 1, row ? 2 : cellSize * 0.5, row ? cellSize * 0.5 : 2);
+      }
     });
     ctx.restore();
   }
@@ -1060,32 +1069,36 @@ export default class Renderer {
   }
 
   drawPreview(state) {
-    if (!state.dragState.isDragging || !state.previewState.visible || state.toolState.clearMode) {
-      return;
-    }
-
+    if (!state.dragState.isDragging || !state.previewState.visible || state.toolState.clearMode) return;
     const piece = state.rackPieces[state.dragState.activePieceIndex];
+    if (!piece) return;
     const { row, col, canPlace } = state.previewState;
-    const { boardRect, cellSize } = this.layout;
-
+    const { ctx, layout: { boardRect, cellSize } } = this;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(boardRect.x, boardRect.y, boardRect.width, boardRect.height);
+    ctx.clip();
     piece.cells.forEach((cell) => {
-      const drawX = boardRect.x + (col + cell.x) * cellSize + 0.5;
-      const drawY = boardRect.y + (row + cell.y) * cellSize + 0.5;
-
-      this.drawBlockCell(drawX, drawY, cellSize - 1, piece.color, {
-        alpha: canPlace ? 0.62 : 0.24,
-        glow: canPlace ? 0.22 : 0,
-        shadowAlpha: 0,
-        borderBoost: canPlace ? 0.1 : 0,
-        flatten: true
-      });
-
-      const inset = canPlace ? 1 : 3;
-      roundedRect(this.ctx, drawX + inset, drawY + inset, cellSize - inset * 2 - 1, cellSize - inset * 2 - 1, 3);
-      this.ctx.strokeStyle = canPlace ? PREVIEW_VALID : PREVIEW_INVALID;
-      this.ctx.lineWidth = 1.2;
-      this.ctx.stroke();
+      const x = boardRect.x + (col + cell.x) * cellSize + 2;
+      const y = boardRect.y + (row + cell.y) * cellSize + 2;
+      roundedRect(ctx, x, y, cellSize - 4, cellSize - 4, 4);
+      ctx.fillStyle = canPlace ? rgba(piece.color, 0.22) : 'rgba(241, 116, 134, 0.16)';
+      ctx.fill();
+      ctx.lineWidth = canPlace ? 1.5 : 1;
+      ctx.strokeStyle = canPlace ? rgba(tintColor(piece.color, 0.55), 0.82) : PREVIEW_INVALID;
+      ctx.stroke();
+      // Four short registration edges make the snapped destination unambiguous.
+      if (canPlace) {
+        const arm = cellSize * 0.18;
+        ctx.strokeStyle = PREVIEW_VALID;
+        ctx.beginPath();
+        ctx.moveTo(x, y + arm); ctx.lineTo(x, y); ctx.lineTo(x + arm, y);
+        ctx.moveTo(x + cellSize - 4 - arm, y + cellSize - 4);
+        ctx.lineTo(x + cellSize - 4, y + cellSize - 4); ctx.lineTo(x + cellSize - 4, y + cellSize - 4 - arm);
+        ctx.stroke();
+      }
     });
+    ctx.restore();
   }
 
   drawToolBar(state) {
@@ -1213,7 +1226,7 @@ export default class Renderer {
       const piece = state.rackPieces[index];
       const slot = this.layout.rackSlots[index];
       const activeDrag = state.feedbackState && state.feedbackState.drag;
-      if (!piece || piece.used || !slot || (activeDrag && activeDrag.active && index === activeDrag.pieceIndex)) {
+      if (!piece || piece.used || !slot || (activeDrag && activeDrag.active && activeDrag.phase !== 'settling' && index === activeDrag.pieceIndex)) {
         continue;
       }
 
@@ -1242,11 +1255,19 @@ export default class Renderer {
         cellSize
       });
 
+      const action = state.feedbackState.action;
+      const arrival = action.active && action.rack ? getActionVisual(action, index, this.reducedMotion) : null;
+      ctx.save();
+      if (arrival) {
+        ctx.globalAlpha *= arrival.alpha;
+        ctx.translate(x + width / 2, y + height / 2 + arrival.offsetY);
+        ctx.scale(arrival.scale, arrival.scale);
+        ctx.translate(-x - width / 2, -y - height / 2);
+      }
       piece.cells.forEach((cell) => {
-        this.drawBlockCell(x + cell.x * cellSize, y + cell.y * cellSize, cellSize, piece.color, {
-          shadowAlpha: 0.14
-        });
+        this.drawBlockCell(x + cell.x * cellSize, y + cell.y * cellSize, cellSize, piece.color);
       });
+      ctx.restore();
     }
   }
 
@@ -1300,44 +1321,31 @@ export default class Renderer {
   }
 
   drawDraggingPiece(state) {
-    const drag = state.feedbackState && state.feedbackState.drag;
-    if (!drag || !drag.active || state.toolState.clearMode) {
-      return;
-    }
-
-    const piece = drag.piece;
-    const visual = getDragVisual(drag);
-    if (!piece || !visual) {
-      return;
-    }
-
+    const drag = state.feedbackState.drag;
+    if (!drag.active || state.toolState.clearMode || !drag.piece) return;
+    const visual = getDragVisual(drag, this.reducedMotion);
     const { ctx } = this;
-    const displayCellSize = drag.displayCellSize;
-    const pieceWidth = piece.bounds.width * displayCellSize;
-    const pieceHeight = piece.bounds.height * displayCellSize;
-    const cx = visual.x + pieceWidth / 2;
-    const cy = visual.y + pieceHeight / 2;
-
+    const size = drag.displayCellSize;
     ctx.save();
-    ctx.globalAlpha = visual.alpha;
-    ctx.translate(cx, cy);
+    ctx.translate(visual.x, visual.y);
     ctx.scale(visual.scale, visual.scale);
-    ctx.translate(-cx, -cy);
-
-    piece.cells.forEach((cell) => {
-      const invalid = drag.phase === 'invalid';
-      this.drawBlockCell(
-        visual.x + cell.x * displayCellSize,
-        visual.y + cell.y * displayCellSize,
-        displayCellSize,
-        invalid ? '#FF6B86' : piece.color,
-        {
-          alpha: invalid ? 0.82 : 1,
-          glow: invalid ? 0.08 : 0.2,
-          borderBoost: invalid ? 0.04 : 0.1,
-          shadowAlpha: 0.16
-        }
-      );
+    // A directional contact shadow, kept separate from the tile's material.
+    ctx.fillStyle = `rgba(2, 10, 21, ${0.16 + visual.elevation * 0.16})`;
+    drag.piece.cells.forEach((cell) => {
+      roundedRect(ctx, cell.x * size + 1 + visual.elevation * 2, cell.y * size + 3 + visual.elevation * 4,
+        size - 2, size - 2, clamp(size * 0.12, 2, 5));
+      ctx.fill();
+    });
+    drag.piece.cells.forEach((cell) => {
+      this.drawBlockCell(cell.x * size, cell.y * size, size, drag.piece.color, {
+        pulse: drag.phase === 'invalid' ? 0 : visual.elevation * 0.14
+      });
+      if (drag.phase === 'invalid') {
+        ctx.strokeStyle = `rgba(255, 166, 171, ${Math.min(0.75, visual.elevation)})`;
+        ctx.lineWidth = 1.5;
+        roundedRect(ctx, cell.x * size + 1.5, cell.y * size + 1.5, size - 3, size - 3, 4);
+        ctx.stroke();
+      }
     });
     ctx.restore();
   }
@@ -1348,6 +1356,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin,
       preferredContentHeight: null
@@ -1433,6 +1442,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 3,
       preferredContentHeight: confirmOpen ? 130 : null
@@ -1598,6 +1608,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 5,
       preferredContentHeight: confirmOpen ? 116 : 236
@@ -1680,6 +1691,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 12,
       preferredContentHeight: 138
@@ -1749,6 +1761,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 12,
       preferredContentHeight: 138
@@ -1818,6 +1831,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 9,
       preferredContentHeight: 130
@@ -1880,6 +1894,7 @@ export default class Renderer {
     const shell = calculateModalShellLayout({
       viewportWidth: layout.screenWidth,
       viewportHeight: layout.screenHeight,
+      topInset: layout.headerRect.y,
       bottomInset: layout.bottomInset,
       sideInset: layout.sideMargin + 4,
       preferredContentHeight: showAdminNote ? 218 : 188
@@ -2089,7 +2104,11 @@ export default class Renderer {
     const width = Math.min(layout.screenWidth - layout.sideMargin * 4, 280);
     const height = 32;
     const x = (layout.screenWidth - width) / 2;
-    const y = layout.toolRect.y - 38;
+    const belowRack = layout.rackRect.y + layout.rackRect.height + 10;
+    const y = belowRack + height <= layout.screenHeight - layout.bottomInset
+      ? belowRack : layout.boardPanelRect.y - height - 6;
+    ctx.save();
+    ctx.globalAlpha *= Math.min(1, (this.state.notice?.remainingTime || 160) / 160);
 
     roundedRect(ctx, x, y, width, height, UI_TOKENS.radius.small);
     ctx.fillStyle = 'rgba(8, 18, 36, 0.86)';
@@ -2102,76 +2121,48 @@ export default class Renderer {
     ctx.fillStyle = TEXT_PRIMARY;
     ctx.font = '14px sans-serif';
     ctx.fillText(text, x + width / 2, y + 21);
+    ctx.restore();
   }
 
   drawBlockCell(x, y, size, color, options = {}) {
+    if (size < 4) return;
     const { ctx } = this;
-    const inset = clamp(size * 0.02, 1, 2);
+    const inset = clamp(size * 0.035, 1, 2);
     const drawSize = size - inset * 2;
-    const drawX = x + inset;
-    const drawY = y + inset;
-    const radius = clamp(size * 0.1, 2, 5);
-    const alpha = options.alpha == null ? 1 : options.alpha;
+    const depth = clamp(size * 0.075, 1.5, 3.5);
+    const radius = clamp(size * 0.12, 2.5, 5);
+    const left = x + inset;
+    const top = y + inset;
     const pulse = options.pulse || 0;
-    const glow = options.glow || 0;
-    const borderBoost = options.borderBoost || 0;
-    const shadowAlpha = options.shadowAlpha == null ? 0 : options.shadowAlpha;
-    const flatten = !!options.flatten;
-    const clearing = !!options.clearing;
-    const pulseSquash = pulse > 0 ? 1 - 0.05 * Math.sin(pulse * Math.PI) : 1;
-
-    const topColor = tintColor(color, flatten ? 0.14 : 0.16 + pulse * 0.1);
-    const midColor = clearing ? tintColor(color, 0.1) : color;
-    const bottomColor = shadeColor(color, flatten ? 0.14 : 0.24);
-
     ctx.save();
-    ctx.globalAlpha = alpha;
-    if (shadowAlpha > 0 || glow > 0) {
-      ctx.shadowColor = rgba(tintColor(color, 0.2), glow > 0 ? 0.16 : shadowAlpha);
-      ctx.shadowBlur = glow > 0 ? 4 : 3;
-      ctx.shadowOffsetY = glow > 0 ? 1 : 2;
-    }
-    roundedRect(
-      ctx,
-      drawX + (drawSize * (1 - pulseSquash)) / 2,
-      drawY + (drawSize * (1 - pulseSquash)) / 2,
-      drawSize * pulseSquash,
-      drawSize * pulseSquash,
-      radius
-    );
-    const gradient = this.createLinearGradient(drawX, drawY, drawX, drawY + drawSize);
-    gradient.addColorStop(0, topColor);
-    gradient.addColorStop(0.45, midColor);
-    gradient.addColorStop(1, bottomColor);
-    ctx.fillStyle = gradient;
+    ctx.globalAlpha *= options.alpha == null ? 1 : options.alpha;
+    // A dark foot below a softly bevelled face gives every piece the same material.
+    roundedRect(ctx, left, top, drawSize, drawSize, radius);
+    ctx.fillStyle = shadeColor(color, 0.42);
     ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
+    roundedRect(ctx, left, top, drawSize, drawSize - depth, radius);
+    const face = this.createLinearGradient(left, top, left + drawSize * 0.3, top + drawSize - depth);
+    face.addColorStop(0, tintColor(color, 0.24 + pulse * 0.12));
+    face.addColorStop(0.3, tintColor(color, 0.06));
+    face.addColorStop(1, shadeColor(color, 0.12));
+    ctx.fillStyle = face;
+    ctx.fill();
     ctx.lineWidth = 1;
-    ctx.strokeStyle = rgba(tintColor(color, 0.4 + borderBoost), 0.6);
-    roundedRect(
-      ctx,
-      drawX + (drawSize * (1 - pulseSquash)) / 2 + 0.5,
-      drawY + (drawSize * (1 - pulseSquash)) / 2 + 0.5,
-      drawSize * pulseSquash - 1,
-      drawSize * pulseSquash - 1,
-      radius
-    );
+    ctx.strokeStyle = rgba(tintColor(color, 0.58), 0.52);
+    roundedRect(ctx, left + 0.5, top + 0.5, drawSize - 1, drawSize - depth - 1, radius);
     ctx.stroke();
-
-    // Thin specular edge instead of a plastic shine bar.
-    ctx.strokeStyle = rgba('#FFFFFF', flatten ? 0.16 : 0.26 + pulse * 0.08);
+    // The inner face is satin; the short top and left edges catch the light.
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
     ctx.beginPath();
-    ctx.moveTo(drawX + radius - 1, drawY + 1.5);
-    ctx.lineTo(drawX + drawSize - radius + 1, drawY + 1.5);
+    ctx.moveTo(left + radius, top + 2);
+    ctx.lineTo(left + drawSize - radius, top + 2);
+    ctx.moveTo(left + 2, top + radius);
+    ctx.lineTo(left + 2, top + drawSize * 0.5);
     ctx.stroke();
-
-    ctx.strokeStyle = rgba(shadeColor(color, 0.45), 0.42);
+    ctx.strokeStyle = rgba(shadeColor(color, 0.48), 0.52);
     ctx.beginPath();
-    ctx.moveTo(drawX + radius - 1, drawY + drawSize - 1.5);
-    ctx.lineTo(drawX + drawSize - radius + 1, drawY + drawSize - 1.5);
+    ctx.moveTo(left + radius, top + drawSize - 1);
+    ctx.lineTo(left + drawSize - radius, top + drawSize - 1);
     ctx.stroke();
     ctx.restore();
   }

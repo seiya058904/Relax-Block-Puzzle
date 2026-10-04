@@ -21,6 +21,11 @@ jobs:
           QA_PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/browser-tools/node_modules/playwright
           QA_SCREENSHOTS: ${{ runner.temp }}/browser-evidence
         run: node tests/browser/high-score.mjs
+      - name: Run tactile, lifecycle, and rendering regression
+        env:
+          QA_PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/browser-tools/node_modules/playwright
+          QA_SCREENSHOTS: ${{ runner.temp }}/browser-evidence
+        run: node tests/browser/quality.mjs
       - name: Preserve desktop and mobile evidence
         if: always()
         uses: actions/upload-artifact@v4

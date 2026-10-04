@@ -21,14 +21,14 @@ export const COLORS = [
   '#FF4D6D'
 ];
 
-export const BACKGROUND_TOP = '#2A8AC6';
-export const BACKGROUND_MID = '#145E93';
+export const BACKGROUND_TOP = '#246F99';
+export const BACKGROUND_MID = '#164D76';
 export const BACKGROUND_BOTTOM = '#091B36';
 export const BOARD_PANEL = '#0E2640';
 export const BOARD_PANEL_BORDER = 'rgba(150, 218, 255, 0.4)';
 export const BOARD_PANEL_GLOW = 'rgba(110, 200, 255, 0.12)';
-export const BOARD_CELL = '#122B44';
-export const BOARD_CELL_ALT = '#142F4B';
+export const BOARD_CELL = '#102A40';
+export const BOARD_CELL_ALT = '#122D43';
 export const BOARD_GRID = 'rgba(150, 205, 240, 0.11)';
 export const PREVIEW_VALID = 'rgba(174, 236, 255, 0.6)';
 export const PREVIEW_INVALID = 'rgba(255, 119, 145, 0.5)';

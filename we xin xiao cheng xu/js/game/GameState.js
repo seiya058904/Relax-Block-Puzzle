@@ -10,6 +10,8 @@ import {
   releaseDragFeedback,
   startDragFeedback,
   triggerClearScore,
+  triggerScoreGain,
+  triggerActionFeedback,
   triggerLineClearEffect,
   triggerHighScore,
   triggerModalClose,
@@ -380,16 +382,14 @@ export default class GameState {
     this.generateRackForPlay(true);
   }
 
+  canAdvanceTime() {
+    return this.screen === 'playing' &&
+      !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
+      !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+  }
+
   update(deltaTime) {
-    if (
-      this.screen !== 'playing' ||
-      this.ui.isSettingsOpen ||
-      this.ui.isPauseOpen ||
-      this.ui.isAdminPanelOpen ||
-      this.ui.isRevivePromptOpen
-    ) {
-      return;
-    }
+    if (!this.canAdvanceTime()) return;
 
     if (this.notice) {
       this.notice.remainingTime -= deltaTime;
@@ -696,6 +696,7 @@ export default class GameState {
       visualY: visualPosition.y,
       startX: hitArea.x,
       startY: hitArea.y,
+      originCellSize: hitArea.cellSize,
       displayCellSize
     });
     this.moveDrag(touchX, touchY);
@@ -783,8 +784,9 @@ export default class GameState {
       col: this.previewState.col
     });
     releaseDragFeedback(this.feedbackState, 'invalid', {
-      targetX: this.feedbackState.drag.startX,
-      targetY: this.feedbackState.drag.startY
+      targetX: this.feedbackState.drag.originX,
+      targetY: this.feedbackState.drag.originY,
+      targetCellSize: this.feedbackState.drag.originCellSize
     });
     this.clearDrag(true);
     return false;
@@ -804,6 +806,7 @@ export default class GameState {
     const scoreBefore = this.score;
     const placedCount = this.board.place(piece, row, col);
     const placementScoreResult = this.scoreManager.applyPlacement(this, placedCount);
+    triggerScoreGain(this.feedbackState, scoreBefore, this.score);
     this.checkNewRecord();
     this.emitEvent('place');
     piece.used = true;
@@ -837,7 +840,10 @@ export default class GameState {
     releaseDragFeedback(this.feedbackState, 'settling', this.layout
       ? {
           targetX: this.layout.boardRect.x + col * this.layout.cellSize,
-          targetY: this.layout.boardRect.y + row * this.layout.cellSize
+          targetY: this.layout.boardRect.y + row * this.layout.cellSize,
+          targetCellSize: this.layout.cellSize,
+          row,
+          col
         }
       : {
           targetX: this.feedbackState.drag.visualX,
@@ -849,7 +855,11 @@ export default class GameState {
       triggerLineClearEffect(this.feedbackState, {
         rows: completed.rows,
         cols: completed.cols,
-        cells: createLineClearCells(completed.rows, completed.cols, this.board.size)
+        cells: createLineClearCells(completed.rows, completed.cols, this.board.size).map((cell) => ({
+          ...cell,
+          color: this.board.grid[cell.row][cell.col]?.color
+        })),
+        origin: { row: row + (piece.bounds.height - 1) / 2, col: col + (piece.bounds.width - 1) / 2 }
       });
       this.pendingClear = {
         rows: completed.rows,
@@ -887,7 +897,9 @@ export default class GameState {
       });
     }
     this.board.clearLines(pendingClear.rows, pendingClear.cols);
+    const scoreBeforeClear = this.score;
     const scoreResult = this.scoreManager.applyLineClear(this, lineCount);
+    triggerScoreGain(this.feedbackState, scoreBeforeClear, this.score);
     triggerClearScore(this.feedbackState, scoreResult);
     this.emitFeedbackEvent(FEEDBACK_EVENTS.linesCleared, {
       rows: pendingClear.rows.slice(),
@@ -972,6 +984,8 @@ export default class GameState {
     this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
     this.undoSnapshot = null;
     this.clearDrag();
+    triggerActionFeedback(this.feedbackState, 'refresh', { rack: true });
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.itemUsed, { item: 'refresh', remaining: this.toolState.refreshCount });
     this.showNotice('已刷新候选方块');
     return true;
   }
@@ -1031,6 +1045,8 @@ export default class GameState {
       col: cell.col,
       remainingTime: PLACEMENT_PULSE_MS
     }));
+    triggerActionFeedback(this.feedbackState, 'clear', { cells: removedCells });
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.itemUsed, { item: 'clear', remaining: this.toolState.clearCount, cells: removedCells });
     this.emitEvent('clear');
     this.showNotice('已清除附近方块');
     this.checkGameOver();
@@ -1056,6 +1072,13 @@ export default class GameState {
     }
 
     const snapshot = this.undoSnapshot;
+    const restoredCells = [];
+    this.board.grid.forEach((line, row) => line.forEach((tile, col) => {
+      const restored = snapshot.boardGrid[row][col];
+      if (tile?.color !== restored?.color) {
+        restoredCells.push({ row, col, color: (restored || tile)?.color });
+      }
+    }));
 
     this.board.restoreSnapshot(snapshot.boardGrid);
     this.score = snapshot.score;
@@ -1096,6 +1119,9 @@ export default class GameState {
     this.ui.isRevivePromptOpen = false;
     this.setScreen('playing');
     this.syncRoundRuntimeState();
+    triggerActionFeedback(this.feedbackState, 'undo', { cells: restoredCells, rack: true });
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.itemUsed, { item: 'undo', remaining: this.toolState.undoCount });
+    this.showNotice('已撤回上一步');
     return true;
   }
 
@@ -1112,6 +1138,7 @@ export default class GameState {
     });
     if (result.success) {
       this.rackPieces = result.pieces;
+      triggerActionFeedback(this.feedbackState, 'refill', { rack: true });
       this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
       this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
       return true;
@@ -1180,6 +1207,8 @@ export default class GameState {
     this.inputLocked = false;
     this.comboState = createComboState();
 
+    this.clearScoreFeedback();
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.reviveStarted, { remainingBefore: this.reviveCount, isAdmin });
     this.reviveUsedCount += 1;
     this.syncRoundRuntimeState();
 
@@ -1195,6 +1224,8 @@ export default class GameState {
       this.showNotice(isAdmin ? '管理员模式已继续当前局' : '已使用免死金牌');
       this.closeRevivePrompt();
       this.setScreen('playing');
+      triggerActionFeedback(this.feedbackState, 'revive', { rack: true });
+      this.emitFeedbackEvent(FEEDBACK_EVENTS.reviveCompleted, { remainingAfter: this.reviveCount, clearedCells: [] });
       return true;
     }
 
@@ -1222,11 +1253,14 @@ export default class GameState {
     this.showNotice(isAdmin ? '管理员模式已继续当前局' : '已使用免死金牌');
     this.closeRevivePrompt();
     this.setScreen('playing');
+    triggerActionFeedback(this.feedbackState, 'revive', { rack: true, cells: removedCells });
+    this.emitFeedbackEvent(FEEDBACK_EVENTS.reviveCompleted, { remainingAfter: this.reviveCount, clearedCells: removedCells });
     return true;
   }
 
   triggerGameOver() {
     const wasGameOver = this.isGameOver;
+    this.clearScoreFeedback();
     this.clearDrag();
     this.toolState.clearMode = false;
     this.inputLocked = false;

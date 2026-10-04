@@ -1,248 +1,167 @@
-# 双版本自动化行为测试基线
+# 三端验证基线与验收边界
 
-日期：2026-06-15  
-范围：微信小游戏与 Android APK 当前共同核心  
-产品用语：面向用户统一使用“福利”；代码中的历史字段名暂不修改，以保护存档兼容。
+更新：2026-10-04。范围：当前本地品质升级候选；不改变 10×10、计分、生成、道具、撤回、复活、最高分资格或存档格式。
 
-## 1. 测试框架
+本文记录当前覆盖和证据类型。历史的 136 / 184 / 213 项计数不再作为当前基线；旧轮次记录可从 Git 历史查看。产品界面统一使用“福利”，代码中的 `localMembershipEnabled` 等历史字段保留以兼容存档。
 
-本阶段使用 Node.js 内置 `node:test` 和 `node:assert/strict`，不安装 Vitest、Jest 或其他第三方包。
+## 1. 证据类型
 
-选择理由：
+| 验证层 | 实际运行内容 | 能证明什么 | 不能代替什么 |
+| --- | --- | --- | --- |
+| Node 自动化 | `node:test` 导入生产模块；内存 Storage、平台回调、Canvas、音频、RAF 等按测试需要 mock | 规则、状态转换、事件次数、布局数学、生命周期调度、共享模块一致性 | 浏览器像素、原生 API、真实音效/震动或设备性能 |
+| Web Chromium 自动化 | 本地 Web 入口、真实 Canvas、鼠标/CDP 触摸；最高分用两个真实页面和 localStorage | 指定视口的画面/输入结果、重绘像素、缓存预算、浏览器存储回归 | 其他浏览器、物理触屏手感、手机 GPU 帧率 |
+| 微信 Chromium host | 微信平台 Main/Renderer/InputManager 在 Chromium 中配合浏览器 `wx` shim 运行；认证初始化在夹具中关闭 | 微信平台代码的输入/表现回归和 Canvas 输出 | 微信原生运行时、原生 Storage/音频/震动、开发者工具或真机验收 |
+| 已安装 Android APK 自动化 | 构建后的 debug APK 安装到独立 Android QA 目标；实际 Activity、打包 WebView 和资源 | APK 输入流程、宿主后台恢复、进程重启后的本地存储、资源身份 | 仅构建成功不能证明交互；模拟器通过不能记作物理手机通过 |
+| 微信人工验收 | 用户在微信开发者工具中手动编译、观察并操作 | 只记录人工实际确认的项目 | 不扩展成未操作过的流程或自动化通过 |
 
-- 当前环境已有 Node.js `v24.15.0` 和 npm `11.12.1`。
-- 两边核心代码使用 ES Module（`import/export`），Node 24 可直接加载。
-- 零依赖，不影响微信开发者工具或 Android Gradle 构建。
-- 测试只在共同工作区根目录运行，不写入两个项目的配置。
-- 支持一条命令运行，并可顺序执行以避免全局平台 mock 相互干扰。
+Android 本轮的 APK 验证运行于 Android 34 模拟器，ADB 中未发现物理手机。因此“实际安装 APK”指真实 APK/WebView 运行，不称为“Android 实机已通过”。微信人工确认也仅限开发者工具编译并进入首页，不等于微信真机验收。
 
-## 2. 执行命令
+## 2. 当前 Node 覆盖
 
-在共同工作区根目录运行：
+当前套件为 **241 项**，使用 Node.js 内置 `node:test` / `node:assert/strict`，没有增加游戏运行依赖。环境为 Node 24、npm 11；测试按 `--test-concurrency=1` 顺序运行，避免全局 `wx`、随机数和平台 mock 相互污染。
+
+传统核心向量直接对照微信与 Android 生产模块；其他文件分别覆盖 Web 或三端，范围以各文件的 target 列表为准。`tests/helpers/version-adapter.mjs` 提供三个平台的导入路径，不复制规则。共享模块生成一致性检查不能单独证明所有 Web 业务流程。
+
+| 范围 | 当前断言与主要测试文件 |
+| --- | --- |
+| 棋盘与生成 | 合法/重叠/越界放置、行列/交叉清除、3×3 区域、无路判断；形状/旋转、三档配置、保底、重试上限、家族抽样、历史恢复、压力夹具和有限样本模拟。`board`、`piece-generation`、`piece-family-sampling`、`piece-generation-simulation`、`rack-history-consistency` |
+| 计分与资格 | 放置和 1–4 线冻结向量、统一返回对象、最高分单调更新、管理员/不合资格成绩排除。`score`、`high-score-monotonic`、`game-state` |
+| 道具/撤回/复活 | 成功才扣次数、清除道具不加分、撤回恢复业务状态并扣一次、快照不可重用、复活保留分数与资格并清除旧撤回、失败复活进入结束。`game-state`、`rack-history-consistency`、`presentation-upgrade` |
+| 存档 | 默认值、缺失/错误数据、三档最高分、旧单分数迁移、非法 JSON、存储失败与兼容处理。`storage`、`storage-failures`、`high-score-monotonic` |
+| 表现与输入 | 拖拽阶段/释放连续性、触摸会话/结束坐标/cancel、事件只发一次、清线原颜色与交叉去重、落下期间绘制归属、得分显示、工具反馈、暂停冻结、到期释放、模态开关与输入门禁。`feedback-state`、`input-feedback`、`touch-session`、`ui-motion`、`modal-closing-input`、`presentation-upgrade`、`tests/shared/` |
+| 布局与性能预算 | 小屏/大分数/胶囊夹具的几何约束、按需调度、DPR 与缓存上限、统计样本上限、资源映射/体积/同步边界。`layout-metrics`、`modal-layout`、`render-scheduler`、`resource-budget`、`platform-manifest`、`sync-integrity`、`apk-asset-boundary` |
+| 运行时适配 | Web/Android Main 的 mock 生命周期与 viewport；微信实际 Main 注册在 mock `wx` 上的触摸、hide/show、resize 回调、空闲停帧与旧反馈不重播；浏览器音频 mock 的生命周期。`main-runtime`、`android-lifecycle`、`viewport-events`、`wechat-runtime`、`web-audio-stability` |
+
+表中未带扩展名的文件位于 `tests/parity/`，扩展名为 `.test.mjs`。
+
+计分返回结构已统一：`placementScore`、`lineClearScore`、`bonusScore`、`totalAdded`、`clearedLines` 始终存在，且 `totalAdded` 为三类得分之和。撤回扣次和复活后旧快照失效已是当前基线，不再记作待修复差异。
+
+Node 的随机数、时钟和 Storage mock 在测试后恢复；这些隔离说明仅适用于 Node 测试。浏览器和独立 QA APK 会读写各自测试目标的真实 localStorage。未知设置字段保留是现有兼容行为。本轮不改存档键、字段名或迁移策略。
+
+有限生成模拟验证统计输出和约束，不是长期概率分布或玩家体验的统计证明；历史抽样百分比也不作为本候选的新测量结果。
+
+## 3. Web 与微信 Chromium host
+
+`tests/browser/high-score.mjs` 在 1280×900 和 390×844 下使用同一浏览器上下文中的两个真实页面，检查过期页面/相等/更高纪录、管理员排除、重置取消/确认和重载。合法候选由夹具设置，放置走真实 GameState 方法；这个脚本不声称测试 Canvas 拖拽。
+
+`tests/browser/quality.mjs` 的六组用例明确分为：
+
+- **Web 五组**：1280×900 / DPR 1.25；390×844 / DPR 3 / 触摸；320×568 / DPR 3 / 触摸；768×1024 / DPR 2；360×640 / DPR 2.5 / 触摸 / 减少动画与安全区夹具。
+- **微信 Chromium host 一组**：390×844 / DPR 3 / 触摸，运行微信平台代码；不是原生微信。
+
+每组通过原始唯一 Main 的真实鼠标/CDP 触摸链，检查首页/难度、拿起、失败返回、合法放置、暂停、撤回、单线/交叉/三线、3 秒窗口内连击、刷新/清除、复活和 Game Over/重开。复活资格由明确的本地授权状态夹具提供，不证明认证。暂停清线测试直接打开状态弹层，沿用原有清线输入锁，不声称清线锁期间可点暂停按钮。
+
+同时断言主画布可见、无启动错误、交互阶段无 JS/console error、反馈结束后停帧、缓存受限，以及局部/完整重绘像素的通道差异最多为 1。保存截图供目视检查；这不是所有动画时刻的参考图逐像素回归。安全区由夹具提供，不是真实刘海设备的测量。
+
+Web 390×844 连续拖动压力目标为 30 秒；微信 host 为 10 秒。报告记录实际时长、帧数、焦点/隐藏状态、局部重绘数量和缓存大小。render 时长仅为 Canvas JS 调用耗时，不等于 GPU 栅格耗时、触摸延迟或完整帧率。声音和震动的自动断言验证触发次数与语义，不证明听感或物理震动。
+
+## 4. 已安装 Android APK
+
+`tests/browser/android-quality.mjs` 需要指定独立 QA 目标，并先安装当前构建的 debug APK。脚本连接该 APK 的原始 WebView，通过不暂停的条件断点暴露唯一 Main；不修改生产入口、不创建第二个实例。实际载入 Renderer 必须逐字等于当前源码。
+
+覆盖同一触摸流程、30 秒连续拖动、6 次 ADB Home/Activity 恢复、后台取消触摸/停帧且棋盘不变，以及 force-stop/重启后设置与最高分保留。它没有使用 Android 返回键，也不证明系统回收后的整局棋盘存档；当前回归仅断言已有设置和最高分键。
+
+APK 资源验证分两层：`verify:apk-assets` 只检查禁止的 `assets/js/js/` 嵌套边界；发布前另将 ZIP 内 **35 个游戏 assets 文件**的路径集合和 SHA-256 与当前 `app/src/main/assets/` 比对，确认无缺失或旧资源。debug 包应只有这 35 个文件；release 包另外包含 AGP 生成的 `assets/dexopt/baseline.prof` 与 `baseline.profm`，分别与本次 `compileReleaseArtProfile` 的二进制中间产物比对，不允许其他多余资源。仅边界检查通过不能称为资源内容一致。
+
+仅 debug 包启用 WebView 调试；release 编译、是否签名、是否安装运行分别记录。未安装的 release 构建不能声称通过 release 运行时验收。
+
+## 5. 复现命令与构建
+
+从仓库根目录运行：
 
 ```powershell
 npm test
+npm run verify
+npm run verify:assets
 ```
 
-当前结果（2026-07-16，清理阶段）：共 `136` 项，`136` 项通过、`0` 项失败、`0` 项 TODO。包含 Android APK 嵌套旧副本和三端音频目录边界验证。
+`npm run test:parity` 仅运行 parity 子集，不能替代完整 241 项。当前 `npm run verify` 检查 11 个共享文件在三个目标中的生成一致性；`verify:assets` 检查音频映射、缺失/未使用文件与体积预算，微信 light 与 Web/Android full 分级保留。
 
-只运行双版本对照测试：
+复用现有 Playwright 或 CI 的隔离工具目录，不安装游戏依赖：
 
 ```powershell
-npm run test:parity
+$env:QA_PLAYWRIGHT_PACKAGE='<现有 Playwright 包目录>'
+$env:QA_SCREENSHOTS='<仓库外的证据目录>'
+node tests/browser/high-score.mjs
+node tests/browser/quality.mjs
 ```
 
-测试命令使用 `--test-concurrency=1`，原因是现有代码通过全局 `wx` 和 `Math.random` 访问平台与随机数。顺序运行可以保证 mock 隔离和结果稳定。
+Android 使用已有 JDK 17、SDK 和仓库 Gradle Wrapper。在 `we xin xiao cheng xu-android-apk/` 中运行：
 
-## 3. 测试目录
-
-```text
-tests/
-  fixtures/
-    core-vectors.mjs          共享分数、道具和版本测试向量
-  helpers/
-    version-adapter.mjs       分别加载微信与 Android 真实模块
-    platform-mocks.mjs        内存 Storage、随机数、时间和浏览器环境
-  parity/
-    module-loading.test.mjs   模块加载能力
-    board.test.mjs            棋盘规则与双版本快照
-    piece-generation.test.mjs 方块定义、难度、保底和固定随机序列
-    score.test.mjs            计分、最高分和当前返回结构
-    game-state.test.mjs       道具、撤回、组合、复活和结束状态
-    storage.test.mjs          设置、最高分、迁移和 Android JSON 处理
+```powershell
+$env:JAVA_HOME='<已有 JDK 17 根目录>'
+$env:ANDROID_HOME='<已有 Android SDK 根目录>'
+.\gradlew.bat assembleDebug assembleRelease --no-daemon
 ```
 
-所有核心行为使用同一组测试逻辑分别运行两个版本。`version-adapter.mjs` 只是路径和导入适配器，不复制游戏规则。
+现有 `gradle.properties` 已设置 `android.overridePathCheck=true`，当前路径可直接构建；临时英文盘符映射属于旧轮次做法，不是当前前置条件。不改 AGP/Gradle/SDK 版本或签名配置。
 
-## 4. Mock 与隔离方式
+从 Gradle/Manifest 读取 applicationId，安装到明确的独立 QA 目标，待启动后从根目录运行：
 
-### 4.1 随机数
-
-测试期间临时替换 `Math.random`，使用明确的固定序列。回调完成后恢复原函数。方块测试不依赖大量随机运行。
-
-### 4.2 当前时间
-
-组合窗口测试临时替换 `Date.now`，精确验证 3 秒窗口。拖拽模型、输入队列和触摸结束清理已有共享行为测试；真机手感仍需人工验收。
-
-### 4.3 平台存储
-
-- 微信逻辑使用内存版 `wx.getStorageSync/setStorageSync`。
-- Android 非法 JSON 测试加载真实 `browser-wx-shim.js`，使用内存 `localStorage` 和最小 DOM mock。
-- 不读取或修改用户真实微信 Storage、WebView 数据或设备文件。
-
-### 4.4 平台能力
-
-本阶段不连接后端、不调用微信登录、不启动 WebView、不播放真实音频、不触发真机震动。测试辅助代码提供无副作用的平台占位能力；相关表现留待后续平台测试。
-
-## 5. 当前自动覆盖
-
-### 棋盘
-
-- 空 10x10 棋盘。
-- 合法放置、越界和重叠。
-- 横线、竖线、交叉和多线识别/清除。
-- 清除后的格子状态。
-- 3x3 区域在边缘的裁剪。
-- 无合法位置与仍有合法位置。
-- 两版本相同操作后的棋盘快照一致。
-
-### 方块与生成
-
-- 两边 16 个基础形状标识一致。
-- 每个旋转变体坐标为非负整数且类别有效。
-- 三档难度权重与限制。
-- 简单难度必须包含 rescue 类且不含 hard 类。
-- 普通和大师难度禁止的 hard/蛇形组合。
-- 自定义最大重试次数被严格执行。
-- 固定随机序列下，两版本三档难度生成结果一致。
-
-### 计分
-
-- 1、3、5 格放置分。
-- 1、2、3、4 线的清线分、奖励分和总增加分。
-- 两版当前不同返回结构分别被记录。
-- 相同输入的最终分数等价。
-- 提高和未提高最高分。
-- 管理员不可计分状态不写正式最高分。
-- 组合状态和 clear/combo/combo3 事件数据。
-
-### 道具、撤回、复活
-
-- 三档初始道具次数和重开恢复。
-- 刷新成功扣次数、零次数禁止和刷新后可放置保底。
-- 清除指定区域、扣次数且不增加分数。
-- 撤回恢复棋盘、候选、分数和业务状态；成功撤回扣减次数，同一快照不可重复使用。
-- 撤回后清理拖动、预览、输入锁和临时反馈状态。
-- 无复活时游戏结束。
-- 福利复活保留分数、消耗次数并返回可玩候选。
-- 复活失败进入游戏结束且保留分数。
-- 管理员状态只存在于运行时，管理员分数不污染最高分。
-
-### 存档
-
-- 空值和错误数据类型回退默认值。
-- 设置正常保存/加载和缺失字段补默认值。
-- 三档最高分分别保存。
-- 非数值最高分清洗。
-- 旧单最高分迁移到普通难度。
-- Android localStorage 非法 JSON 安全回退。
-- 微信和 Android 逻辑存档对象等价。
-
-## 6. 已发现的当前行为与差异
-
-### 6.1 计分返回结构已统一
-
-两个生产版本的 `applyPlacement()` 和 `applyLineClear()` 现在直接返回相同结构：
-
-```js
-{
-  placementScore: 0,
-  lineClearScore: 0,
-  bonusScore: 0,
-  totalAdded: 0,
-  clearedLines: 0
-}
+```powershell
+$env:ANDROID_HOME='<已有 Android SDK 根目录>'
+$env:QA_ANDROID_SERIAL='<独立测试目标编号>'
+$env:QA_PLAYWRIGHT_PACKAGE='<现有 Playwright 包目录>'
+$env:QA_SCREENSHOTS='<仓库外的证据目录>'
+node tests/browser/android-quality.mjs
+npm run verify:apk-assets
 ```
 
-- 所有字段始终存在且为有限数字。
-- `totalAdded === placementScore + lineClearScore + bonusScore`。
-- 放置、单线、双线、三线和四线向量均直接比较两个生产版本的返回对象。
-- 微信清线提示已改为读取 `totalAdded`；提示文案和动画时长未改变。
-- 计分公式、最终分数、最高分保存、管理员成绩隔离和存档格式未改变。
+浏览器构建为静态 HTML/ES modules，无单独的 bundler/build 命令；以模块/资源检查和本地入口实际运行验证。构建输出、日志、JSON 与截图保留在忽略目录或仓库外，不提交 APK、缓存、机器路径和私有配置。
 
-### 6.2 撤回次数缺陷已修复
+## 6. 微信人工记录与物理设备待验收
 
-两版旧逻辑在 `useUndoTool()` 中先增加 `toolUsage.undo`，随后又从放置前快照恢复旧 `toolUsage`，导致剩余撤回次数恢复为原值。
+2026-10-04 上一轮记录：微信开发者工具 Stable 2.01.2510290、基础库 3.15.2；用户人工确认当前项目编译并进入首页。确认范围仅到首页，不能推断已完成下列操作。
 
-当前已修复为：恢复快照业务状态后，撤回使用量在快照基础上额外增加 1 次；`syncRoundRuntimeState()` 因此计算出正确的剩余次数。测试套件不再保留 TODO。
+本轮最终复查：工具 CLI 再次返回自身窗口代码中的 `TypeError: d.on is not a function`；自动化端口可以返回上述工具/基础库版本，但 `App.callFunction` 在 8 秒内未响应。因此记录为“原生自动交互未验证”，保留原错误与超时证据。本轮没有新增人工验收，不更换运行时冒充微信，不伪造成功或绕过工具限制。
 
-### 6.3 多余设置字段会被保留
+待人工在原生微信/真机确认：
 
-当前 `loadSettings()` 使用对象展开合并，因此存档中的未知字段会出现在加载结果中。统一规格原本倾向忽略未知字段；改变该行为前需要兼容性决策和单独测试。
+- 拿起、长拖、快速释放、边缘吸附、合法落下、失败返回及 touchcancel；单线/多线/连击的实际节奏。
+- 刷新、清除、撤回、福利复活、新纪录、暂停恢复、结束和重开；确认反馈各播放一次。
+- 真实音效听感/重叠、BGM 后台停止和恢复、开关设置、真实震动强度。
+- hide/show、尺寸变化、实际胶囊/刘海/底部安全区、小屏和高 DPR；真实设备的帧率、触摸延迟、GPU/内存表现。
+- 微信原生 Storage 重启持久性。
 
-### 6.4 复活后的撤回语义已锁定
+Android 物理手机尚未连接，本轮只有第 4 节的已安装模拟器 APK 自动化。物理手机安装包交互、音效、震动、安全区、系统返回键及设备性能仍待人工确认，独立于微信人工验收记录。
 
-当前统一规则为：`consumeRevive()` 处理复活时清除旧 `undoSnapshot`。自动测试验证复活后不能使用复活前旧快照，避免把棋盘恢复到再次无路可走的状态。
+微信登录、后端健康检查、远程管理员资格、云端配置、签名发布和部署不属于本轮本地回归。
 
-### 6.5 用户用语
+## 7. 最终回归记录
 
-测试名称和本文使用“福利”。生产代码中的 `localMembershipEnabled` 等历史字段未改名，这是有意的存档兼容措施，不代表最终用户界面继续使用“会员”。
+2026-10-04 在当前本地候选上重新运行，以下均为本轮结果。环境：Node 24.15.0、npm 11.12.1、Playwright 1.63.0 / Chromium、JDK 17、Gradle Wrapper 8.7；Android 使用独立 Android 34 Google APIs x86_64 模拟器，逻辑视口为 393×806。未连接物理手机。
 
-### 6.6 反馈事件与表现状态已统一
+| 检查 | 本轮结果与边界 |
+| --- | --- |
+| `npm test` | **241/241 通过**，0 失败、跳过、取消或 TODO；实际耗时 13.36 秒 |
+| `npm run verify` | 11 个共享文件在三个目标中一致 |
+| `npm run verify:assets` | 三端音频映射/缺失/未使用/体积检查通过；微信 light 11 文件 / 2,931,409 bytes，Web 与 Android full 各 11 文件 / 26,936,009 bytes；后两端的 11 个音频 SHA-256 另行逐一比对一致 |
+| Web Chromium | 第 3 节的五组视口全部通过；两组跨页最高分/localStorage 回归通过 |
+| 微信 Chromium host | 第 3 节的一组真实平台代码流程通过；仅代表 shim host，不能记为原生微信通过 |
+| Android 构建 | `assembleDebug assembleRelease --no-daemon` 成功，85 项任务；release 的 `lintVital` 随构建通过，不等于运行了全面 lint 或类型检查 |
+| APK 资源 | debug 和 unsigned release 各有 35 个游戏 assets 与当前源码路径/字节哈希一致；release 另外两项编译 profile 与本次 AGP 中间产物一致；两个 APK 的禁止嵌套边界检查通过；debug 签名验证通过 |
+| 已安装 debug APK | 原始 WebView 载入的 Renderer 与源码一致；触摸流程、6 次 Home/Activity 后台恢复和 force-stop/重启后的设置/最高分持久性通过；本次过滤的 AndroidRuntime/chromium 错误日志为空 |
+| 微信原生自动交互 | **未验证**：工具内部 `d.on is not a function` 与执行接口 8 秒超时仍在；人工确认仅沿用上一轮编译/首页，后续项保留在第 6 节 |
 
-- 两边新增内容一致的 `FeedbackState.js`，统一清线得分、分数脉冲、新纪录和拖动阶段。
-- 统一业务事件为 `piecePicked/piecePlaced/invalidPlacement/linesCleared/scoreChanged/highScoreBroken`。
-- Android 已加入微信现有的清线提示、分数脉冲和本局首次新纪录提示。
-- 微信已加入 Android 的 200ms 抬升、候选槽隐藏、成功收束和无效返回表现。
-- 暂停时计时冻结；重开、返回首页、撤回和复活按契约清理。
-- Android 调度测试确认空闲不持续请求帧，活跃反馈会唤醒帧循环，暂停时停止。
+本轮压力记录均保持焦点且未进入后台，所有记录的拖动帧均为局部重绘；反馈到期后停帧断言通过：
 
-### 6.7 布局响应式测试已加入
+| 目标 | 实际拖动时长 | 帧数 | Canvas JS render p95 |
+| --- | --- | --- | --- |
+| Web 390×844 | 30,074 ms | 1,805 | 0.70 ms |
+| 微信 Chromium host | 10,018 ms | 602 | 0.60 ms |
+| Android debug APK / 模拟器 | 30,125 ms | 1,689 | 4.10 ms |
 
-- Android 首页布局测试覆盖 9 组逻辑视口，并分别验证管理员模式开启和关闭。
-- Android 顶部 HUD 测试覆盖 9 组逻辑视口和 10 组分数，检查按钮、分数脉冲、最高分和安全区域不重叠。
-- 微信顶部 HUD 测试覆盖菜单胶囊安全区、大分数和分数脉冲防重叠。
-- Renderer 布局测试确认棋盘顶部位于拟合后的 HUD 下方。
+这些数据不表示物理手机帧率或触摸延迟。三个压力目标各有 2 项缓存，主画布与缓存总像素均在对应预算内；局部/完整重绘像素比较通过。JSON/日志/截图分别保存为 `quality-results.json`、`android-results.json`、`apk-resource-results.json`、`wechat-final.json` 等仓库外证据，未加入提交。
 
-## 7. 暂未覆盖
+APK 身份（均为本轮构建；`versionCode=11`、`versionName=1.0.11` 保持不变）：
 
-- Canvas 像素输出、布局截图、字体和安全区。
-- 拖动手感、抬升动画、触摸结束坐标和真机输入。
-- 真实音频播放、重叠、后台停止和 BGM 恢复。
-- 真实震动。
-- 微信登录、后端健康检查和管理员远程验证。
-- Android Activity 返回键、WebView 生命周期和实际 localStorage 生命周期。
-- 微信开发者工具、Android 模拟器和真机。
-- 概率分布的统计检验；当前只验证冻结配置和确定性序列。
+- `app-debug.apk`：34,075,935 bytes；SHA-256 `6ab1107f01214a451167885b622d1ff8e6be815eed453205a139a7a23a3f53cb`。已安装到上述模拟器验证。
+- `app-release-unsigned.apk`：32,896,918 bytes；SHA-256 `8f74a02aeb47ad55e475b2e8423481d4fab33498bc7dd81c3ac47a5147412f57`。未签名、未安装运行，只完成构建和包内资源检查。
 
-## 8. 下一阶段可安全修改的模块
+没有重新执行物理 Android 手机或微信真机验收；真实听感、震动、安全区及第 6 节人工项目仍待确认。远程 CI、推送、部署、发布和版本号变更均未执行。
 
-计分返回结构、反馈事件、表现状态、布局响应式防重叠和撤回行为均已有自动化基线。下一阶段建议统一音效与震动触发规则，但继续保留平台音频接口和 Renderer 独立。
+## 8. 失败定位与提交门槛
 
-## 9. 测试失败定位方法
+先按失败名称和 target 找到真实生产模块，核对原规则与夹具；不要先改期望或放宽断言。实际交互失败需保留截图/状态/错误；3 秒连击必须记录真实清线间隔，压力测试必须记录真实时长及是否后台中断。
 
-1. 先运行完整 `npm test`，查看失败测试名称中的版本前缀。
-2. 若只有一个版本失败，检查 `tests/helpers/version-adapter.mjs` 指向的对应真实文件。
-3. 棋盘失败查看 `Board.js`；生成失败查看 `Piece.js` 和固定随机序列。
-4. 分数失败查看 `ScoreManager.js`，不要先改测试期望。
-5. 道具、撤回、复活失败查看 `GameState.js` 对应方法和状态快照。
-6. 存档失败先查看内存 Storage 快照；Android 非法 JSON 再查看 `browser-wx-shim.js`。
-7. 若测试偶发失败，连续运行两次；确定性测试不应依赖真实时间或随机数。
-8. 测试不得通过连接真实后端、清理用户存档或放宽断言来“修复”。
-
-## 10. 构建说明
-
-本次撤回修复测试包阶段已通过临时英文盘符映射完成 Android Debug 构建；项目真实路径仍包含中文，直接在原路径构建可能继续触发 Android Gradle Plugin 的中文路径检查。该规避方式只用于验证和出包，不修改业务代码或项目路径。
-
-## v1.0.5 clear effect test baseline
-
-Current expected automated baseline after this change:
-
-- `npm test`: 136 tests, 136 passing, 0 failing, 0 TODO.
-- The full test command must pass twice before reporting completion.
-- New coverage includes clear effect event creation, row and column semantics, deterministic particles, phase transitions, expiry, bounded effect list size, pause timer behavior through existing update rules, and undo cleanup.
-- `game-state.test.mjs` confirms a real clearing placement creates a clear effect and undo clears it without replaying it.
-- Pixel-perfect Canvas output is still a manual verification item; automated tests assert semantic state and module behavior.
-
-## UI motion and modal layout test baseline (2026-09-25)
-
-UI/UX/Motion polish round. Gameplay rules, scoring, storage, and platform boundaries are unchanged.
-
-- `npm test`: 184 tests, 184 passing, 0 failing, 0 TODO (run twice consecutively).
-- New `tests/parity/modal-layout.test.mjs`: modal shell, settings tab pages, and help rows are asserted for wechat/android/web across 320×560, 360×640, 375×667, 390×844, and 412×915. Covers panel bounds, footer visibility, content/footer non-overlap, row bounds, tab layout, and compact dialogs.
-- New `tests/parity/ui-motion.test.mjs`: `FeedbackState` uiMotion contract shared byte-identically by all three targets. Covers press feedback creation/decay/cleanup, multi-press independence, modal open/close progress and finish, per-kind keying, unknown-kind rejection, independence from gameplay feedback freezing, and reset with `clearFeedbackState`.
-- `main-runtime.test.mjs` contract update (approved UI change): modal open/close motion and the gameover open motion legitimately keep at most one frame alive for their duration (~140–180ms); the loop clamps per-frame delta to 32ms, so tests advance several ticks. Idle-after-finish and background/foreground idle assertions are unchanged.
-- Settings is split into two tab pages (游戏 / 账号与数据) via `GameState.ui.settingsTab`; the previous fixed-row Settings/Help overflow on short screens is fixed by `calculateModalShellLayout`/`calculateModalRowsLayout`/`calculateHelpRowsLayout` in both `LayoutMetrics.js` copies.
-- Android debug build for this round was produced through the temporary English drive-letter mapping approach documented in section 10.
-
-## Candidate piece generation round (2026-09-25, audit repair)
-
-Generation maturity round on top of the UI polish branch. Gameplay rules, scoring, tool counts, revive rules, storage, and rendering are unchanged.
-
-- `npm test`: 213 tests, 213 passing, 0 failing (includes 14 piece-family-sampling tests and 6 rack-history-consistency tests across wechat/android/web).
-- `tests/parity/piece-family-sampling.test.mjs`: family-first sampling keeps rotation count out of base frequency, rotations stay uniform inside a family, recent history is soft, per-difficulty same-base caps hold, the viability evaluator agrees with real Board placements (including clear-reopen and forced-zero fixtures), and pressure buckets behave.
-- `tests/parity/rack-history-consistency.test.mjs`: `consumeRevive()` re-points `recentRackBaseIds` at the regenerated rack on all three targets, and `useUndoTool()` restores the history captured with the snapshot (audit repair).
-- Generation changes: family-first sampling (base weight, then uniform rotation), light recent-rack soft penalty (x0.65), in-rack duplicate soft penalty (x0.5), same-base hard caps (easy 1, normal/master 2), 3-piece viability evaluator reusing real Board rules with a 10000-placement budget, four board-pressure buckets driving per-difficulty category adjustments, and the last 3 attempts bypass the viability gate so failure rates never exceed the previous generator.
-- Duplicate policy is uniform across categories: every family stays selectable at the reduced weight up to the hard cap; another category is only used when the picked category's pool is empty. Measured rack duplicate rate at 20k samples across pressure-heavy fixtures: easy 0%, normal 42%, master 23% (pairs only; triples remain hard-capped out).
-- `scripts/simulate-piece-generation.mjs` reports category/base/rotation distributions, duplicate and consecutive-repeat rates, per-base droughts, viability quality, and generation timing (avg/p95/worst) across 8 deterministic board fixtures; `--piece <path>` replays a baseline generator through the same evaluator for before/after comparisons.
-- Android debug build for this round was produced through the temporary English drive-letter mapping approach documented in section 10.
+全部要求的本地自动化、资源与必要构建通过，审查 `git diff --check`、变更范围、生成文件和敏感数据后才提交。未完成的物理设备或微信人工项如实保留；不把它们记作通过。提交不包含依赖升级、版本号变更、产物、私有配置、推送或发布。
