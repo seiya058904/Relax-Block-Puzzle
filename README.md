@@ -35,7 +35,11 @@ Open `we xin xiao cheng xu/` in WeChat Developer Tools as a Mini Game project fo
 
 ## Android Release
 
-The current Android package version is `1.0.11` (`versionCode 11`). APK files are ignored by Git and should be distributed through a release attachment rather than committed to the repository. Android-specific notes are in [`we xin xiao cheng xu-android-apk/README.md`](we%20xin%20xiao%20cheng%20xu-android-apk/README.md).
+The current Android package version is `1.0.12` (`versionCode 12`). The previous `v1.0.11` release remains intact; new releases follow the existing matching version/Tag sequence. APK files are ignored by Git and distributed through [GitHub Releases](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.12).
+
+The Release APK is explicitly **unsigned** and cannot be installed as supplied. The separate **Debug preview** APK is installable and uses the same Android Debug certificate as the previous release; it is not a production-signed Release build. Checksums accompany both files. Android-specific notes are in [`we xin xiao cheng xu-android-apk/README.md`](we%20xin%20xiao%20cheng%20xu-android-apk/README.md).
+
+This release freezes the existing tactile/material/feedback candidate without changing gameplay or save formats. The 241-test suite, Web/WeChat Chromium host checks and installed Android emulator regression have separate evidence boundaries in [TEST_BASELINE](docs/TEST_BASELINE.md). Physical Android/WeChat devices and the remaining WeChat native interactions are unverified.
 
 ## Documentation
 

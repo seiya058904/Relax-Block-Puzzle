@@ -9,7 +9,7 @@ This directory contains the Android WebView wrapper and browser build for Relax 
 - `app/src/main/java/`: Kotlin host; `MainActivity.kt` owns WebView and lifecycle forwarding.
 - `app/src/main/assets/`: Android HTML, JavaScript, browser shim, and full audio.
 - `docs/`: GitHub Pages web entry and web-specific HTML/shim assets.
-- `app/build.gradle.kts`: Android package and `versionCode`/`versionName` (currently `1.0.11` / `11`).
+- `app/build.gradle.kts`: Android package and `versionCode`/`versionName` (currently `1.0.12` / `12`).
 - `release-notes/`: user-facing notes. APKs and toolchains remain local and ignored.
 
 ## Build & Verify

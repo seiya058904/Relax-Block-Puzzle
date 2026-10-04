@@ -79,8 +79,19 @@ try {
   });
   assert.equal(await page.evaluate(() => qaMain.gameState.dragState.isDragging), true);
   const boardBefore = await page.evaluate(() => qaMain.gameState.board.getSnapshot());
+  const nativeBackgroundWaitMs = [];
+  async function waitForBackground() {
+    // ADB returns before the Activity transition completes. Poll from Node:
+    // WebView timers and RAF can stop while the app is in the background.
+    const started = Date.now();
+    while (!await page.evaluate(() => qaMain.isPaused && qaMain.aniId === 0)) {
+      assert.ok(Date.now() - started < 5000, 'native background callback stops RAF within 5 seconds');
+      await pause(50);
+    }
+    nativeBackgroundWaitMs.push(Date.now() - started);
+  }
   adb('shell', 'input', 'keyevent', '3');
-  await pause(350);
+  await waitForBackground();
   assert.deepEqual(await page.evaluate(() => ({ paused: qaMain.isPaused, dragging: qaMain.gameState.dragState.isDragging,
     touch: qaMain.inputManager.activeTouchIdentifier, frame: qaMain.aniId })),
   { paused: true, dragging: false, touch: null, frame: 0 });
@@ -89,7 +100,8 @@ try {
   assert.deepEqual(await page.evaluate(() => qaMain.gameState.board.getSnapshot()), boardBefore);
   await touchSession.detach();
   for (let i = 0; i < 5; i++) {
-    adb('shell', 'input', 'keyevent', '3'); await pause(180);
+    adb('shell', 'input', 'keyevent', '3');
+    await waitForBackground();
     assert.equal(await page.evaluate(() => qaMain.isPaused && !qaMain.aniId), true);
     adb('shell', 'am', 'start', '-n', `${app}/.MainActivity`);
     await page.waitForFunction(() => !qaMain.isPaused && !qaMain.aniId);
@@ -106,6 +118,7 @@ try {
   assert.deepEqual(await restarted.evaluate(() => qaMain.settings), stored.settings);
   assert.equal(await restarted.locator('#bootError').isVisible(), false);
   report.nativeLifecycleCycles = 6;
+  report.nativeBackgroundWaitMs = nativeBackgroundWaitMs;
   report.processRestartPersistence = true;
   report.rendererSha256 = createHash('sha256').update(rendererSource).digest('hex');
   await writeFile(resolve(output, 'android-results.json'), JSON.stringify(report, null, 2));

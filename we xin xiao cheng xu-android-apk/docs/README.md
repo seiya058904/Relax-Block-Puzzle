@@ -7,7 +7,7 @@
 本地预览时，请在仓库根目录运行静态服务器：
 
 ```powershell
-python -m http.server 8000 -d docs
+python -m http.server 8000 --directory "we xin xiao cheng xu-android-apk/docs"
 ```
 
 然后在浏览器访问 <http://localhost:8000/>。

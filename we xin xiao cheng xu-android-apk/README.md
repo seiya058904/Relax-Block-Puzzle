@@ -40,7 +40,7 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Installation / 安装方法
 
-1. Download the APK from the latest GitHub Release. / 从最新的 GitHub Release 下载 APK。
+1. Download the `debug-preview.apk` attachment from the latest GitHub Release for installation. The separate `unsigned.apk` cannot be installed without signing. / 安装时下载最新 GitHub Release 的 `debug-preview.apk` 附件；另附的 `unsigned.apk` 未签名，不能直接安装。
 2. Transfer it to an Android device if needed. / 如有需要，传输到安卓设备。
 3. Allow installation from unknown sources when Android asks for permission. / 在安卓提示时允许安装未知来源应用。
 4. Install and open the game. / 安装并打开游戏。
@@ -52,6 +52,14 @@ Source code and project files are stored in this repository. APK files should be
 - Designed as an offline Android version and does not require WeChat login or cloud hosting. / 定位为离线安卓版本，无需微信登录或云托管。
 
 ## Version History / 版本历史
+
+`v1.0.12`
+
+- Freeze the existing three-platform tactile, material, animation and feedback upgrade from candidate `057b8f8`; preserve all gameplay rules and save formats. / 将候选 `057b8f8` 的三端手感、材质、动画和反馈升级正式封板，保留全部玩法规则与存档格式。
+- Bound DPR/cache/redraw costs and stop idle/background animation; retain independent platform renderers. / 保留各端独立 Renderer，限制 DPR、缓存和重绘成本，空闲与后台停帧。
+- Verify 241 tests, Web and WeChat Chromium host, and the installed Android 34 emulator APK. Physical phones and remaining WeChat native interactions remain unverified. / 验证 241 项测试、Web、微信 Chromium host 及 Android 34 模拟器内已安装 APK；物理手机和微信原生后续交互未验证。
+- Android versionName 1.0.12 / versionCode 12 follows the existing release sequence; the already published v1.0.11 is preserved. / 按现有发布顺序使用 1.0.12 / 12，保留已发布的 v1.0.11。
+- Attach an explicitly unsigned Release APK and a separately labelled installable Debug preview with the existing Android Debug certificate, each with SHA-256. / 附件区分未签名 Release APK 和使用原有 Android Debug 证书的可安装 Debug 预览包，均附 SHA-256。
 
 `v1.0.11`
 
