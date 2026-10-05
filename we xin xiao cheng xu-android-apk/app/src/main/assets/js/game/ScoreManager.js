@@ -48,17 +48,28 @@ export default class ScoreManager {
     }
 
     const difficulty = state.activeDifficulty || 'normal';
+    const generation = state.bestScoreGeneration || 0;
     const result = saveBestScore(difficulty, state.score);
-    if (!result) return;
-    // An external higher record changes the threshold; our own earlier writes
-    // must not turn a first-ever game into a new-record celebration.
-    if (result.previous > state.bestScore) {
-      state.startingHighScore = Math.max(state.startingHighScore || 0, result.previous);
-    }
-    state.bestScore = Math.max(state.bestScore, result.score);
-    state.bestScores = {
-      ...state.bestScores,
-      [difficulty]: state.bestScore
+    const apply = (saved) => {
+      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
+      // An external higher record changes the threshold; our own earlier writes
+      // must not turn a first-ever game into a new-record celebration.
+      if (saved.previous > state.bestScore) {
+        state.startingHighScore = Math.max(state.startingHighScore || 0, saved.previous);
+      }
+      state.bestScore = Math.max(state.bestScore, saved.score);
+      state.bestScores = {
+        ...state.bestScores,
+        [difficulty]: state.bestScore
+      };
     };
+    if (result?.then) {
+      state.pendingBestScoreWrites = (state.pendingBestScoreWrites || 0) + 1;
+      result.then(apply).finally(() => {
+        state.pendingBestScoreWrites--;
+        if (generation === (state.bestScoreGeneration || 0)) state.checkNewRecord?.();
+        state.onBestScoreUpdated?.();
+      });
+    } else apply(result);
   }
 }

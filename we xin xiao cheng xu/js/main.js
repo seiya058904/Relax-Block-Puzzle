@@ -20,6 +20,7 @@ export default class Main {
     this.canvasSize = canvasSize;
     initCloud();
     this.gameState = new GameState();
+    this.gameState.onBestScoreUpdated = () => this.requestRender();
     this.authClient = new AuthClient();
     this.gameState.setAuthClient(this.authClient);
     this.settings = loadSettings();

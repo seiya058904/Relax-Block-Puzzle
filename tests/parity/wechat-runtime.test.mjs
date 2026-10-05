@@ -136,6 +136,27 @@ test('wechat: real Main wakes on native callbacks, idles, freezes, resizes, and 
       assert.equal(frames.size, 0);
     }
     assert.equal(clicks, 1, 'lifecycle cycling never repeats a consumed tool result');
+    for (const outcome of ['success', 'failure', 'exception', 'hidden']) {
+      state.initializeHomeState();
+      state.openAdminPanel();
+      state.adminInput = 'local-test-code';
+      let complete;
+      state.setAuthClient({ verifyAdmin: () => new Promise((resolve, reject) => { complete = () => outcome === 'exception' ? reject(new Error('offline')) : resolve({ adminMode: outcome === 'success' }); }) });
+      main.renderer.getAdminAction = () => 'confirm';
+      main.inputManager.handleAdminTouch({ x: 0, y: 0 });
+      main.requestRender();
+      tick(100);
+      assert.equal(frames.size, 0, `${outcome}: button animation has expired before reply`);
+      if (outcome === 'hidden') handlers.Hide();
+      complete();
+      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+      assert.equal(frames.size, outcome === 'hidden' ? 0 : 1, `${outcome}: completion wakes exactly the existing scheduler`);
+      if (outcome === 'hidden') handlers.Show();
+      tick(100);
+      assert.equal(frames.size, 0, `${outcome}: completion returns to idle`);
+      if (outcome === 'success') { assert.equal(state.ui.isAdminPanelOpen, false); state.disableAdminMode(); }
+      else assert.equal(state.adminError, '验证失败');
+    }
     main.stopLoop();
   } finally {
     for (const [name, descriptor] of previous) {

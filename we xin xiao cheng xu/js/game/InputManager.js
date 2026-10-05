@@ -355,7 +355,7 @@ export default class InputManager {
     }
 
     if (action === 'confirm') {
-      this.gameState.submitAdminCode();
+      Promise.resolve(this.gameState.submitAdminCode()).finally(() => this.requestInputFrame());
     }
   }
 

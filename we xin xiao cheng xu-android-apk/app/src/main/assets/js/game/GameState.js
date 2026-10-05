@@ -401,6 +401,7 @@ export default class GameState {
   }
 
   startNewGame() {
+    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
     this.reset();
   }
 
@@ -498,7 +499,8 @@ export default class GameState {
 
   confirmResetBestScore() {
     const difficulty = normalizeDifficulty(this.settings.difficulty);
-    persistResetBestScore(difficulty);
+    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+    const reset = persistResetBestScore(difficulty);
     this.bestScores = {
       ...this.bestScores,
       [difficulty]: 0
@@ -513,6 +515,8 @@ export default class GameState {
     }
 
     this.ui.isResetConfirmOpen = false;
+    if (reset?.then) reset.finally(() => this.onBestScoreUpdated?.());
+    return reset;
   }
 
   openAdminPanel() {
@@ -1304,6 +1308,7 @@ export default class GameState {
   }
 
   checkNewRecord() {
+    if (this.pendingBestScoreWrites) return false;
     if (
       this.isAdminModeActive() ||
       !this.bestScoreEligible ||

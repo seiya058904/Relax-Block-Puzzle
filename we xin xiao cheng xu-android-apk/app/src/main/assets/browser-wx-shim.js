@@ -21,6 +21,31 @@ const visibilityHandlers = {
 
 const loopingAudioContexts = new Set();
 
+let storageLockDatabase;
+
+function withStorageLock(name, update) {
+  if (navigator.locks?.request) return navigator.locks.request(name, update);
+  // A readwrite transaction is the fallback mutex for WebViews without Web Locks.
+  // All localStorage reads and writes run synchronously while this transaction owns it.
+  if (!globalThis.indexedDB) return Promise.reject(new Error('Storage coordination unavailable'));
+  if (!storageLockDatabase) storageLockDatabase = new Promise((resolve, reject) => {
+    const request = indexedDB.open('block-puzzle-storage-locks', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('locks');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error('Storage coordination blocked'));
+  }).catch(error => { storageLockDatabase = undefined; throw error; });
+  return storageLockDatabase.then(database => new Promise((resolve, reject) => {
+    const transaction = database.transaction('locks', 'readwrite');
+    let result;
+    transaction.oncomplete = () => resolve(result);
+    transaction.onabort = transaction.onerror = () => reject(transaction.error || new Error('Storage coordination failed'));
+    transaction.objectStore('locks').get(name).onsuccess = () => {
+      try { result = update(); } catch (error) { transaction.abort(); reject(error); }
+    };
+  }));
+}
+
 function safeParseStorage(value) {
   if (value == null) {
     return '';
@@ -435,6 +460,10 @@ globalThis.wx = {
   },
   onTouchCancel(handler) {
     touchHandlers.cancel.push(handler);
+  },
+  withStorageLock,
+  onStorageChange(handler) {
+    window.addEventListener('storage', handler);
   },
   getStorageSync(key) {
     return safeParseStorage(localStorage.getItem(key));

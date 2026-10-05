@@ -56,3 +56,35 @@ test('ordinary best writes preserve failure and explicit-reset contracts', async
     assert.equal(writes, 0);
   } finally { restore(); }
 });
+
+test('browser coordination serializes complete mutations and explicit reset', async () => {
+  const { storage, ScoreManager } = await loadVersion('web');
+  const memory = createMemoryStorage({ block_puzzle_best_scores_v1: { easy: 10, normal: 20, master: 30 } });
+  const restore = installWxStorage(memory);
+  const queue = [];
+  const keys = [];
+  try {
+    wx.withStorageLock = (key, update) => { keys.push(key); return new Promise(resolve => queue.push(() => resolve(update()))); };
+    const high = storage.saveBestScore('normal', 100);
+    const lower = storage.saveBestScore('normal', 90);
+    const other = storage.saveBestScore('easy', 15);
+    assert.deepEqual(memory.snapshot().block_puzzle_best_scores_v1, { easy: 10, normal: 20, master: 30 }, 'no mutation before lock entry');
+    queue.shift()(); await high;
+    queue.shift()(); await lower;
+    queue.shift()(); await other;
+    assert.deepEqual(memory.snapshot().block_puzzle_best_scores_v1, { easy: 15, normal: 100, master: 30 });
+    const reset = storage.resetBestScore('normal');
+    assert.equal(memory.snapshot().block_puzzle_best_scores_v1.normal, 100);
+    queue.shift()(); await reset;
+    assert.equal(memory.snapshot().block_puzzle_best_scores_v1.normal, 0);
+    assert.equal(new Set(keys).size, 1, 'save and reset share one lock');
+    const state = { score: 10, bestScore: 0, bestScores: { normal: 0 }, activeDifficulty: 'normal', bestScoreEligible: true, startingHighScore: 0, bestScoreGeneration: 1 };
+    const manager = new ScoreManager();
+    manager.syncBestScore(state);
+    assert.equal(state.pendingBestScoreWrites, 1);
+    state.bestScoreGeneration++;
+    queue.shift()(); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(state.bestScore, 0, 'completion from old round cannot rewrite reset/new-round UI');
+    assert.equal(state.pendingBestScoreWrites, 0);
+  } finally { restore(); }
+});

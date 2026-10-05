@@ -67,6 +67,34 @@ try {
       qaMain.handleViewportChange();
     });
     const report = await runQualityFlows(page, { output, label, touch: item.touch, stressMs: item.stressMs });
+    if (item.wechat) {
+      for (const outcome of ['success', 'failure', 'exception', 'hidden']) {
+        await page.evaluate(result => {
+          const state = qaMain.gameState;
+          state.initializeHomeState(); state.openAdminPanel(); state.adminInput = 'local-test-code';
+          state.setAuthClient({ verifyAdmin: () => new Promise((resolve, reject) => { window.qaAuthComplete = () => result === 'exception' ? reject(new Error('offline')) : resolve({ adminMode: result === 'success' }); }) });
+          qaMain.renderer.getAdminAction = () => 'confirm';
+          window.qaAuthRenders = 0;
+          if (!window.qaObserveAuthRender) { const render = qaMain.renderer.render.bind(qaMain.renderer); qaMain.renderer.render = current => { window.qaAuthRenders++; return render(current); }; window.qaObserveAuthRender = true; }
+          qaMain.inputManager.handleAdminTouch({ x: 0, y: 0 }); qaMain.requestRender();
+        }, outcome);
+        await page.waitForFunction(() => qaMain.aniId === 0);
+        const renders = await page.evaluate(() => window.qaAuthRenders);
+        if (outcome === 'hidden') await page.evaluate(() => qaMain.handleAppBackground());
+        await page.evaluate(() => window.qaAuthComplete());
+        if (outcome === 'hidden') {
+          await page.waitForTimeout(100);
+          assert.equal(await page.evaluate(() => qaMain.aniId), 0);
+          assert.equal(await page.evaluate(() => window.qaAuthRenders), renders);
+          await page.evaluate(() => qaMain.handleAppForeground());
+        }
+        await page.waitForFunction(previous => window.qaAuthRenders > previous, renders);
+        await page.waitForFunction(() => qaMain.aniId === 0);
+        if (outcome === 'success') { assert.equal(await page.evaluate(() => qaMain.gameState.ui.isAdminPanelOpen), false); await page.evaluate(() => qaMain.gameState.disableAdminMode()); }
+        else assert.equal(await page.evaluate(() => qaMain.gameState.adminError), '验证失败');
+      }
+      console.log('PASS wechat-host delayed admin success/failure/exception after idle; hidden scheduling preserved');
+    }
     if (item.reducedMotion) assert.equal(report.metrics.reducedMotion, true);
     assert.deepEqual(errors, [], `${label}: no runtime or console errors`);
     reports.push(report);
