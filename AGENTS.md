@@ -18,6 +18,10 @@ Relax Block Puzzle is a three-platform block-puzzle project: a WeChat Mini Game,
 
 `shared/js` is copied with a generated marker into the three targets listed in `config/platform-manifest.json`; `npm run sync` is the only normal synchronization path. Platform renderers and input/lifecycle adapters remain independent. WeChat uses light audio/effect settings; Android and Web retain full audio resources. Do not merge platform audio or move `wx`/WebView-specific code into shared modules. Storage keys, scoring, difficulty, drag semantics, and feedback timing are compatibility contracts.
 
+All best-score mutations use the same coordinator; score updates and difficulty reset keep the full read/merge/write inside it, including legacy migration. Native WeChat storage remains synchronous. Browser/WebView adapters supply asynchronous `wx.withStorageLock` through Web Locks or an IndexedDB readwrite transaction; do not write before acquisition or fall back to uncoordinated writes when coordination fails. ScoreManager ignores completions from an obsolete game generation.
+
+Delayed authentication and score-write completion must request the existing render path. Preserve idle frame shutdown and hidden/paused scheduling guards rather than adding a permanent frame loop.
+
 ## Build, Test & Development Commands
 
 Run from the repository root:
@@ -29,7 +33,11 @@ npm run verify
 npm run verify:assets
 npm run verify:apk-assets
 npm run simulate:generation -- --samples 10000
+node tests/browser/high-score.mjs
+node tests/browser/quality.mjs
 ```
+
+The browser scripts require Playwright and Chromium; `QA_PLAYWRIGHT_PACKAGE` can select an existing installation and `QA_SCREENSHOTS` selects evidence output. `QA_DOCS_ROOT` defaults to `we xin xiao cheng xu-android-apk/docs` and can select `we xin xiao cheng xu-android-apk/app/src/main/assets` for packaged web assets. Chromium WeChat-host tests supplement Developer Tools/device checks; they do not establish native-device acceptance.
 
 `npm run verify` checks generated parity across all three targets. `verify:assets` checks audio mappings and budgets. `verify:apk-assets` requires a freshly built debug APK. For Android, set local `JAVA_HOME` and `ANDROID_HOME`, then run from `we xin xiao cheng xu-android-apk`:
 
