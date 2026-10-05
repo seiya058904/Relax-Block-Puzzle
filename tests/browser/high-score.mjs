@@ -29,8 +29,9 @@ let browser;
 try {
   browser = await chromium.launch();
   await mkdir(output, { recursive: true });
-  for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+  for (const coordination of ['web-locks', 'indexeddb']) for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
     const context = await browser.newContext({ viewport });
+    if (coordination === 'indexeddb') await context.addInitScript(() => Object.defineProperty(navigator, 'locks', { value: undefined }));
     const errors = [];
     const pages = [await context.newPage(), await context.newPage()];
     for (const page of pages) {
@@ -55,16 +56,23 @@ try {
     // Controlled legal rack fixture, then the application's real placement path.
     // No second Main/GameState, fake storage, replacement scoring, or canvas-drag claim.
     async function place(page, col) {
-      return page.evaluate((column) => {
+      return page.evaluate(async (column) => {
         const state = window.qaMain.gameState;
+        if (!window.qaRecordEvents) {
+          window.qaRecordEvents = { count: 0 };
+          const emit = state.emitFeedbackEvent.bind(state);
+          state.emitFeedbackEvent = (type, payload) => { if (type === 'highScoreBroken') window.qaRecordEvents.count++; return emit(type, payload); };
+        }
+        const beforeEvents = window.qaRecordEvents.count;
         state.rackPieces = [{ id: 'single', cells: [{ x: 0, y: 0 }], color: '#123456', used: false, bounds: { width: 1, height: 1 }, category: 'rescue', baseId: 'single', isSnake: false }];
         state.dragState.activePieceIndex = 0;
         state.previewState = { row: 0, col: column, canPlace: true, visible: true };
         const placed = state.tryPlaceDraggedPiece();
+        while (state.pendingBestScoreWrites) await new Promise(resolve => setTimeout(resolve, 0));
         const result = {
           placed, score: state.score, best: state.bestScore, cache: state.bestScores.normal,
           record: state.hasShownNewRecord,
-          recordEvents: state.consumeEvents().filter((event) => event.type === 'highScoreBroken').length,
+          recordEvents: window.qaRecordEvents.count - beforeEvents,
           stored: JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1'))
         };
         window.qaMain.requestImmediateRender();
@@ -97,7 +105,7 @@ try {
     const excluded = await place(b, 3);
     assert.equal(excluded.score, 40);
     assert.equal(excluded.stored.normal, 30);
-    const reset = await b.evaluate(() => {
+    const reset = await b.evaluate(async () => {
       const state = window.qaMain.gameState;
       state.disableAdminMode();
       state.requestResetBestScore();
@@ -106,19 +114,69 @@ try {
       const cancelled = !state.ui.isResetConfirmOpen;
       const before = JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1')).normal;
       state.requestResetBestScore();
-      state.confirmResetBestScore();
+      await state.confirmResetBestScore();
       return { opened, cancelled, before, best: state.bestScore, stored: JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1')) };
     });
     assert.deepEqual(reset, { opened: true, cancelled: true, before: 30, best: 0, stored: { easy: 123, normal: 0, master: 789 } });
     await a.reload();
     await a.waitForFunction(() => !!window.qaMain);
     assert.equal(await a.evaluate(() => window.qaMain.gameState.bestScore), 0);
+    const third = await context.newPage();
+    await third.goto(origin);
+    await third.waitForFunction(() => !!window.qaMain);
+    await third.evaluate(async () => {
+      window.qaLocked = false;
+      window.qaStorageEvents = 0;
+      window.addEventListener('storage', event => { if (event.key === 'block_puzzle_best_scores_v1') window.qaStorageEvents++; });
+      if (navigator.locks) {
+        navigator.locks.request('block_puzzle_best_scores_v1', () => {
+          window.qaLocked = true;
+          return new Promise(resolve => window.qaRelease = resolve);
+        });
+      } else {
+        const database = await new Promise((resolve, reject) => {
+          const request = indexedDB.open('block-puzzle-storage-locks', 1);
+          request.onupgradeneeded = () => request.result.createObjectStore('locks');
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        const transaction = database.transaction('locks', 'readwrite');
+        let released = false;
+        window.qaRelease = () => released = true;
+        const pump = () => { window.qaLocked = true; if (!released) transaction.objectStore('locks').get('gate').onsuccess = pump; };
+        transaction.objectStore('locks').get('gate').onsuccess = pump;
+      }
+    });
+    await third.waitForFunction(() => window.qaLocked);
+    for (const [page, score] of [[a, 100], [b, 90]]) await page.evaluate(async value => {
+      const storage = await import('./js/utils/storage.js');
+      window.qaReads = 0;
+      const read = wx.getStorageSync;
+      wx.getStorageSync = key => { if (key === 'block_puzzle_best_scores_v1') window.qaReads++; return read(key); };
+      window.qaSave = storage.saveBestScore('normal', value);
+    }, score);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    for (const page of pages) assert.equal(await page.evaluate(() => window.qaReads), 0, 'even the initial read is held by the common critical-section lock');
+    assert.equal(await third.evaluate(() => JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1')).normal), 0);
+    await third.evaluate(() => window.qaRelease());
+    await Promise.all(pages.map(page => page.evaluate(() => window.qaSave)));
+    await third.waitForFunction(() => window.qaStorageEvents > 0);
+    await third.waitForFunction(() => qaMain.gameState.bestScore === 100);
+    for (const page of [...pages, third]) {
+      assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1'))), { easy: 123, normal: 100, master: 789 });
+      await page.reload();
+      await page.waitForFunction(() => !!window.qaMain);
+      assert.equal(await page.evaluate(() => window.qaMain.gameState.bestScore), 100);
+    }
+    await third.evaluate(async () => { const storage = await import('./js/utils/storage.js'); await storage.resetBestScore('normal'); });
+    assert.deepEqual(await third.evaluate(() => JSON.parse(localStorage.getItem('block_puzzle_best_scores_v1'))), { easy: 123, normal: 0, master: 789 });
+    await third.close();
     for (const page of pages) {
       assert.equal(await page.locator('#gameCanvas').isVisible(), true);
       assert.equal(await page.locator('#bootError').isVisible(), false);
     }
     assert.deepEqual(errors, [], 'no browser runtime or console errors');
-    console.log(`PASS ${viewport.width}x${viewport.height}: two-page real localStorage, stale/equal/higher record, feedback, admin exclusion, reset/reload, canvas boot`);
+    console.log(`PASS ${coordination} ${viewport.width}x${viewport.height}: serial pages and forced concurrent lock queue, max record, storage event/third page/reload, untouched other difficulties, explicit reset, feedback and canvas boot`);
     await context.close();
   }
 } finally {

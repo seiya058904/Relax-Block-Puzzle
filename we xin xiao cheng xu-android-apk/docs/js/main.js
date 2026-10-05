@@ -6,7 +6,8 @@ import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
 import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
 import { shouldScheduleFrame } from './RenderScheduler.js';
-import { loadSettings, saveSettings } from './utils/storage.js';
+import { loadSettings, saveSettings, loadBestScores } from './utils/storage.js';
+import { BEST_SCORES_KEY } from './game/coreConstants.js';
 
 export default class Main {
   constructor() {
@@ -21,6 +22,7 @@ export default class Main {
     this.isRendering = false;
     this.needsRender = true;
     this.gameState = new GameState();
+    this.gameState.onBestScoreUpdated = () => this.requestImmediateRender();
     this.settings = loadSettings();
     this.gameState.setSettings(this.settings);
     this.soundManager = new SoundManager();
@@ -43,6 +45,17 @@ export default class Main {
     });
     this.bindAppLifecycle();
     if (wx.onWindowResize) wx.onWindowResize(() => this.handleViewportChange());
+    wx.onStorageChange?.(event => {
+      if (event.key !== BEST_SCORES_KEY) return;
+      const state = this.gameState;
+      const scores = loadBestScores();
+      const difficulty = state.screen === 'home' || state.screen === 'help' ? this.settings.difficulty : state.activeDifficulty;
+      const best = scores[difficulty];
+      state.startingHighScore = best < state.bestScore ? best : Math.max(state.startingHighScore || 0, best);
+      state.bestScores = scores;
+      state.bestScore = best;
+      this.requestImmediateRender();
+    });
     this.start();
   }
 

@@ -48,7 +48,7 @@ function readBestScores() {
   }
 }
 
-function loadWritableBestScores() {
+function loadWritableBestScores(persistMigration = true) {
   const result = readBestScores();
   if (result.status === 'readable') return result.scores;
   if (result.status !== 'missing') return null;
@@ -64,7 +64,7 @@ function loadWritableBestScores() {
   }
 
   try {
-    wx.setStorageSync(BEST_SCORES_KEY, migrated);
+    if (persistMigration) wx.setStorageSync(BEST_SCORES_KEY, migrated);
   } catch (error) {
     // Ignore storage failures so the local game keeps running.
   }
@@ -73,10 +73,10 @@ function loadWritableBestScores() {
 }
 
 export function loadBestScores() {
-  return loadWritableBestScores() || { ...DEFAULT_BEST_SCORES };
+  return loadWritableBestScores(!globalThis.wx?.withStorageLock) || { ...DEFAULT_BEST_SCORES };
 }
 
-export function saveBestScores(bestScores) {
+function writeBestScores(bestScores) {
   try {
     wx.setStorageSync(BEST_SCORES_KEY, sanitizeBestScores(bestScores));
     return true;
@@ -85,27 +85,40 @@ export function saveBestScores(bestScores) {
   }
 }
 
+function withBestScoresLock(update) {
+  if (!globalThis.wx?.withStorageLock) return update();
+  return wx.withStorageLock(BEST_SCORES_KEY, update).catch(() => undefined);
+}
+
+export function saveBestScores(bestScores) {
+  return withBestScoresLock(() => writeBestScores(bestScores));
+}
+
 export function loadBestScore(difficulty = 'normal') {
   const bestScores = loadBestScores();
   return bestScores[normalizeDifficulty(difficulty)] || 0;
 }
 
 export function saveBestScore(difficulty, score) {
-  const bestScores = loadWritableBestScores();
-  if (!bestScores) return;
-  const key = normalizeDifficulty(difficulty);
-  const previous = bestScores[key];
-  const next = Math.max(previous, Number.isFinite(score) ? score : 0);
-  if (next === previous) return { previous, score: previous };
-  bestScores[key] = next;
-  return { previous, score: saveBestScores(bestScores) ? next : previous };
+  return withBestScoresLock(() => {
+    const bestScores = loadWritableBestScores();
+    if (!bestScores) return;
+    const key = normalizeDifficulty(difficulty);
+    const previous = bestScores[key];
+    const next = Math.max(previous, Number.isFinite(score) ? score : 0);
+    if (next === previous) return { previous, score: previous };
+    bestScores[key] = next;
+    return { previous, score: writeBestScores(bestScores) ? next : previous };
+  });
 }
 
 export function resetBestScore(difficulty = 'normal') {
-  const bestScores = loadWritableBestScores();
-  if (!bestScores) return;
-  bestScores[normalizeDifficulty(difficulty)] = 0;
-  saveBestScores(bestScores);
+  return withBestScoresLock(() => {
+    const bestScores = loadWritableBestScores();
+    if (!bestScores) return;
+    bestScores[normalizeDifficulty(difficulty)] = 0;
+    return writeBestScores(bestScores);
+  });
 }
 
 export function loadSettings() {
