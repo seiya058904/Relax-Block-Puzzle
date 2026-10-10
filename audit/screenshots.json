@@ -1,0 +1,342 @@
+[
+  {
+    "path": "audit/browser/high-score-android-host/record-1280.png",
+    "bytes": 255655,
+    "sha256": "d0b4ed8bd1a42839833cd5bda1d0dfe473d3abadddbda648c512859ce142aad8"
+  },
+  {
+    "path": "audit/browser/high-score-android-host/record-390.png",
+    "bytes": 86737,
+    "sha256": "440aa8b823bad286038a5ce9fed423a3182ab78c73bfd8f80ed0f0544074b4a1"
+  },
+  {
+    "path": "audit/browser/high-score-android-host/stale-1280.png",
+    "bytes": 253595,
+    "sha256": "f9ed6df5ce1904a13529baf189e76ebd5c5d3c5ad6c4e1959e47b1e536664c28"
+  },
+  {
+    "path": "audit/browser/high-score-android-host/stale-390.png",
+    "bytes": 83800,
+    "sha256": "36f03931921abc13a84c2eba9287742e35267f2cd88219a96fe87f223f249ded"
+  },
+  {
+    "path": "audit/browser/high-score-web/record-1280.png",
+    "bytes": 258431,
+    "sha256": "003b71b6bcc3e62ba7eb6e6f273ede5f35c92b1c2b16860b612ca9bdd426a14f"
+  },
+  {
+    "path": "audit/browser/high-score-web/record-390.png",
+    "bytes": 88412,
+    "sha256": "1a178ca0eb930763d165e49f4199e7557d45777ec75efbe2d3fc72c637406796"
+  },
+  {
+    "path": "audit/browser/high-score-web/stale-1280.png",
+    "bytes": 249819,
+    "sha256": "494d4eb57331dcfe158741bcdd052d5bea2332c3cc8442377192104448a5507b"
+  },
+  {
+    "path": "audit/browser/high-score-web/stale-390.png",
+    "bytes": 83234,
+    "sha256": "c81569db1f9463b1798b1742cfdf86b7852c31b6098518e6cf3bda5b29c2a2f9"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-1280-playing.png",
+    "bytes": 321242,
+    "sha256": "b15b18d7d97d833d4705e3b41df89e0260992670b50f590b7ffe2b913a32a3e1"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-320-playing.png",
+    "bytes": 213943,
+    "sha256": "7f6e40f4587bd6707cde93de2534659b9b69d7aef31fdb0a4e72366a07904c72"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-390-drag.png",
+    "bytes": 599816,
+    "sha256": "f2ed5cd67a444f09b065c02586daa92bbee81606f3569d1aaef8d7d7f3696cb2"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-390-paused-clear.png",
+    "bytes": 238795,
+    "sha256": "263e1585bb818f857398e3dc5c586f991811d242a1f311fd17aefb93d8f8e6a8"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-390-playing.png",
+    "bytes": 338875,
+    "sha256": "fe583b35f4f902ed9096cfe4a2b63003926e8490602f576a5ecae4492221f371"
+  },
+  {
+    "path": "audit/browser/quality-android-host/web-390-triple-feedback.png",
+    "bytes": 427672,
+    "sha256": "a5f56c5840eca2d229febdb87e6fbaf31ab60ac4285828f8f80e868544bc6b4f"
+  },
+  {
+    "path": "audit/browser/quality-web/web-1280-playing.png",
+    "bytes": 324147,
+    "sha256": "3faeaa85d4f9d86f62c591869712bed69188898698c20b6e103033a201e1186d"
+  },
+  {
+    "path": "audit/browser/quality-web/web-320-playing.png",
+    "bytes": 200914,
+    "sha256": "5d8b4ceac2544870f8cf21542e1977ad31d08835b60ce1ba4dfed36942b27a26"
+  },
+  {
+    "path": "audit/browser/quality-web/web-390-cross-feedback.png",
+    "bytes": 279101,
+    "sha256": "00a8b7d6daad0e3398de5a2d798e302310ecea60661ced3dff78ef0b0e2e96ab"
+  },
+  {
+    "path": "audit/browser/quality-web/web-390-drag.png",
+    "bytes": 476357,
+    "sha256": "f2c2a4346d49c3d924039c30cbf6e3787faa81a712c48bdaa86791b31b12c68c"
+  },
+  {
+    "path": "audit/browser/quality-web/web-390-paused-clear.png",
+    "bytes": 155871,
+    "sha256": "3c8584842c9d8beffa7030b682059027c42df1eb959454b2a4b7670931c1bd66"
+  },
+  {
+    "path": "audit/browser/quality-web/web-390-playing.png",
+    "bytes": 282869,
+    "sha256": "546d4277f36e76034d18a9bcb39e111c8507bab17a902bfaf151289b8b2a674f"
+  },
+  {
+    "path": "audit/browser/quality-web/web-390-triple-feedback.png",
+    "bytes": 328553,
+    "sha256": "90022e632943aee340e12eb7c238c4bfe8575a89c6491a1354ece534c37c1b98"
+  },
+  {
+    "path": "audit/browser/quality-web/wechat-host-390-drag.png",
+    "bytes": 497385,
+    "sha256": "c76d7c4d153e3e1abc7f19ec6b0c687dcdb85a3ec100f979446a342d4eb00e24"
+  },
+  {
+    "path": "audit/browser/quality-web/wechat-host-390-paused-clear.png",
+    "bytes": 136169,
+    "sha256": "d75bd93c5218176c6353ae426d775c245869e45b720a5f3ceed8b31da1521a1f"
+  },
+  {
+    "path": "audit/browser/quality-web/wechat-host-390-playing.png",
+    "bytes": 252321,
+    "sha256": "e918f67612cda57655db984e59553bc7319925b7932c9620c6e972e20b84dfc6"
+  },
+  {
+    "path": "audit/browser/quality-web/wechat-host-390-triple-feedback.png",
+    "bytes": 285309,
+    "sha256": "6ff0f2b3661587998f3f0fc7157839917529ca70c35f83602623a968fbe175b9"
+  },
+  {
+    "path": "audit/concurrency/browser/r1-indexeddb.png",
+    "bytes": 114891,
+    "sha256": "1fc15147ccab20a48587cc5e0ae2a40bdcb70e3e4a533de5ae86f608761e8318"
+  },
+  {
+    "path": "audit/concurrency/browser/r1-web-locks.png",
+    "bytes": 114891,
+    "sha256": "1fc15147ccab20a48587cc5e0ae2a40bdcb70e3e4a533de5ae86f608761e8318"
+  },
+  {
+    "path": "audit/input/browser/baseline/input-home.png",
+    "bytes": 436208,
+    "sha256": "5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145"
+  },
+  {
+    "path": "audit/input/browser/baseline/mouse-lost-release.png",
+    "bytes": 327811,
+    "sha256": "916498da232c29b61c3bf100887bce0bb2c24632e369f02e10b44714c97b7422"
+  },
+  {
+    "path": "audit/input/browser/baseline/native-keyboard-invalid-confirm.png",
+    "bytes": 126279,
+    "sha256": "8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688"
+  },
+  {
+    "path": "audit/input/browser/baseline/native-keyboard-typed.png",
+    "bytes": 123926,
+    "sha256": "f28e7853db4287f9f6c7df554445cd9f260268d17d8d6b72e37a250abe027cc1"
+  },
+  {
+    "path": "audit/input/browser/baseline/viewport-1280x900.png",
+    "bytes": 321290,
+    "sha256": "0cfa7ff9e80b016a386415b76c019c447ce690504a10ac5d4e2f328d117785e7"
+  },
+  {
+    "path": "audit/input/browser/baseline/viewport-320x568.png",
+    "bytes": 82021,
+    "sha256": "9e271cd0c62508d4dd50c73799db4b6af37bf2cf782bd27287628d46f2b617b1"
+  },
+  {
+    "path": "audit/input/browser/baseline/viewport-390x844.png",
+    "bytes": 120904,
+    "sha256": "511a00d7319273df5a038b4725e81cee175e371e3e0f42e17fc4767a9317efa3"
+  },
+  {
+    "path": "audit/input/browser/baseline/viewport-568x320.png",
+    "bytes": 63602,
+    "sha256": "ec1931f9cf8c18a42a292f702b3f856f07deaab34ed987541eaee71a9b4b2315"
+  },
+  {
+    "path": "audit/input/browser/baseline/viewport-640x360.png",
+    "bytes": 124232,
+    "sha256": "c98b11f9aad8d7a0d8b878691cdbcbef8b54eb655f86e2fa3bca1cce212699c0"
+  },
+  {
+    "path": "audit/input/browser/fixed/fallback-clear-resumed.png",
+    "bytes": 117683,
+    "sha256": "47bfe1e5b9c5075cbede4edfea44287ef16a494b8d2374944a564bc89f68fc89"
+  },
+  {
+    "path": "audit/input/browser/fixed/fallback-frozen-clear.png",
+    "bytes": 100888,
+    "sha256": "1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d"
+  },
+  {
+    "path": "audit/input/browser/fixed/input-home.png",
+    "bytes": 436208,
+    "sha256": "5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145"
+  },
+  {
+    "path": "audit/input/browser/fixed/mouse-lost-release.png",
+    "bytes": 321683,
+    "sha256": "ac0ff37e565355aba9d7a8dc17246a121a4cee662c2289311acda8a1b8999386"
+  },
+  {
+    "path": "audit/input/browser/fixed/native-keyboard-invalid-confirm.png",
+    "bytes": 126992,
+    "sha256": "52b3967b52c3bbaa326d2884338315dc97247e1e78d61b94b5bc4610555bd1b7"
+  },
+  {
+    "path": "audit/input/browser/fixed/native-keyboard-typed.png",
+    "bytes": 126279,
+    "sha256": "8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-1280x900.png",
+    "bytes": 320851,
+    "sha256": "6441d04dc64c4a3e30d1a54d394d9dfcc6e288de27a6212d94ede7c024687c2a"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-320x568.png",
+    "bytes": 81067,
+    "sha256": "c49428014f64e03c87fa5e80eaf2e447d9529b49cd18b4fc14904a3ab52e7003"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-390x844.png",
+    "bytes": 121746,
+    "sha256": "ec24b16fbd872d3a50063dd013509cb886d33675deca8395ab280cd0c162a4b4"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-568x320-restored.png",
+    "bytes": 120437,
+    "sha256": "81450486c4701abf9f5018b279806fe362cec5698593f3d860f46dfdfe2c2f1e"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-568x320.png",
+    "bytes": 100888,
+    "sha256": "1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-640x360-restored.png",
+    "bytes": 125151,
+    "sha256": "71bf1a00b5b0fd409e6c83c52019b2d81a7187a3bce4f565c96f15848d11cb25"
+  },
+  {
+    "path": "audit/input/browser/fixed/viewport-640x360.png",
+    "bytes": 122253,
+    "sha256": "2c3aba2ba80e07b00734fd7e1124f360ec04610886ecf97da09e8d10893f40c3"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/fallback-clear-resumed.png",
+    "bytes": 117683,
+    "sha256": "47bfe1e5b9c5075cbede4edfea44287ef16a494b8d2374944a564bc89f68fc89"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/fallback-frozen-clear.png",
+    "bytes": 100888,
+    "sha256": "1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/input-home.png",
+    "bytes": 436208,
+    "sha256": "5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/keyboard-resize-recovered.png",
+    "bytes": 126566,
+    "sha256": "f6943fd94cea9e805b15fa68f9480c185d2f5fa929a643a1de74eac72dd2d298"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/mouse-lost-release.png",
+    "bytes": 318461,
+    "sha256": "8f7a5fb491f778b7b17edc7d44e2090c7f2292f251905db8a45257b6e1e6528c"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/native-keyboard-invalid-confirm.png",
+    "bytes": 127316,
+    "sha256": "af78ef507f998090613663afaee419b347956c8744dc2154e397103679c6c911"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/native-keyboard-typed.png",
+    "bytes": 126279,
+    "sha256": "8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-1280x900.png",
+    "bytes": 322065,
+    "sha256": "3d6de8d84d9015fd98c8a7c3bf1c13d207cadea6f6f19dd02e46fa5a3a45eaad"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-320x568.png",
+    "bytes": 83287,
+    "sha256": "b11428d26bf6726e8c2e2e8e492e8b32e6d3f8c8419743fc4d7cfa00ff119b3e"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-390x844.png",
+    "bytes": 122038,
+    "sha256": "4ddd24e87ace607cd698a2261bbca38fb4d5035f6b343b4e7d65440bb775965a"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-568x320-restored.png",
+    "bytes": 122366,
+    "sha256": "72fc7ec83e106b75f2f6721005b2096f93086ee8dc5b9d3664646d8a59cc4ad2"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-568x320.png",
+    "bytes": 100888,
+    "sha256": "1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-640x360-restored.png",
+    "bytes": 122699,
+    "sha256": "8f6c026a2fef98d9613c02623cf90284f42b7a1b3b4da0347f2b723f7e631d69"
+  },
+  {
+    "path": "audit/input/browser/fixed-android-host/viewport-640x360.png",
+    "bytes": 122253,
+    "sha256": "2c3aba2ba80e07b00734fd7e1124f360ec04610886ecf97da09e8d10893f40c3"
+  },
+  {
+    "path": "audit/input/browser/fixed-keyboard-resize/input-home.png",
+    "bytes": 436208,
+    "sha256": "5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145"
+  },
+  {
+    "path": "audit/input/browser/fixed-keyboard-resize/keyboard-resize-recovered.png",
+    "bytes": 126566,
+    "sha256": "f6943fd94cea9e805b15fa68f9480c185d2f5fa929a643a1de74eac72dd2d298"
+  },
+  {
+    "path": "audit/input/browser/fixed-keyboard-resize/mouse-lost-release.png",
+    "bytes": 321786,
+    "sha256": "c68f5c53effab6747827e3cd774430dcfebbdb7c7bb9d8303cf5a3dc9d24d28d"
+  },
+  {
+    "path": "audit/input/browser/fixed-keyboard-resize/native-keyboard-invalid-confirm.png",
+    "bytes": 127316,
+    "sha256": "af78ef507f998090613663afaee419b347956c8744dc2154e397103679c6c911"
+  },
+  {
+    "path": "audit/input/browser/fixed-keyboard-resize/native-keyboard-typed.png",
+    "bytes": 126279,
+    "sha256": "8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688"
+  }
+]

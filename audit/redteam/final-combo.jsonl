@@ -1,0 +1,37 @@
+{"version":"wechat","name":"Pause plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"wechat","name":"Pause plus background show-first, duplicate hide/show","pass":true}
+{"version":"wechat","name":"Settings plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"wechat","name":"Settings plus background show-first, duplicate hide/show","pass":true}
+{"version":"wechat","name":"pure background repeated hide is counted once","pass":true}
+{"version":"wechat","name":"short viewport, modal and host pause resume only after all three reasons clear","pass":true}
+{"version":"wechat","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"wechat","name":"exact 3000ms active window retained and 3001ms expires","pass":true}
+{"version":"wechat","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":true}
+{"version":"wechat","name":"return home and long home idle cannot carry the previous combo into a new round","pass":true}
+{"version":"wechat","name":"new round during hidden state preserves the host pause reason","pass":true}
+{"version":"wechat","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":true}
+{"version":"web","name":"Pause plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"web","name":"Pause plus background show-first, duplicate hide/show","pass":true}
+{"version":"web","name":"Settings plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"web","name":"Settings plus background show-first, duplicate hide/show","pass":true}
+{"version":"web","name":"pure background repeated hide is counted once","pass":true}
+{"version":"web","name":"short viewport, modal and host pause resume only after all three reasons clear","pass":true}
+{"version":"web","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"web","name":"exact 3000ms active window retained and 3001ms expires","pass":true}
+{"version":"web","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":true}
+{"version":"web","name":"return home and long home idle cannot carry the previous combo into a new round","pass":true}
+{"version":"web","name":"new round during hidden state preserves the host pause reason","pass":true}
+{"version":"web","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":true}
+{"version":"android","name":"Pause plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"android","name":"Pause plus background show-first, duplicate hide/show","pass":true}
+{"version":"android","name":"Settings plus background close-modal-first, duplicate hide/show","pass":true}
+{"version":"android","name":"Settings plus background show-first, duplicate hide/show","pass":true}
+{"version":"android","name":"pure background repeated hide is counted once","pass":true}
+{"version":"android","name":"short viewport, modal and host pause resume only after all three reasons clear","pass":true}
+{"version":"android","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"android","name":"exact 3000ms active window retained and 3001ms expires","pass":true}
+{"version":"android","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":true}
+{"version":"android","name":"return home and long home idle cannot carry the previous combo into a new round","pass":true}
+{"version":"android","name":"new round during hidden state preserves the host pause reason","pass":true}
+{"version":"android","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":true}
+{"summary":true,"root":"/workspace/scratch/7bb2fb03b768/source/relax-block-puzzle","total":36,"passed":36,"failed":0}

@@ -1,0 +1,99 @@
+{
+  "audioStress": {
+    "wechat": {
+      "cycles": 200,
+      "liveEffectContexts": 7,
+      "liveBgmContexts": 1,
+      "destroyedBgmContexts": 200,
+      "playingAfterHide": 0,
+      "assertions": "pass"
+    },
+    "web": {
+      "cycles": 200,
+      "liveEffectContexts": 7,
+      "liveBgmContexts": 1,
+      "destroyedBgmContexts": 200,
+      "playingAfterHide": 0,
+      "assertions": "pass"
+    },
+    "android": {
+      "cycles": 200,
+      "liveEffectContexts": 7,
+      "liveBgmContexts": 1,
+      "destroyedBgmContexts": 200,
+      "playingAfterHide": 0,
+      "assertions": "pass"
+    }
+  },
+  "canvasStress": {
+    "wechat": {
+      "resizeCycles": 1000,
+      "maximumCachePixels": 750000,
+      "pixelBudget": 750000,
+      "retainedPixelsAfterClear": 0,
+      "assertions": "pass"
+    },
+    "web": {
+      "resizeCycles": 1000,
+      "maximumCachePixels": 1249524,
+      "pixelBudget": 1250000,
+      "retainedPixelsAfterClear": 0,
+      "assertions": "pass"
+    },
+    "android": {
+      "resizeCycles": 1000,
+      "maximumCachePixels": 1249524,
+      "pixelBudget": 1250000,
+      "retainedPixelsAfterClear": 0,
+      "assertions": "pass"
+    }
+  },
+  "initialHidden": {
+    "web": {
+      "initial": {
+        "documentHidden": true,
+        "mainPaused": true,
+        "soundManagerHidden": true,
+        "bgmPlayCalls": 0,
+        "scheduledFrames": 0
+      },
+      "afterHiddenNotification": {
+        "mainPaused": true,
+        "soundManagerHidden": true,
+        "playingAudio": 0
+      },
+      "violation": false,
+      "evidenceType": "real product shim and Main with controlled initial browser visibility; not a native device or natural background-tab reproduction"
+    },
+    "android": {
+      "initial": {
+        "documentHidden": true,
+        "mainPaused": true,
+        "soundManagerHidden": true,
+        "bgmPlayCalls": 0,
+        "scheduledFrames": 0
+      },
+      "afterHiddenNotification": {
+        "mainPaused": true,
+        "soundManagerHidden": true,
+        "playingAudio": 0
+      },
+      "violation": false,
+      "evidenceType": "real product shim and Main with controlled initial browser visibility; not a native device or natural background-tab reproduction"
+    }
+  },
+  "shimPool": {
+    "web": {
+      "bgmReplacements": 200,
+      "remainingLoopingContexts": 0,
+      "retainedSources": 0,
+      "assertions": "pass"
+    },
+    "android": {
+      "bgmReplacements": 200,
+      "remainingLoopingContexts": 0,
+      "retainedSources": 0,
+      "assertions": "pass"
+    }
+  }
+}

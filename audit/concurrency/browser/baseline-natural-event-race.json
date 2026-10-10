@@ -1,0 +1,4 @@
+{
+  "evidenceOrigin": "Exact observed object from the natural browser run stdout before the event-origin repair; the original results filename was reused by the passing rerun.",
+  "observed": {"iteration":22,"best":10,"starting":10,"trace":[{"type":"real storage event","oldValue":"{\"easy\":0,\"normal\":0,\"master\":0}","newValue":"{\"easy\":20,\"normal\":0,\"master\":0}","committed":"{\"easy\":20,\"normal\":10,\"master\":0}","before":{"score":10,"best":0,"starting":0,"pending":1,"screen":"playing"},"after":{"best":0,"starting":0,"pending":1,"record":false}}],"second":{"score":20,"starting":10,"record":true}}
+}

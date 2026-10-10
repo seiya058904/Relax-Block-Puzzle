@@ -1,0 +1,12 @@
+{
+  "baseline_zip_sha256": "f62a15701963d9f3474063c99d69a83b5c1324cd58e08d116cc79f2df8a0b021",
+  "changed_original_files": 30,
+  "new_source_test_document_files": 8,
+  "git_apply_to_isolated_baseline": "pass",
+  "applied_file_contents_equal_delivery_source": true,
+  "excluded_from_patch": [
+    "audit/",
+    "MANIFEST-SHA256.txt",
+    "recoverable Android audio mirror"
+  ]
+}

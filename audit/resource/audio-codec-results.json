@@ -1,0 +1,332 @@
+{
+  "we xin xiao cheng xu/audio/bgm_1.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "22050",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "175.046531",
+      "size": "700540",
+      "bit_rate": "32016"
+    }
+  },
+  "we xin xiao cheng xu/audio/bgm_2.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "22050",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "150.804898",
+      "size": "603574",
+      "bit_rate": "32018"
+    }
+  },
+  "we xin xiao cheng xu/audio/bgm_3.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "22050",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "181.681633",
+      "size": "727081",
+      "bit_rate": "32015"
+    }
+  },
+  "we xin xiao cheng xu/audio/bgm_4.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "22050",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "159.294694",
+      "size": "637533",
+      "bit_rate": "32017"
+    }
+  },
+  "we xin xiao cheng xu/audio/clear.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.840000",
+      "size": "34732",
+      "bit_rate": "330780"
+    }
+  },
+  "we xin xiao cheng xu/audio/click.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.240000",
+      "size": "10732",
+      "bit_rate": "357733"
+    }
+  },
+  "we xin xiao cheng xu/audio/combo.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "1.032000",
+      "size": "42412",
+      "bit_rate": "328775"
+    }
+  },
+  "we xin xiao cheng xu/audio/combo3.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "1.080000",
+      "size": "44332",
+      "bit_rate": "328385"
+    }
+  },
+  "we xin xiao cheng xu/audio/gameover.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "2.821225",
+      "size": "112849",
+      "bit_rate": "320000"
+    }
+  },
+  "we xin xiao cheng xu/audio/pickup.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.192000",
+      "size": "8812",
+      "bit_rate": "367166"
+    }
+  },
+  "we xin xiao cheng xu/audio/place.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.192000",
+      "size": "8812",
+      "bit_rate": "367166"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/bgm_1.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "175.032000",
+      "size": "7002412",
+      "bit_rate": "320051"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/bgm_2.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "150.768000",
+      "size": "6031852",
+      "bit_rate": "320060"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/bgm_3.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "181.656000",
+      "size": "7267372",
+      "bit_rate": "320049"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/bgm_4.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "159.264000",
+      "size": "6371692",
+      "bit_rate": "320056"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/clear.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.840000",
+      "size": "34732",
+      "bit_rate": "330780"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/click.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.240000",
+      "size": "10732",
+      "bit_rate": "357733"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/combo.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "1.032000",
+      "size": "42412",
+      "bit_rate": "328775"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/combo3.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "1.080000",
+      "size": "44332",
+      "bit_rate": "328385"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/gameover.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 2
+      }
+    ],
+    "format": {
+      "duration": "2.821225",
+      "size": "112849",
+      "bit_rate": "320000"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/pickup.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.192000",
+      "size": "8812",
+      "bit_rate": "367166"
+    }
+  },
+  "we xin xiao cheng xu-android-apk/docs/audio/place.mp3": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "mp3",
+        "sample_rate": "48000",
+        "channels": 1
+      }
+    ],
+    "format": {
+      "duration": "0.192000",
+      "size": "8812",
+      "bit_rate": "367166"
+    }
+  }
+}

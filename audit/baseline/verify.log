@@ -1,0 +1,7 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> verify
+> node scripts/sync-platforms.mjs --check && node scripts/verify-platforms.mjs
+
+platforms are in sync
+verified 11 shared files across 3 targets

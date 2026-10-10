@@ -1,0 +1,65 @@
+[
+  {
+    "platform": "wechat",
+    "modal": "pause",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  },
+  {
+    "platform": "wechat",
+    "modal": "settings",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  },
+  {
+    "platform": "web",
+    "modal": "pause",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  },
+  {
+    "platform": "web",
+    "modal": "settings",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  },
+  {
+    "platform": "android",
+    "modal": "pause",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  },
+  {
+    "platform": "android",
+    "modal": "settings",
+    "activeElapsedMs": 1000,
+    "pausedElapsedMs": 10000,
+    "expectedComboCount": 2,
+    "actualComboCount": 1
+  }
+]
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: UNIFIED_SPEC L133/L300 requires the three-second combo window to freeze while paused
+    at file:///workspace/scratch/7bb2fb03b768/audit/core/combo-pause-repro.mjs:38:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

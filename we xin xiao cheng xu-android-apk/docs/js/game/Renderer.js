@@ -248,12 +248,14 @@ export default class Renderer {
       toolGap -
       rackGap -
       8;
-    const cellSize = Math.floor(
+    const availableCellSize = Math.floor(
       Math.min(
         (boardOuterWidth - BOARD_PADDING * 2) / BOARD_SIZE,
         (boardAvailableHeight - BOARD_PADDING * 2) / BOARD_SIZE
       )
     );
+    const cellSize = Math.max(1, availableCellSize);
+    const viewportBlocked = screenWidth < 320 || screenHeight < 560 || availableCellSize <= 4;
     const boardSizePx = cellSize * BOARD_SIZE + BOARD_PADDING * 2;
     const boardPanelRect = {
       x: Math.round((screenWidth - boardSizePx) / 2),
@@ -295,6 +297,7 @@ export default class Renderer {
     return {
       screenWidth,
       screenHeight,
+      viewportBlocked,
       sideMargin,
       cellSize,
       bottomInset,
@@ -321,7 +324,7 @@ export default class Renderer {
       this.clearSurfaceCache();
     }
     state.setLayout(this.layout);
-    const damage = this.getFrameDamage(state);
+    const damage = this.layout.viewportBlocked ? null : this.getFrameDamage(state);
     this.ctx.save();
     if (damage) {
       // Clip on physical pixel boundaries; fractional DPR clips otherwise
@@ -342,6 +345,22 @@ export default class Renderer {
 
     this.clearCanvas();
     this.drawBackground(state.screen !== 'playing', state.dragState.isDragging);
+
+    if (this.layout.viewportBlocked) {
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillStyle = TEXT_PRIMARY;
+      this.ctx.font = 'bold 20px sans-serif';
+      this.ctx.fillText('轻松俄罗斯方块', this.layout.screenWidth / 2, this.layout.screenHeight / 2 - 18);
+      this.ctx.fillStyle = TEXT_SECONDARY;
+      this.ctx.font = '16px sans-serif';
+      this.ctx.fillText('请转为竖屏或增大窗口', this.layout.screenWidth / 2, this.layout.screenHeight / 2 + 18);
+      globalThis.__syncKeyboardInputPosition?.(null);
+      this.lastScene = null;
+      this.ctx.restore();
+      this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
+      return;
+    }
 
     if (state.screen === 'home' || state.screen === 'help') {
       this.drawHome(state);

@@ -1,0 +1,23 @@
+{"version":"wechat","name":"current admin request success preserves valid behavior","pass":true}
+{"version":"wechat","name":"current admin request denied preserves valid behavior","pass":true}
+{"version":"wechat","name":"current admin request rejected preserves valid behavior","pass":true}
+{"version":"wechat","name":"cancel and reopen isolates old success","pass":false,"actual":true,"expected":false,"error":"Expected values to be strictly equal:\n\ntrue !== false\n"}
+{"version":"wechat","name":"cancel and reopen isolates old denied","pass":false,"actual":{"input":"new-panel-input","error":"验证失败","allowed":false},"expected":{"input":"new-panel-input","error":"","allowed":false},"error":"Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    allowed: false,\n+   error: '验证失败',\n-   error: '',\n    input: 'new-panel-input'\n  }\n"}
+{"version":"wechat","name":"cancel and reopen isolates old rejected","pass":false,"actual":{"input":"new-panel-input","error":"验证失败","allowed":false},"expected":{"input":"new-panel-input","error":"","allowed":false},"error":"Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    allowed: false,\n+   error: '验证失败',\n-   error: '',\n    input: 'new-panel-input'\n  }\n"}
+{"version":"wechat","name":"latest denied request dominates older success (old-first)","pass":false,"actual":true,"expected":false,"error":"Expected values to be strictly equal:\n\ntrue !== false\n"}
+{"version":"wechat","name":"latest denied request dominates older success (new-first)","pass":false,"actual":true,"expected":false,"error":"Expected values to be strictly equal:\n\ntrue !== false\n"}
+{"version":"wechat","name":"blank new submission supersedes pending success","pass":false,"actual":true,"expected":false,"error":"Expected values to be strictly equal:\n\ntrue !== false\n"}
+{"version":"wechat","name":"cancelled administrator response leaves subsequent normal gameplay and undo eligible","pass":false,"actual":true,"expected":false,"error":"Expected values to be strictly equal:\n\ntrue !== false\n"}
+{"version":"wechat","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"wechat","name":"failed reset preserves trusted unrelated records and later retry works","pass":false,"actual":0,"expected":100,"error":"Expected values to be strictly equal:\n\n0 !== 100\n"}
+{"version":"web","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"web","name":"failed reset preserves trusted unrelated records and later retry works","pass":false,"actual":0,"expected":100,"error":"Expected values to be strictly equal:\n\n0 !== 100\n"}
+{"version":"android","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"android","name":"failed reset preserves trusted unrelated records and later retry works","pass":false,"actual":0,"expected":100,"error":"Expected values to be strictly equal:\n\n0 !== 100\n"}
+{"version":"web","name":"pending reset completed after switching and starting another difficulty keeps its own score","pass":true}
+{"version":"web","name":"new round score queued after successful reset must become its new record","pass":false,"actual":100,"expected":0,"error":"Expected values to be strictly equal:\n\n100 !== 0\n"}
+{"version":"web","name":"old save on return-home cannot rewrite another difficulty even when lock completes last","pass":false,"actual":30,"expected":3,"error":"Expected values to be strictly equal:\n\n30 !== 3\n"}
+{"version":"android","name":"pending reset completed after switching and starting another difficulty keeps its own score","pass":true}
+{"version":"android","name":"new round score queued after successful reset must become its new record","pass":false,"actual":100,"expected":0,"error":"Expected values to be strictly equal:\n\n100 !== 0\n"}
+{"version":"android","name":"old save on return-home cannot rewrite another difficulty even when lock completes last","pass":false,"actual":20,"expected":3,"error":"Expected values to be strictly equal:\n\n20 !== 3\n"}
+{"summary":true,"root":"/workspace/scratch/7bb2fb03b768/audit/redteam/baseline","total":22,"passed":8,"failed":14}

@@ -1,0 +1,1211 @@
+{
+  "mode": "baseline",
+  "root": "/workspace/scratch/7bb2fb03b768/audit/input/baseline-web",
+  "url": "http://127.0.0.1:43271/",
+  "reason": "Browser plugin not available; existing Playwright and existing Chromium used without installing dependencies",
+  "checks": [
+    {
+      "name": "input: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "home",
+        "raf": 0
+      }
+    },
+    {
+      "name": "input: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "mouse field focus",
+      "pass": true,
+      "evidence": {
+        "mouseFocus": ""
+      }
+    },
+    {
+      "name": "native keyboard receives focus",
+      "pass": true,
+      "evidence": "wxKeyboard"
+    },
+    {
+      "name": "native keyboard updates idle Canvas",
+      "pass": true,
+      "evidence": {
+        "state": "INVALID-AUDIT",
+        "rendered": "",
+        "renderCount": 21,
+        "raf": 0
+      }
+    },
+    {
+      "name": "invalid native keyboard code retains error",
+      "pass": true,
+      "evidence": {
+        "error": "",
+        "rendered": "",
+        "open": true,
+        "focused": ""
+      }
+    },
+    {
+      "name": "lost release cancellation leaves no stale drag",
+      "pass": true,
+      "evidence": {
+        "beforeBlur": {
+          "score": 0,
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "drag": true
+        },
+        "stale": {
+          "drag": true,
+          "paused": false,
+          "score": 0,
+          "hidden": false
+        },
+        "afterClick": {
+          "score": 30,
+          "drag": false,
+          "filled": 3
+        }
+      }
+    },
+    {
+      "name": "next ordinary click cannot place stale piece",
+      "pass": true,
+      "evidence": {
+        "score": 30,
+        "drag": false,
+        "filled": 3
+      }
+    },
+    {
+      "name": "window blur preserves actual visibility lifecycle",
+      "pass": true,
+      "evidence": {
+        "drag": true,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      }
+    },
+    {
+      "name": "input flow console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": [
+          "effect playback failed: audio/click.mp3"
+        ]
+      }
+    },
+    {
+      "name": "viewport-1280x900: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-1280x900: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-1280x900: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 50,
+        "board": {
+          "x": 390,
+          "y": 176.88,
+          "width": 500,
+          "height": 500
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-1280x900: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-390x844: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 487,
+          "height": 1055
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-390x844: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-390x844: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 35,
+        "board": {
+          "x": 20,
+          "y": 176.88,
+          "width": 350,
+          "height": 350
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-390x844: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-320x568: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 400,
+          "height": 710
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-320x568: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-320x568: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 22,
+        "board": {
+          "x": 50,
+          "y": 176.88,
+          "width": 220,
+          "height": 220
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-320x568: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-568x320: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 710,
+          "height": 400
+        },
+        "bootError": {
+          "display": "block",
+          "text": "启动失败\n\nIndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-11) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:864:7\n    at Renderer.drawCachedSurface (http://127.0.0.1:43271/js/game/Renderer.js:439:11)\n    at Renderer.drawBoard (http://127.0.0.1:43271/js/game/Renderer.js:856:10)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:762:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at Main.handleViewportChange (http://127.0.0.1:43271/js/main.js:224:10)"
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-568x320: no boot overlay",
+      "pass": false,
+      "evidence": {
+        "display": "block",
+        "text": "启动失败\n\nIndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-11) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:864:7\n    at Renderer.drawCachedSurface (http://127.0.0.1:43271/js/game/Renderer.js:439:11)\n    at Renderer.drawBoard (http://127.0.0.1:43271/js/game/Renderer.js:856:10)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:762:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at Main.handleViewportChange (http://127.0.0.1:43271/js/main.js:224:10)"
+      }
+    },
+    {
+      "name": "viewport-568x320: baseline records invalid or unusable geometry",
+      "pass": true,
+      "evidence": {
+        "layout": {
+          "cellSize": -3,
+          "board": {
+            "x": 299,
+            "y": 176.88,
+            "width": -30,
+            "height": -30
+          },
+          "rack": 0,
+          "tools": [],
+          "frameText": [
+            "0",
+            "普通最高分：0"
+          ],
+          "raf": 0,
+          "screen": "playing"
+        },
+        "errors": [
+          "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-11) is negative."
+        ]
+      }
+    },
+    {
+      "name": "viewport-640x360: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 800,
+          "height": 450
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-640x360: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-640x360: baseline records invalid or unusable geometry",
+      "pass": true,
+      "evidence": {
+        "layout": {
+          "cellSize": 1,
+          "board": {
+            "x": 315,
+            "y": 176.88,
+            "width": 10,
+            "height": 10
+          },
+          "rack": 3,
+          "tools": [
+            "refresh",
+            "clear",
+            "undo"
+          ],
+          "frameText": [
+            "0",
+            "普通最高分：0",
+            "刷新 ×2",
+            "清除 ×1",
+            "撤回 ×1",
+            "设置",
+            "暂停"
+          ],
+          "raf": 0,
+          "screen": "playing"
+        },
+        "errors": [
+          "console: touch handler failed: start IndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-1.5) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:1106:7\n    at Array.forEach (<anonymous>)\n    at Renderer.drawPreview (http://127.0.0.1:43271/js/game/Renderer.js:1103:17)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:763:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at InputManager.handleTouchStart (http://127.0.0.1:43271/js/game/InputManager.js:121:14)",
+          "console: touch handler failed: end IndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:1357:7\n    at Array.forEach (<anonymous>)\n    at Renderer.drawDraggingPiece (http://127.0.0.1:43271/js/game/Renderer.js:1356:22)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:768:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at InputManager.handleTouchEnd (http://127.0.0.1:43271/js/game/InputManager.js:180:10)",
+          "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative.",
+          "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative."
+        ]
+      }
+    }
+  ],
+  "cases": [
+    {
+      "label": "input",
+      "typed": {
+        "state": "INVALID-AUDIT",
+        "rendered": "",
+        "renderCount": 21,
+        "raf": 0
+      },
+      "invalid": {
+        "error": "",
+        "rendered": "",
+        "open": true,
+        "focused": ""
+      },
+      "stale": {
+        "drag": true,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      },
+      "afterClick": {
+        "score": 30,
+        "drag": false,
+        "filled": 3
+      },
+      "errors": [],
+      "warnings": [
+        "effect playback failed: audio/click.mp3"
+      ]
+    },
+    {
+      "label": "viewport-1280x900",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 50,
+        "board": {
+          "x": 390,
+          "y": 176.88,
+          "width": 500,
+          "height": 500
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-390x844",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 487,
+          "height": 1055
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 35,
+        "board": {
+          "x": 20,
+          "y": 176.88,
+          "width": 350,
+          "height": 350
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-320x568",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 400,
+          "height": 710
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 22,
+        "board": {
+          "x": 50,
+          "y": 176.88,
+          "width": 220,
+          "height": 220
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-568x320",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 710,
+          "height": 400
+        },
+        "bootError": {
+          "display": "block",
+          "text": "启动失败\n\nIndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-11) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:864:7\n    at Renderer.drawCachedSurface (http://127.0.0.1:43271/js/game/Renderer.js:439:11)\n    at Renderer.drawBoard (http://127.0.0.1:43271/js/game/Renderer.js:856:10)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:762:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at Main.handleViewportChange (http://127.0.0.1:43271/js/main.js:224:10)"
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": -3,
+        "board": {
+          "x": 299,
+          "y": 176.88,
+          "width": -30,
+          "height": -30
+        },
+        "rack": 0,
+        "tools": [],
+        "frameText": [
+          "0",
+          "普通最高分：0"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "before": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_1_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "l3_0_2",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 1
+              }
+            ],
+            "color": "#FFD60A",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "single_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#3A86FF",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          }
+        ]
+      },
+      "interaction": {
+        "drag": false,
+        "score": 0
+      },
+      "afterRecovery": {
+        "boot": "block",
+        "canvas": "none"
+      },
+      "errors": [
+        "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-11) is negative."
+      ],
+      "warnings": []
+    },
+    {
+      "label": "viewport-640x360",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 800,
+          "height": 450
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 1,
+        "board": {
+          "x": 315,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "before": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_2_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#FF4D6D",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "single_0_2",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#FF4D6D",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          },
+          {
+            "id": "cross5_0_3",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 2,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 2
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 3
+            },
+            "category": "hard",
+            "baseId": "cross5",
+            "isSnake": false
+          }
+        ]
+      },
+      "interaction": {
+        "drag": false,
+        "score": 0
+      },
+      "afterRecovery": {
+        "boot": "block",
+        "canvas": "none"
+      },
+      "errors": [
+        "console: touch handler failed: start IndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-1.5) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:1106:7\n    at Array.forEach (<anonymous>)\n    at Renderer.drawPreview (http://127.0.0.1:43271/js/game/Renderer.js:1103:17)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:763:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at InputManager.handleTouchStart (http://127.0.0.1:43271/js/game/InputManager.js:121:14)",
+        "console: touch handler failed: end IndexSizeError: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative.\n    at roundedRect (http://127.0.0.1:43271/js/game/Renderer.js:55:7)\n    at http://127.0.0.1:43271/js/game/Renderer.js:1357:7\n    at Array.forEach (<anonymous>)\n    at Renderer.drawDraggingPiece (http://127.0.0.1:43271/js/game/Renderer.js:1356:22)\n    at Renderer.drawPlayingScene (http://127.0.0.1:43271/js/game/Renderer.js:768:10)\n    at Renderer.render (http://127.0.0.1:43271/js/game/Renderer.js:349:12)\n    at qaMain.renderer.render (eval at evaluate (:311:30), <anonymous>:3:212)\n    at Main.render (http://127.0.0.1:43271/js/main.js:144:21)\n    at Main.requestImmediateRender (http://127.0.0.1:43271/js/main.js:174:10)\n    at InputManager.handleTouchEnd (http://127.0.0.1:43271/js/game/InputManager.js:180:10)",
+        "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative.",
+        "pageerror: Failed to execute 'arcTo' on 'CanvasRenderingContext2D': The radius provided (-0.52) is negative."
+      ],
+      "warnings": []
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "passed": 27,
+  "failed": 1
+}

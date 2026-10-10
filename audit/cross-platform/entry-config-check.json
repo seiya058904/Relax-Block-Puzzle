@@ -1,0 +1,60 @@
+{
+  "checkedAtUtc": "2026-10-10T04:12:33.578473+00:00",
+  "relativeImportEdges": 124,
+  "unresolvedImports": [],
+  "extensionlessEntryImports": [
+    {
+      "source": "we xin xiao cheng xu/game.js",
+      "import": "./js/api/AuthClient"
+    },
+    {
+      "source": "we xin xiao cheng xu/game.js",
+      "import": "./js/main"
+    }
+  ],
+  "protectedCompared": 41,
+  "protectedUnchanged": true,
+  "protectedHashesUnchanged": {
+    "server/.gitignore": true,
+    "server/app.js": true,
+    "server/README.md": true,
+    "server/package.json": true,
+    "server/server.js": true,
+    "server/.dockerignore": true,
+    "server/package-lock.json": true,
+    "server/Dockerfile": true,
+    "we xin xiao cheng xu/game.json": true,
+    "we xin xiao cheng xu/game.js": true,
+    "we xin xiao cheng xu/project.config.json": true,
+    "we xin xiao cheng xu-android-apk/build.gradle.kts": true,
+    "we xin xiao cheng xu-android-apk/settings.gradle.kts": true,
+    "we xin xiao cheng xu-android-apk/gradlew.bat": true,
+    "we xin xiao cheng xu-android-apk/gradlew": true,
+    "we xin xiao cheng xu-android-apk/gradle.properties": true,
+    "config/resource-map.json": true,
+    "config/platform-manifest.json": true,
+    ".github/workflows/ci.yml": true,
+    ".github/workflows/verify-browser.yml": true,
+    ".github/workflows/deploy-pages.yml": true,
+    "we xin xiao cheng xu/js/api/AuthClient.js": true,
+    "we xin xiao cheng xu/js/config/quality.js": true,
+    "we xin xiao cheng xu/js/config/backend.js": true,
+    "shared/js/config/quality.js": true,
+    "we xin xiao cheng xu-android-apk/docs/index.html": true,
+    "we xin xiao cheng xu-android-apk/docs/game.js": true,
+    "we xin xiao cheng xu-android-apk/app/build.gradle.kts": true,
+    "we xin xiao cheng xu-android-apk/docs/js/config/quality.js": true,
+    "we xin xiao cheng xu-android-apk/gradle/wrapper/gradle-wrapper.jar": true,
+    "we xin xiao cheng xu-android-apk/gradle/wrapper/gradle-wrapper.properties": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/AndroidManifest.xml": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/assets/index.html": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/assets/game.js": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/assets/js/config/quality.js": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/java/com/blockpuzzle/android/MainActivity.kt": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/res/values/strings.xml": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/res/values/themes.xml": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/res/layout/activity_main.xml": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/res/values-v28/themes.xml": true,
+    "we xin xiao cheng xu-android-apk/app/src/main/res/drawable/app_icon.png": true
+  }
+}

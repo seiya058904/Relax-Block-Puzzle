@@ -43,6 +43,7 @@ export default class SoundManager {
   }
 
   setSettings(settings) {
+    const previousSoundEnabled = this.settings.soundEnabled;
     const previousEnabled = this.settings.bgmEnabled;
     const previousTrack = normalizeTrackId(this.settings.bgmTrack);
     const nextTrack = normalizeTrackId(settings.bgmTrack);
@@ -53,6 +54,8 @@ export default class SoundManager {
       bgmTrack: nextTrack
     };
     this.currentBgmTrack = nextTrack;
+
+    if (previousSoundEnabled && !this.settings.soundEnabled) this.stopAllEffects();
 
     if (previousTrack !== nextTrack) {
       this.switchBgmTrack(nextTrack);
@@ -156,7 +159,7 @@ export default class SoundManager {
   }
 
   playEffect(key) {
-    if (!this.settings.soundEnabled) {
+    if (!this.settings.soundEnabled || this.appHidden) {
       return;
     }
 
@@ -199,10 +202,6 @@ export default class SoundManager {
     }
 
     try {
-      audio.stop();
-      if (audio.seek) {
-        audio.seek(0);
-      }
       audio.play();
     } catch (error) {
       this.warnOnce(`bgm_play_${this.currentBgmTrack}`, 'bgm play failed');
@@ -219,6 +218,16 @@ export default class SoundManager {
     } catch (error) {
       this.warnOnce('bgm_stop', 'bgm stop failed');
     }
+  }
+
+  stopAllEffects() {
+    Object.values(this.effectContexts).forEach((audio) => {
+      try {
+        audio?.stop();
+      } catch (error) {
+        this.warnOnce('effect_stop', 'effect stop failed');
+      }
+    });
   }
 
   switchBgmTrack(trackId) {
@@ -243,6 +252,7 @@ export default class SoundManager {
 
   handleAppHide() {
     this.appHidden = true;
+    this.stopAllEffects();
     this.stopBgm();
   }
 

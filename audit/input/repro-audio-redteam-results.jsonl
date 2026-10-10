@@ -1,0 +1,12 @@
+{"version":"wechat","case":"mute active effect","playing":true,"stopDelta":0}
+{"version":"wechat","case":"change vibration while BGM on","stopDelta":1,"seekDelta":1,"playDelta":1}
+{"version":"wechat","case":"hide active effect","playing":true,"stopDelta":0}
+{"version":"wechat","case":"play request while hidden","playDelta":1}
+{"version":"web","case":"mute active effect","playing":true,"stopDelta":0}
+{"version":"web","case":"change vibration while BGM on","stopDelta":0,"seekDelta":0,"playDelta":1}
+{"version":"web","case":"hide active effect","playing":false,"stopDelta":1}
+{"version":"web","case":"play request while hidden","playDelta":0}
+{"version":"android","case":"mute active effect","playing":true,"stopDelta":0}
+{"version":"android","case":"change vibration while BGM on","stopDelta":0,"seekDelta":0,"playDelta":1}
+{"version":"android","case":"hide active effect","playing":false,"stopDelta":1}
+{"version":"android","case":"play request while hidden","playDelta":0}

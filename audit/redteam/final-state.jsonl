@@ -1,0 +1,25 @@
+{"version":"wechat","name":"current admin request success preserves valid behavior","pass":true}
+{"version":"wechat","name":"current admin request denied preserves valid behavior","pass":true}
+{"version":"wechat","name":"current admin request rejected preserves valid behavior","pass":true}
+{"version":"wechat","name":"cancel and reopen isolates old success","pass":true}
+{"version":"wechat","name":"cancel and reopen isolates old denied","pass":true}
+{"version":"wechat","name":"cancel and reopen isolates old rejected","pass":true}
+{"version":"wechat","name":"latest denied request dominates older success (old-first)","pass":true}
+{"version":"wechat","name":"latest denied request dominates older success (new-first)","pass":true}
+{"version":"wechat","name":"blank new submission supersedes pending success","pass":true}
+{"version":"wechat","name":"cancelled administrator response leaves subsequent normal gameplay and undo eligible","pass":true}
+{"version":"wechat","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"wechat","name":"failed reset preserves trusted unrelated records and later retry works","pass":true}
+{"version":"web","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"web","name":"failed reset preserves trusted unrelated records and later retry works","pass":true}
+{"version":"android","name":"completed admin round remains ineligible after disable and undo; next normal round qualifies","pass":true}
+{"version":"android","name":"failed reset preserves trusted unrelated records and later retry works","pass":true}
+{"version":"web","name":"reset of next difficulty cannot turn the current first round own save into an external record","pass":true}
+{"version":"web","name":"pending reset completed after switching and starting another difficulty keeps its own score","pass":true}
+{"version":"web","name":"new round score queued after successful reset must become its new record","pass":true}
+{"version":"web","name":"old save on return-home cannot rewrite another difficulty even when lock completes last","pass":true}
+{"version":"android","name":"reset of next difficulty cannot turn the current first round own save into an external record","pass":true}
+{"version":"android","name":"pending reset completed after switching and starting another difficulty keeps its own score","pass":true}
+{"version":"android","name":"new round score queued after successful reset must become its new record","pass":true}
+{"version":"android","name":"old save on return-home cannot rewrite another difficulty even when lock completes last","pass":true}
+{"summary":true,"root":"/workspace/scratch/7bb2fb03b768/source/relax-block-puzzle","total":24,"passed":24,"failed":0}

@@ -1,0 +1,149 @@
+✖ web: real keyboard callbacks redraw idle input and preserve validation feedback (36.385524ms)
+✖ web: losing a mouse release cancels only input and never changes audio visibility (17.336655ms)
+✔ web: another difficulty's storage event does not invent a first-game record threshold (4.992338ms)
+✖ android: real keyboard callbacks redraw idle input and preserve validation feedback (27.688538ms)
+✖ android: losing a mouse release cancels only input and never changes audio visibility (20.251388ms)
+✔ android: another difficulty's storage event does not invent a first-game record threshold (5.849585ms)
+✔ wechat: cancelling the next drag preserves feedback from the previous placement (17.965529ms)
+✖ web: cancelling the next drag preserves feedback from the previous placement (3.544966ms)
+✖ android: cancelling the next drag preserves feedback from the previous placement (4.444568ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 3
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 241.52045
+
+✖ failing tests:
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:88:3
+✖ web: real keyboard callbacks redraw idle input and preserve validation feedback (36.385524ms)
+  AssertionError [ERR_ASSERTION]: input must invalidate the canvas
+      at file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:97:16
+      at withMain (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:70:11)
+      at async TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:89:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:119:3
+✖ web: losing a mouse release cancels only input and never changes audio visibility (17.336655ms)
+  AssertionError [ERR_ASSERTION]: releasing a secondary button does not release the owned drag
+  
+  false !== true
+  
+      at file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:134:14
+      at withMain (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:70:11)
+      at async TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:120:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:88:3
+✖ android: real keyboard callbacks redraw idle input and preserve validation feedback (27.688538ms)
+  AssertionError [ERR_ASSERTION]: input must invalidate the canvas
+      at file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:97:16
+      at withMain (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:70:11)
+      at async TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:89:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:119:3
+✖ android: losing a mouse release cancels only input and never changes audio visibility (20.251388ms)
+  AssertionError [ERR_ASSERTION]: releasing a secondary button does not release the owned drag
+  
+  false !== true
+  
+      at file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:134:14
+      at withMain (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:70:11)
+      at async TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:120:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:179:3
+✖ web: cancelling the next drag preserves feedback from the previous placement (3.544966ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   active: false,
+  -   active: true,
+      duration: 240,
+      from: 0,
+  +   remaining: 0,
+  -   remaining: 240,
+      startedAt: 0,
+  +   to: 0,
+  +   totalAdded: 0
+  -   to: 10,
+  -   totalAdded: 10
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:198:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { active: false, startedAt: 0, duration: 240, remaining: 0, from: 0, to: 0, totalAdded: 0 },
+    expected: { active: true, startedAt: 0, duration: 240, remaining: 240, from: 0, to: 10, totalAdded: 10 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/input-lifecycle-regressions.test.mjs:179:3
+✖ android: cancelling the next drag preserves feedback from the previous placement (4.444568ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   active: false,
+  -   active: true,
+      duration: 240,
+      from: 0,
+  +   remaining: 0,
+  -   remaining: 240,
+      startedAt: 0,
+  +   to: 0,
+  +   totalAdded: 0
+  -   to: 10,
+  -   totalAdded: 10
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/input-lifecycle-regressions.test.mjs:198:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { active: false, startedAt: 0, duration: 240, remaining: 0, from: 0, to: 0, totalAdded: 0 },
+    expected: { active: true, startedAt: 0, duration: 240, remaining: 240, from: 0, to: 10, totalAdded: 10 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

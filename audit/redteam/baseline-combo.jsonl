@@ -1,0 +1,34 @@
+{"version":"wechat","name":"Pause plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"wechat","name":"Pause plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"wechat","name":"Settings plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"wechat","name":"Settings plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"wechat","name":"pure background repeated hide is counted once","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"wechat","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"wechat","name":"exact 3000ms active window retained and 3001ms expires","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"wechat","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":false,"actual":1,"expected":2,"message":"restored last clear has only 2000ms active age\n\n1 !== 2\n"}
+{"version":"wechat","name":"return home and long home idle cannot carry the previous combo into a new round","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"wechat","name":"new round during hidden state preserves the host pause reason","pass":false,"expected":true,"message":"reset does not replace host lifecycle state\n+ actual - expected\n\n+ undefined\n- true\n"}
+{"version":"wechat","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"web","name":"Pause plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"web","name":"Pause plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"web","name":"Settings plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"web","name":"Settings plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"web","name":"pure background repeated hide is counted once","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"web","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"web","name":"exact 3000ms active window retained and 3001ms expires","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"web","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":false,"actual":1,"expected":2,"message":"restored last clear has only 2000ms active age\n\n1 !== 2\n"}
+{"version":"web","name":"return home and long home idle cannot carry the previous combo into a new round","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"web","name":"new round during hidden state preserves the host pause reason","pass":false,"expected":true,"message":"reset does not replace host lifecycle state\n+ actual - expected\n\n+ undefined\n- true\n"}
+{"version":"web","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"android","name":"Pause plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"android","name":"Pause plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"android","name":"Settings plus background close-modal-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"android","name":"Settings plus background show-first, duplicate hide/show","pass":false,"actual":1,"expected":2,"message":"only 1000ms active gameplay elapsed\n\n1 !== 2\n"}
+{"version":"android","name":"pure background repeated hide is counted once","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"android","name":"foreground idle expires without update or RAF","pass":true}
+{"version":"android","name":"exact 3000ms active window retained and 3001ms expires","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"android","name":"undo after a long pause does not restore an obsolete wall-clock offset","pass":false,"actual":1,"expected":2,"message":"restored last clear has only 2000ms active age\n\n1 !== 2\n"}
+{"version":"android","name":"return home and long home idle cannot carry the previous combo into a new round","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"version":"android","name":"new round during hidden state preserves the host pause reason","pass":false,"expected":true,"message":"reset does not replace host lifecycle state\n+ actual - expected\n\n+ undefined\n- true\n"}
+{"version":"android","name":"revive reached from genuine generated placements resets combo and resumes its new window","pass":false,"actual":1,"expected":2,"message":"Expected values to be strictly equal:\n\n1 !== 2\n"}
+{"summary":true,"root":"/workspace/scratch/7bb2fb03b768/audit/redteam/baseline","total":33,"passed":3,"failed":30}

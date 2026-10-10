@@ -1,0 +1,140 @@
+[
+  {
+    "path": "audit/concurrency/browser-event-source-checks.mjs",
+    "original_probe_sha256": "a98b1b87b24434668f647275e4ccfc6be3d09348a19fa9cd5caf9f837983d302",
+    "packaged_probe_sha256": "d4a5a528bc30ac1dc2f8edf75506d213eceb909143a7f8a5b12f8efb06e7140a",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/browser-fix-check.mjs",
+    "original_probe_sha256": "7ca71698280654caf5300651fb4cd20195e6fa1478df9070d06b0a099295cbb0",
+    "packaged_probe_sha256": "86297aa02e54ebcfd497a3685e12c5c60d23383aae27fe6ccf7cf32bb0b0a6d2",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/browser-natural-event-race.mjs",
+    "original_probe_sha256": "21e8fd956250026c10775cc778fd5be050503e301e2674ab9bc4ba7b15829747",
+    "packaged_probe_sha256": "e13688fa122d476782f068b63c35d2b7a3f6e33f597f01c62a95ca3a3e89e512",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/pending-threshold-equality.test.mjs",
+    "original_probe_sha256": "252119f9545595a345c2c31c4342aba312eb5e5986238447eec214cd61bd64ce",
+    "packaged_probe_sha256": "f113fbf0e379e694a8fa0b20e6cab32917ee70faa4d56fb1d7a3590ef57a0ab0",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/redteam-extra-paths.mjs",
+    "original_probe_sha256": "db995648dd8fb3ee97ae3f7ff8e9f4741d29ab606dbb58bfff225775c657d4cb",
+    "packaged_probe_sha256": "aa1f0657b530106f88ed137434c7cef96467751a51b35c45e656751d6bb1a09d",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/repro-fix-counterexamples.mjs",
+    "original_probe_sha256": "92ec951c77185ef0c9f7bd9a0047ce6a54424d839a683491b1cedb25112d55e4",
+    "packaged_probe_sha256": "296597cd0adfa4506f25bb74cee4db30775c02432072d3fb947581998cf1e2dd",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/reproduce-state-races.mjs",
+    "original_probe_sha256": "7287185c86ae86fe716bf5ddd405de0d5b817ee19b1409ed0cac98916a9f1728",
+    "packaged_probe_sha256": "2212c288e8118953f6ed27d9354054cd87e22ef198bd1e9e41084f62594f3707",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/reproduce-storage-event.mjs",
+    "original_probe_sha256": "6dd17e7eaa4096b2efa1e3a89e5756b24e440d78dcb0f6d71ba7f707e35f728c",
+    "packaged_probe_sha256": "0ac8329ed1c6b683bf5baa86bfec8a5a8fc2bcd8ce50aea6b303a86a65219c35",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/reset-reconcile-boundaries.test.mjs",
+    "original_probe_sha256": "50d9f43336f99ac1c1ea0bb8325375959292d58761926b55a129097e03ebffbb",
+    "packaged_probe_sha256": "b625d4875566d78ef56a55495d3b37328f36fd5023eae6fbb3438bbcb934b17f",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/concurrency/storage-fault-matrix.mjs",
+    "original_probe_sha256": "c6262634da68114d06461c599f17de178c5616f4eed45672ce0b6da303c67812",
+    "packaged_probe_sha256": "52ad67d26af669789d6fbc54b2bcebe4d5cb7059376d5eb115f34df9fa08e0cf",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/core/admin-undo-repro.mjs",
+    "original_probe_sha256": "e75efd45e3ea797d58bc48c5f7f946cf37579102f6b2a71e499e18ea1672beca",
+    "packaged_probe_sha256": "65484ae8d89d818dfa8649d10a12b9d4e9aefbca6603cfea3df03ebc0d4fbed7",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/core/combo-pause-repro.mjs",
+    "original_probe_sha256": "d7be27a2af3d135218173bd9fcc957c658a791f2819ff24224e050e483ac6ac4",
+    "packaged_probe_sha256": "17fb0397dcb24a947ec267a37e80c82cfee3bd033e4fd958a7fbb89d47ad9dfd",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/core/long-game-invariants.mjs",
+    "original_probe_sha256": "001fe88c7b162891c64fef694053fc53538e40a6032304cf9753fb2f69bd05f0",
+    "packaged_probe_sha256": "5d33f2562e0decb20d67465eaabad81e0478dde41c78724fdeea7004f48ba698",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/input/browser-qa.mjs",
+    "original_probe_sha256": "d1e11f742c4d50aa0e335f39b5c93657c2dbb3fa04014ae084666faecafb7b91",
+    "packaged_probe_sha256": "e86b1bccbb70a25c546b412c2968b18783b8e91a3660a4ec6459eb8dba970219",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/input/repro-audio-redteam.mjs",
+    "original_probe_sha256": "08ef2442e47388f52c84aa3cd851b8667d7a6d4ef43bafe4ed0b5b025b588832",
+    "packaged_probe_sha256": "0e8056c4453b262e92485e43c5c7ac7fdc27492c916b14b16b6ca5de3db411b6",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/input/repro-input.mjs",
+    "original_probe_sha256": "bf36be5fdbf8f83d5c7429e32bad1f36be9a3462f709ad436d4ee71fca714e1f",
+    "packaged_probe_sha256": "a0c31feb841a31988ee2339eebf02a3afbc598b0309ced80848d99eb256bc136",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/input/repro-short-viewport.mjs",
+    "original_probe_sha256": "4940e0c899b67b295d3bfbfdca845afda6f927018f06b591f7057e0cdc5e6ecf",
+    "packaged_probe_sha256": "919e615e77d09daae56b5be7cb842f3fa54d74208ec358c9b49fd8600620aa42",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/redteam/adversarial-state.mjs",
+    "original_probe_sha256": "171974d731ce832038852bfa4723be8e4eef210632681cb30d3a13d56b106301",
+    "packaged_probe_sha256": "b9d808ccb96c1aecb104a102db6e243c62aca88713a9b177aa3a998555f7e47f",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/redteam/combo-clock-countercases.mjs",
+    "original_probe_sha256": "dfab2e1ff54625e1f6b43ce9b5ce3fb04fb9a777a6683fc529c61497182e17f2",
+    "packaged_probe_sha256": "9da62a66566e7a6d7667a03b32a273f2d4363701a0364229b743fd69059ea39f",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/redteam/initial-visibility-countercases.mjs",
+    "original_probe_sha256": "15977d60e9efe21eedf1bfeb8a46c36f8cc5a507a893696e9a9cfb283a0e0c10",
+    "packaged_probe_sha256": "adb5bea01bcfdaff9b1e74b726dd79454aad924fa065bd2d78a71bdd7b944043",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/redteam/lifecycle-callbacks.mjs",
+    "original_probe_sha256": "95e55ee7d9c50112f1df53ac98cbec1f7810ddd2803ad9e09ef72662f339ef92",
+    "packaged_probe_sha256": "cc3f6e88349cdcc0d5ff7193d284fc96fb1d14ecbe68cb34243d294762c7c372",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/resource/lifecycle-resource-probes.mjs",
+    "original_probe_sha256": "eb3ec10ecd4b1ffbdda05f4e63a11bdc66525ba63bbffeb36cffe4cb5c40cc33",
+    "packaged_probe_sha256": "618c9676f219e687016f96a432e034cf19a24893515480e1661e4e790f365b6a",
+    "change": "Source, browser and output path plumbing only; existing test assertions preserved."
+  },
+  {
+    "path": "audit/resource/verify-resource-recovery.py",
+    "original_probe_sha256": "ad0b56cbefd5fa4b26b0d930016d9f42841b706a92a3a10f570897ffd5d72198",
+    "packaged_probe_sha256": "742301dfc8377a872b9e706227c7c50d075f9bde9a4c60208ced1d4f79508daa",
+    "change": "Original ZIP is explicit input; output defaults to audit/rerun; existing checks preserved."
+  }
+]

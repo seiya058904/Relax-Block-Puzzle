@@ -1,0 +1,171 @@
+{
+  "audio": {
+    "wechat": {
+      "fileCount": 11,
+      "bytes": 2931409,
+      "files": {
+        "audio/bgm_1.mp3": {
+          "bytes": 700540,
+          "sha256": "a4f847ea29736d6f7208589b9c954a102d0750e6df179f515f8d2b3cf7594afb"
+        },
+        "audio/bgm_2.mp3": {
+          "bytes": 603574,
+          "sha256": "a226fcd5c275d2f0efaad8d48930555dc37efcb0f6d59ea333dab6a61a7f1385"
+        },
+        "audio/bgm_3.mp3": {
+          "bytes": 727081,
+          "sha256": "8ac050830e8b9edc84e78e2e9d8183995f19bee9f5ac689254b9fae45632e1fc"
+        },
+        "audio/bgm_4.mp3": {
+          "bytes": 637533,
+          "sha256": "2c98c5ae5f9f848199c761ec05abedfd41349c245dbdbbe57f0376d748addad3"
+        },
+        "audio/clear.mp3": {
+          "bytes": 34732,
+          "sha256": "918f06a8263b4fbd9f60d457d47a9d1d3b14ac2372c3a208169ce18e81df049e"
+        },
+        "audio/click.mp3": {
+          "bytes": 10732,
+          "sha256": "637ce219b25aa178febbfc979f4da83f153b4b25e1379fc3de10bf1abc92ac98"
+        },
+        "audio/combo.mp3": {
+          "bytes": 42412,
+          "sha256": "d9a0fdd62681528a9be033ec6c9c8d87b743d3122da9cd66a6bbad3699aa61b1"
+        },
+        "audio/combo3.mp3": {
+          "bytes": 44332,
+          "sha256": "8ea535a7ff4c83073025c050f5f35817521a4bd6a3bf629d09f6550e2aa0bc09"
+        },
+        "audio/gameover.mp3": {
+          "bytes": 112849,
+          "sha256": "54397506ee392b91941537981238624d27b5ea98d3a437097a825110ff5e2fa7"
+        },
+        "audio/pickup.mp3": {
+          "bytes": 8812,
+          "sha256": "6830f3b0d20b65db844e39659b3b5490fa87dde52dd0512bd8b975f7f5203787"
+        },
+        "audio/place.mp3": {
+          "bytes": 8812,
+          "sha256": "f8e1f0dff36ea254dcdb633747906d200a13692c69b7b224ffbc7864359ffd6f"
+        }
+      }
+    },
+    "web": {
+      "fileCount": 11,
+      "bytes": 26936009,
+      "files": {
+        "audio/bgm_1.mp3": {
+          "bytes": 7002412,
+          "sha256": "0a36de0f9858c2ad7bfbca5d278421a3fde7bc2f7d6da63803e5e2ecf12843a5"
+        },
+        "audio/bgm_2.mp3": {
+          "bytes": 6031852,
+          "sha256": "a02a78c22ac130806afa5c66a90e042586fde2f288bbee8114719c0c331f8d11"
+        },
+        "audio/bgm_3.mp3": {
+          "bytes": 7267372,
+          "sha256": "bfc7eb6f96e0e09f2a050d5ff6ca464dc8a1705aac0a8b95f9d2212e339b21b4"
+        },
+        "audio/bgm_4.mp3": {
+          "bytes": 6371692,
+          "sha256": "9774a7966291a1b6433774a19b179cef639d6851bd79676c95c23fa0deb44d7b"
+        },
+        "audio/clear.mp3": {
+          "bytes": 34732,
+          "sha256": "918f06a8263b4fbd9f60d457d47a9d1d3b14ac2372c3a208169ce18e81df049e"
+        },
+        "audio/click.mp3": {
+          "bytes": 10732,
+          "sha256": "637ce219b25aa178febbfc979f4da83f153b4b25e1379fc3de10bf1abc92ac98"
+        },
+        "audio/combo.mp3": {
+          "bytes": 42412,
+          "sha256": "d9a0fdd62681528a9be033ec6c9c8d87b743d3122da9cd66a6bbad3699aa61b1"
+        },
+        "audio/combo3.mp3": {
+          "bytes": 44332,
+          "sha256": "8ea535a7ff4c83073025c050f5f35817521a4bd6a3bf629d09f6550e2aa0bc09"
+        },
+        "audio/gameover.mp3": {
+          "bytes": 112849,
+          "sha256": "54397506ee392b91941537981238624d27b5ea98d3a437097a825110ff5e2fa7"
+        },
+        "audio/pickup.mp3": {
+          "bytes": 8812,
+          "sha256": "6830f3b0d20b65db844e39659b3b5490fa87dde52dd0512bd8b975f7f5203787"
+        },
+        "audio/place.mp3": {
+          "bytes": 8812,
+          "sha256": "f8e1f0dff36ea254dcdb633747906d200a13692c69b7b224ffbc7864359ffd6f"
+        }
+      }
+    },
+    "android": {
+      "fileCount": 11,
+      "bytes": 26936009,
+      "files": {
+        "audio/bgm_1.mp3": {
+          "bytes": 7002412,
+          "sha256": "0a36de0f9858c2ad7bfbca5d278421a3fde7bc2f7d6da63803e5e2ecf12843a5"
+        },
+        "audio/bgm_2.mp3": {
+          "bytes": 6031852,
+          "sha256": "a02a78c22ac130806afa5c66a90e042586fde2f288bbee8114719c0c331f8d11"
+        },
+        "audio/bgm_3.mp3": {
+          "bytes": 7267372,
+          "sha256": "bfc7eb6f96e0e09f2a050d5ff6ca464dc8a1705aac0a8b95f9d2212e339b21b4"
+        },
+        "audio/bgm_4.mp3": {
+          "bytes": 6371692,
+          "sha256": "9774a7966291a1b6433774a19b179cef639d6851bd79676c95c23fa0deb44d7b"
+        },
+        "audio/clear.mp3": {
+          "bytes": 34732,
+          "sha256": "918f06a8263b4fbd9f60d457d47a9d1d3b14ac2372c3a208169ce18e81df049e"
+        },
+        "audio/click.mp3": {
+          "bytes": 10732,
+          "sha256": "637ce219b25aa178febbfc979f4da83f153b4b25e1379fc3de10bf1abc92ac98"
+        },
+        "audio/combo.mp3": {
+          "bytes": 42412,
+          "sha256": "d9a0fdd62681528a9be033ec6c9c8d87b743d3122da9cd66a6bbad3699aa61b1"
+        },
+        "audio/combo3.mp3": {
+          "bytes": 44332,
+          "sha256": "8ea535a7ff4c83073025c050f5f35817521a4bd6a3bf629d09f6550e2aa0bc09"
+        },
+        "audio/gameover.mp3": {
+          "bytes": 112849,
+          "sha256": "54397506ee392b91941537981238624d27b5ea98d3a437097a825110ff5e2fa7"
+        },
+        "audio/pickup.mp3": {
+          "bytes": 8812,
+          "sha256": "6830f3b0d20b65db844e39659b3b5490fa87dde52dd0512bd8b975f7f5203787"
+        },
+        "audio/place.mp3": {
+          "bytes": 8812,
+          "sha256": "f8e1f0dff36ea254dcdb633747906d200a13692c69b7b224ffbc7864359ffd6f"
+        }
+      }
+    }
+  },
+  "inputPreserved": {
+    "wechat": true,
+    "web": true
+  },
+  "recovery": {
+    "oldCommandAfterTwoRuns": {
+      "fileCount": 22,
+      "nestedAudioDirectory": true,
+      "bytes": 53872018
+    },
+    "correctedCommandAfterTwoRuns": {
+      "fileCount": 11,
+      "sha256MatchesEveryFile": true,
+      "nestedAudioDirectory": false,
+      "bytes": 26936009
+    }
+  }
+}

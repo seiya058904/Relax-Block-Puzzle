@@ -1,0 +1,341 @@
+[
+  {
+    "mode": "unrelated",
+    "iterations": 37,
+    "critical": 5,
+    "evidence": [
+      {
+        "iteration": 12,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":20,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":20,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 21,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":20,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":20,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 26,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":20,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":20,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 27,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":20,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":20,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 36,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":20,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":20,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "mode": "higher",
+    "iterations": 130,
+    "critical": 5,
+    "evidence": [
+      {
+        "iteration": 51,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":20,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":30,\"master\":0}",
+          "before": {
+            "score": 30,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 30,
+          "best": 30,
+          "starting": 20,
+          "record": true
+        }
+      },
+      {
+        "iteration": 61,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":20,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":30,\"master\":0}",
+          "before": {
+            "score": 30,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 30,
+          "best": 30,
+          "starting": 20,
+          "record": true
+        }
+      },
+      {
+        "iteration": 68,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":20,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":30,\"master\":0}",
+          "before": {
+            "score": 30,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 30,
+          "best": 30,
+          "starting": 20,
+          "record": true
+        }
+      },
+      {
+        "iteration": 95,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":20,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":30,\"master\":0}",
+          "before": {
+            "score": 30,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 30,
+          "best": 30,
+          "starting": 20,
+          "record": true
+        }
+      },
+      {
+        "iteration": 129,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":20,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":30,\"master\":0}",
+          "before": {
+            "score": 30,
+            "best": 0,
+            "starting": 0,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 30,
+          "best": 30,
+          "starting": 20,
+          "record": true
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "mode": "reset",
+    "iterations": 27,
+    "critical": 5,
+    "evidence": [
+      {
+        "iteration": 10,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":100,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 100,
+            "starting": 100,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 16,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":100,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 100,
+            "starting": 100,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 21,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":100,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 100,
+            "starting": 100,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 22,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":100,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 100,
+            "starting": 100,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      },
+      {
+        "iteration": 26,
+        "event": {
+          "oldValue": "{\"easy\":0,\"normal\":100,\"master\":0}",
+          "newValue": "{\"easy\":0,\"normal\":0,\"master\":0}",
+          "committed": "{\"easy\":0,\"normal\":10,\"master\":0}",
+          "before": {
+            "score": 10,
+            "best": 100,
+            "starting": 100,
+            "pending": 1,
+            "screen": "playing"
+          }
+        },
+        "settled": {
+          "score": 10,
+          "best": 10,
+          "starting": 0,
+          "record": false
+        }
+      }
+    ],
+    "errors": []
+  }
+]

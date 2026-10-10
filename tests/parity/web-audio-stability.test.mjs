@@ -66,7 +66,8 @@ for (const [name, target] of targets) {
 
   test(`${name}: browser shim reserves lifecycle callbacks for real page visibility`, async () => {
     const shim = await fs.readFile(path.join(target, 'browser-wx-shim.js'), 'utf8');
-    assert.doesNotMatch(shim, /window\.addEventListener\('blur'/);
+    // Input-only blur cancellation is exercised with real shim events in
+    // input-lifecycle-regressions; it must not emit audio/lifecycle hide/show.
     assert.doesNotMatch(shim, /window\.addEventListener\('focus'/);
     assert.match(shim, /document\.addEventListener\('visibilitychange'/);
     assert.match(shim, /resumeRequestedLoopingAudio/);

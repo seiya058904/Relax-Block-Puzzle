@@ -6,7 +6,7 @@ import InputManager from './game/InputManager.js';
 import SoundManager from './game/SoundManager.js';
 import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
 import { shouldScheduleFrame } from './RenderScheduler.js';
-import { loadSettings, saveSettings, loadBestScores } from './utils/storage.js';
+import { loadSettings, saveSettings } from './utils/storage.js';
 import { BEST_SCORES_KEY } from './game/coreConstants.js';
 
 export default class Main {
@@ -18,14 +18,16 @@ export default class Main {
     this.aniId = 0;
     this.lastTimestamp = 0;
     this.appLifecycleBound = false;
-    this.isPaused = false;
+    this.isPaused = !!globalThis.document?.hidden;
     this.isRendering = false;
     this.needsRender = true;
     this.gameState = new GameState();
+    this.gameState.setLifecyclePaused(this.isPaused);
     this.gameState.onBestScoreUpdated = () => this.requestImmediateRender();
     this.settings = loadSettings();
     this.gameState.setSettings(this.settings);
     this.soundManager = new SoundManager();
+    if (this.isPaused) this.soundManager.handleAppHide();
     this.soundManager.setSettings(this.settings);
     this.renderer = new Renderer(ctx, metrics.screenInfo, metrics.safeAreaInfo);
     this.inputManager = new InputManager(
@@ -48,12 +50,22 @@ export default class Main {
     wx.onStorageChange?.(event => {
       if (event.key !== BEST_SCORES_KEY) return;
       const state = this.gameState;
-      const scores = loadBestScores();
-      const difficulty = state.screen === 'home' || state.screen === 'help' ? this.settings.difficulty : state.activeDifficulty;
-      const best = scores[difficulty];
-      state.startingHighScore = best < state.bestScore ? best : Math.max(state.startingHighScore || 0, best);
-      state.bestScores = scores;
-      state.bestScore = best;
+      if (state.refreshBestScores({ updateRecordThreshold: false })) {
+        try {
+          // The fresh read may already include our own pending write. Only
+          // this event's changed difficulty supplies an external threshold.
+          const previous = JSON.parse(event.oldValue);
+          const next = JSON.parse(event.newValue);
+          const difficulty = state.activeDifficulty;
+          const oldBest = Number.isFinite(previous?.[difficulty]) ? previous[difficulty] : 0;
+          const newBest = Number.isFinite(next?.[difficulty]) ? next[difficulty] : 0;
+          if (newBest < oldBest) {
+            state.startingHighScore = Math.min(state.startingHighScore || 0, newBest);
+          } else if (newBest > oldBest) {
+            state.startingHighScore = Math.max(state.startingHighScore || 0, Math.min(newBest, state.bestScore));
+          }
+        } catch { /* Malformed notifications cannot replace the trusted threshold. */ }
+      }
       this.requestImmediateRender();
     });
     this.start();
@@ -158,6 +170,7 @@ export default class Main {
   }
 
   hasActiveAnimation() {
+    if (this.gameState.viewportBlocked) return false;
     return hasActiveUiMotion(this.gameState.feedbackState) || (
       this.gameState.canAdvanceTime() && !!(
         this.gameState.dragState.isDragging ||
@@ -209,6 +222,7 @@ export default class Main {
     }
 
     this.isPaused = true;
+    this.gameState.setLifecyclePaused(true);
     this.inputManager.cancelInputSession();
     this.needsRender = false;
     this.stopLoop();
@@ -233,6 +247,8 @@ export default class Main {
   handleAppForeground() {
     const wasPaused = this.isPaused;
     this.isPaused = false;
+    this.gameState.setLifecyclePaused(false);
+    this.gameState.retryBestScoreRefresh();
     this.refreshViewport();
     if (wasPaused) this.soundManager.handleAppShow();
     this.requestImmediateRender();
@@ -255,7 +271,7 @@ export default class Main {
 
     // UI motion (button press, modal transitions) advances even while a modal
     // freezes gameplay time; Android scheduling relies on hasActiveAnimation.
-    advanceUiMotion(this.gameState.feedbackState, deltaTime);
+    if (!this.gameState.viewportBlocked) advanceUiMotion(this.gameState.feedbackState, deltaTime);
 
     if (animating) {
       this.update(deltaTime);

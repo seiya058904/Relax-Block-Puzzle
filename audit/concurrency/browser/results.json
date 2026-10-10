@@ -1,0 +1,50 @@
+[
+  {
+    "coordination": "web-locks",
+    "origin": "http://127.0.0.1:46553",
+    "title": "轻松俄罗斯方块",
+    "score": 10,
+    "screen": "home",
+    "stored": {
+      "easy": 2,
+      "normal": 10,
+      "master": 3
+    },
+    "canvas": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "top": 0,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "bootError": "none",
+    "errors": []
+  },
+  {
+    "coordination": "indexeddb",
+    "origin": "http://127.0.0.1:46553",
+    "title": "轻松俄罗斯方块",
+    "score": 10,
+    "screen": "home",
+    "stored": {
+      "easy": 2,
+      "normal": 10,
+      "master": 3
+    },
+    "canvas": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "top": 0,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "bootError": "none",
+    "errors": []
+  }
+]

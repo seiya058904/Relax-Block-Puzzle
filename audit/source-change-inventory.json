@@ -1,0 +1,276 @@
+{
+  "reference_commit": "4d1c30889c95b4458bb16c2704efba885553316a",
+  "original_file_count": 226,
+  "original_files_retained": 226,
+  "missing_original_files": [],
+  "changed_original_files_excluding_hash_manifest": [
+    {
+      "path": "CLOUD-HANDOFF.md",
+      "before_sha256": "0322b8eabaa3dafd242f64931c15e8b1a307d121868606f86521c43fe84a0614",
+      "after_sha256": "a59785c18bee608c1e13ea29cbef0100221c3481eeeb5d4b8d635ff29561e047",
+      "before_bytes": 9805,
+      "after_bytes": 6837
+    },
+    {
+      "path": "docs/PLATFORM_SYNC.md",
+      "before_sha256": "58546a6c532be0fbf858108b56bf2178f763f532923228a6bec0a94f754b961d",
+      "after_sha256": "374d1ad217209ee50a99828661bbcf95ac427fb7493fa3d9f93cae643946dab9",
+      "before_bytes": 2134,
+      "after_bytes": 2417
+    },
+    {
+      "path": "docs/UNDO_BEHAVIOR.md",
+      "before_sha256": "3c095bbedaa3e9f541cfbb5727eb1d2e2fdeb8a757cc8fd6e3bd71ce3204aa68",
+      "after_sha256": "a7c9442a9734f9811bde9fe9310f414dc8e16c3ec561e0f6aa69f275fbedaa08",
+      "before_bytes": 2777,
+      "after_bytes": 2972
+    },
+    {
+      "path": "shared/js/game/ScoreManager.js",
+      "before_sha256": "c4a8505b20c1caf1415415bbf2f2979d6ae4bae799fcf3b4cccd6ab5dd64f0df",
+      "after_sha256": "28219bad4c6355ccb8639648e0fcf3a96f20f1cbc5f701a8fb91ce5aa584b364",
+      "before_bytes": 2187,
+      "after_bytes": 2551
+    },
+    {
+      "path": "shared/js/utils/storage.js",
+      "before_sha256": "e27ccaf66e727672382d0c4f27ef41be717bc002014ffae182eca10e20c9f02f",
+      "after_sha256": "9019bd83f29b2d029700f5bc3b5079c221ec8ec027b95d493b8b7a4a438cf636",
+      "before_bytes": 4403,
+      "after_bytes": 4410
+    },
+    {
+      "path": "tests/parity/game-state.test.mjs",
+      "before_sha256": "b2da0000661c738eb47b4a8d2c87bf5c65c51c56a7049807d93719c6f8776eca",
+      "after_sha256": "e52f9b287a085d095ddbbd7a3d3fbe41807cc21f91cb6fb4667b24c171bc2fa0",
+      "before_bytes": 23595,
+      "after_bytes": 23746
+    },
+    {
+      "path": "tests/parity/web-audio-stability.test.mjs",
+      "before_sha256": "9726b87f587475df6faf6401aa095faab1f73020d9e37a5f758ebaa94cf249db",
+      "after_sha256": "cc9cc773ba2fb707ce0b3d17d14f9ffe6747b240a2005ebc34e1c0a330cc1dcc",
+      "before_bytes": 2409,
+      "after_bytes": 2496
+    },
+    {
+      "path": "we xin xiao cheng xu/js/game/GameState.js",
+      "before_sha256": "e29fde17bdea10662625d9d3951263316b217a64b7824484125b53d847005b32",
+      "after_sha256": "061c433905b660e5c1b5beb042377d69e53d56ed0d878703a26f555d4d772890",
+      "before_bytes": 43421,
+      "after_bytes": 47840
+    },
+    {
+      "path": "we xin xiao cheng xu/js/game/InputManager.js",
+      "before_sha256": "ef3658ab33eae3be6a8c9da9103c92c164e3506395f4d69f62ffabb067dc72ae",
+      "after_sha256": "6e7b7e7b004f9fd619a36a4303d464b472e948114e661874cf6f946b823638ac",
+      "before_bytes": 15406,
+      "after_bytes": 15564
+    },
+    {
+      "path": "we xin xiao cheng xu/js/game/Renderer.js",
+      "before_sha256": "757bd98a330ef4be010a85c3366d6400e566f2f7ae45ca3931616448c028448a",
+      "after_sha256": "8432d5c3952e3c3d094d7e74be36467cf1ca2e964b00bdf9746354ba6848a0d8",
+      "before_bytes": 83076,
+      "after_bytes": 84025
+    },
+    {
+      "path": "we xin xiao cheng xu/js/game/ScoreManager.js",
+      "before_sha256": "f8818526385b017ac55ff481a34a32c446ddda577f05dba967be7ba54cd824a4",
+      "after_sha256": "3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9",
+      "before_bytes": 2251,
+      "after_bytes": 2615
+    },
+    {
+      "path": "we xin xiao cheng xu/js/game/SoundManager.js",
+      "before_sha256": "2ca56505f34bf2108c20f35a2d2ad2ea9fc44a93ccb68bf765258bf90d9878cf",
+      "after_sha256": "d0a342aac71dd3264cb4104ec7b1f6815589afb11ab93c8e0e8368abd2fda203",
+      "before_bytes": 6239,
+      "after_bytes": 6576
+    },
+    {
+      "path": "we xin xiao cheng xu/js/main.js",
+      "before_sha256": "b08530788fcbde6fec6823e4ee12739834efee7234f6ad9cb940d63c280b17fc",
+      "after_sha256": "bdd0ded332b3fe6820e83c7b3edaebaa5efbb79b10e819291c2f3fd792bcc6b2",
+      "before_bytes": 6293,
+      "after_bytes": 6516
+    },
+    {
+      "path": "we xin xiao cheng xu/js/utils/storage.js",
+      "before_sha256": "ec5572d92f1f5b3efa45e3c2c16a0dc97816751a81481d7af3eb6a0f704bc4fa",
+      "after_sha256": "f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f",
+      "before_bytes": 4467,
+      "after_bytes": 4474
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js",
+      "before_sha256": "03b89bc0667d5cd769070e6e8c0f3ee8d2f4a7957fe87fe2b36888c18e493b21",
+      "after_sha256": "b95f92a62fadbfcc92c3d79ffe3800dbbecbb38d59912e2f0181dff49186b6e6",
+      "before_bytes": 15345,
+      "after_bytes": 15882
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js",
+      "before_sha256": "90517d3eb8f91f23d95adf46118eab0fedf3091a0f0f63869c31fecdd87dff51",
+      "after_sha256": "e16e0bdc1eac6e6eb4058182884ad8a8df2c09eb6c8052d99e9a4e4d398d1fee",
+      "before_bytes": 42539,
+      "after_bytes": 46312
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js",
+      "before_sha256": "d5be50fae28bc65f1539c81b9e44fdc5d478bed1fc70b266e8b627010fb502f8",
+      "after_sha256": "a4b7f1d4d1ddc8ede63ffef09dcb2c44aef1932f0c9e59bb2e5314c6a0b5a363",
+      "before_bytes": 16462,
+      "after_bytes": 16739
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js",
+      "before_sha256": "27a02e160769f67e275a530aa67b9612977d3bc129ac63380653ac292f106613",
+      "after_sha256": "f7f71577472c5cb2a8557afe45138e8d8dd5e3f3afb0c662cad095b98b24de26",
+      "before_bytes": 85689,
+      "after_bytes": 86638
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js",
+      "before_sha256": "f8818526385b017ac55ff481a34a32c446ddda577f05dba967be7ba54cd824a4",
+      "after_sha256": "3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9",
+      "before_bytes": 2251,
+      "after_bytes": 2615
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js",
+      "before_sha256": "f3f97ad8bece8f9f353fcbb039471da6cecda155867c7413fa594f6ebe586a80",
+      "after_sha256": "3cd9a941a2fd866de8862bd12535dc5d27010bfbfdef240c6e85ff9fc2fcba60",
+      "before_bytes": 6739,
+      "after_bytes": 6888
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js",
+      "before_sha256": "abcbd8b8e763fede0c335c7fc2969a86eb83343ce2e96a3906d04e7d46919388",
+      "after_sha256": "debf1fb83d23e3286437ab054eeabe2b141cfd23f5de53829d9e1363754347be",
+      "before_bytes": 7473,
+      "after_bytes": 8402
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js",
+      "before_sha256": "ec5572d92f1f5b3efa45e3c2c16a0dc97816751a81481d7af3eb6a0f704bc4fa",
+      "after_sha256": "f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f",
+      "before_bytes": 4467,
+      "after_bytes": 4474
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js",
+      "before_sha256": "89a9b87ff2a3388ee0b32d17b947c89f2d4eba7e684209ef993c1f6d3a8bde5f",
+      "after_sha256": "4236761c1469c60fc0352de6e1ea5fc0916fe5d3f6eb95f453c5b5839b9b6e48",
+      "before_bytes": 15486,
+      "after_bytes": 15987
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/game/GameState.js",
+      "before_sha256": "90517d3eb8f91f23d95adf46118eab0fedf3091a0f0f63869c31fecdd87dff51",
+      "after_sha256": "e16e0bdc1eac6e6eb4058182884ad8a8df2c09eb6c8052d99e9a4e4d398d1fee",
+      "before_bytes": 42539,
+      "after_bytes": 46312
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js",
+      "before_sha256": "d5be50fae28bc65f1539c81b9e44fdc5d478bed1fc70b266e8b627010fb502f8",
+      "after_sha256": "a4b7f1d4d1ddc8ede63ffef09dcb2c44aef1932f0c9e59bb2e5314c6a0b5a363",
+      "before_bytes": 16462,
+      "after_bytes": 16739
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js",
+      "before_sha256": "27a02e160769f67e275a530aa67b9612977d3bc129ac63380653ac292f106613",
+      "after_sha256": "f7f71577472c5cb2a8557afe45138e8d8dd5e3f3afb0c662cad095b98b24de26",
+      "before_bytes": 85689,
+      "after_bytes": 86638
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js",
+      "before_sha256": "f8818526385b017ac55ff481a34a32c446ddda577f05dba967be7ba54cd824a4",
+      "after_sha256": "3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9",
+      "before_bytes": 2251,
+      "after_bytes": 2615
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js",
+      "before_sha256": "f3f97ad8bece8f9f353fcbb039471da6cecda155867c7413fa594f6ebe586a80",
+      "after_sha256": "3cd9a941a2fd866de8862bd12535dc5d27010bfbfdef240c6e85ff9fc2fcba60",
+      "before_bytes": 6739,
+      "after_bytes": 6888
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/main.js",
+      "before_sha256": "abcbd8b8e763fede0c335c7fc2969a86eb83343ce2e96a3906d04e7d46919388",
+      "after_sha256": "debf1fb83d23e3286437ab054eeabe2b141cfd23f5de53829d9e1363754347be",
+      "before_bytes": 7473,
+      "after_bytes": 8402
+    },
+    {
+      "path": "we xin xiao cheng xu-android-apk/docs/js/utils/storage.js",
+      "before_sha256": "ec5572d92f1f5b3efa45e3c2c16a0dc97816751a81481d7af3eb6a0f704bc4fa",
+      "after_sha256": "f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f",
+      "before_bytes": 4467,
+      "after_bytes": 4474
+    }
+  ],
+  "new_source_test_document_files": [
+    {
+      "path": "docs/AUDIT_2026-10-10.md",
+      "sha256": "7b3d1a394402c0432f60d9fb46ca0e23dc0264056a803b33d87aedb813dae2cc",
+      "bytes": 23347
+    },
+    {
+      "path": "docs/TEST_RESULTS_2026-10-10.md",
+      "sha256": "4423cc19f6f420252c3e24689ad704773489be348d4fbf6a59f8450790577e56",
+      "bytes": 13437
+    },
+    {
+      "path": "scripts/restore-android-audio.mjs",
+      "sha256": "3a89822ca968ecad39335b86a22c254db757c6e562be3b4f4d3d30e8f836621c",
+      "bytes": 2118
+    },
+    {
+      "path": "tests/parity/audio-lifecycle.test.mjs",
+      "sha256": "0aa505f84d59a243e9da2c67c736c6d463d492e57c50bc290dbc7d8d3f96c0e4",
+      "bytes": 3276
+    },
+    {
+      "path": "tests/parity/input-lifecycle-regressions.test.mjs",
+      "sha256": "959cc474e77ce3bf90b7c383824cbcbc692c04a85cc5196b0ce04c9a47313586",
+      "bytes": 14588
+    },
+    {
+      "path": "tests/parity/paused-clock-viewport.test.mjs",
+      "sha256": "6ed830f256bd84b2ee3a333a97f53c791d7a8f21dce582e5df501e8a92f193ea",
+      "bytes": 5218
+    },
+    {
+      "path": "tests/parity/reset-reconcile-regressions.test.mjs",
+      "sha256": "3869b371e677d619a56e3cb3a3fa0b6df9de418accfd59dd6df4d801f7296b25",
+      "bytes": 6545
+    },
+    {
+      "path": "tests/parity/state-race-regressions.test.mjs",
+      "sha256": "4e27a48a29dbfb73f9e07059fce747cdc6105357e9f6800ceaf46f56ac75fdcd",
+      "bytes": 9270
+    }
+  ],
+  "unchanged_original_files_excluding_hash_manifest": 195,
+  "manifest": "MANIFEST-SHA256.txt is regenerated separately for all packaged files except itself.",
+  "authority": "shared/js; generated copies produced by npm run sync",
+  "unchanged_shared_modules": [
+    "config/quality.js",
+    "game/Board.js",
+    "game/DragModel.js",
+    "game/FrameInputQueue.js",
+    "game/Piece.js",
+    "game/Presentation.js",
+    "game/RenderPerfStats.js",
+    "game/SafeHitArea.js",
+    "game/coreConstants.js"
+  ],
+  "omitted_recoverable_mirror": "we xin xiao cheng xu-android-apk/app/src/main/assets/audio/",
+  "restoration_command": "node scripts/restore-android-audio.mjs"
+}

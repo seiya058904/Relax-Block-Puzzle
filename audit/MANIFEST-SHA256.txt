@@ -1,0 +1,408 @@
+# SHA-256 manifest for relax-block-puzzle-audited-4d1c308-20261010
+# files: 405; excludes this manifest and the recoverable Android audio mirror
+
+0d3b5932e748f28c225f077dc28ed839b95138144839b0035677ff474ec6551f           164  .gitattributes
+59612e1894114820f14d972825829ca86001acb611d73444d41e42b805ab0bf7           673  .github/workflows/ci.yml
+c76e672f290c88bc04f0f86e0a9c38b585f29c99573088367ab0b7f51d590cf5           855  .github/workflows/deploy-pages.yml
+2e955b2f5780dcfc579df2bab748287e01e8d6930f977ba154cdc5ff9a5048f4          1368  .github/workflows/verify-browser.yml
+2303db81b4d3cc74bff68d05a7cd32e8b9dbbf0ceffee6b32c6a2c65e1787a1b           694  .gitignore
+12a749092795d46f65842aff95be6270dc8aa5d8e6cc902e647b421b4128f40c          8345  AGENTS.md
+a59785c18bee608c1e13ea29cbef0100221c3481eeeb5d4b8d635ff29561e047          6837  CLOUD-HANDOFF.md
+4b76622223da94dc9cc5f7991c875dfb130ff8b248fe1969589aed9d2aa1557a          9578  README.md
+b4ab423c2a44a576e41dab87c38251382d0fff23bec02602c8893e3476b01534        172481  audit/CHANGES.patch
+7eaec446d1b37275ee39f717aba74029852a4e5226d1abb9187fa34e4d3071ef          8348  audit/README.md
+82c84913d60462dbb1519548d51442ccbc1afffafc715795badfbc886da204c7           933  audit/baseline/assets.log
+8b8efe8e571bb1766c294f2d25f629e36266a762e22023cfcca97f85887a0a56         11894  audit/baseline/generation-10000.log
+29a7309017b008b97221b7bc00c8b12c82228ed514dfe8fca8eb2c65045c438b          7198  audit/baseline/new-input-tests.log
+bcde2d54b39029f795aeaa8079ce77f52abde1d7968ec308a2009352ff17af2a         12403  audit/baseline/new-state-audio-tests.log
+8448726d20ee1fd5385d8af4f0d74dec7490c7fec474a9daa2f988b407d7f011         21687  audit/baseline/npm-test.log
+ee8bcd0aa93cdc9841d880e8f9131a4f56dea5e7af22e4de92cf6c34c220a32b         19906  audit/baseline/parity.log
+094bad7dfaed62a3527955893cb67fa3c071bc40115fb733d3d1509eea093cde           253  audit/baseline/verify.log
+a4879df81191e8027f1afc8024d57d76ca8bbe41e0680b6a2087dad7f20eb62d         26725  audit/baseline-input-manifest.json
+d0b4ed8bd1a42839833cd5bda1d0dfe473d3abadddbda648c512859ce142aad8        255655  audit/browser/high-score-android-host/record-1280.png
+440aa8b823bad286038a5ce9fed423a3182ab78c73bfd8f80ed0f0544074b4a1         86737  audit/browser/high-score-android-host/record-390.png
+f9ed6df5ce1904a13529baf189e76ebd5c5d3c5ad6c4e1959e47b1e536664c28        253595  audit/browser/high-score-android-host/stale-1280.png
+36f03931921abc13a84c2eba9287742e35267f2cd88219a96fe87f223f249ded         83800  audit/browser/high-score-android-host/stale-390.png
+003b71b6bcc3e62ba7eb6e6f273ede5f35c92b1c2b16860b612ca9bdd426a14f        258431  audit/browser/high-score-web/record-1280.png
+1a178ca0eb930763d165e49f4199e7557d45777ec75efbe2d3fc72c637406796         88412  audit/browser/high-score-web/record-390.png
+494d4eb57331dcfe158741bcdd052d5bea2332c3cc8442377192104448a5507b        249819  audit/browser/high-score-web/stale-1280.png
+c81569db1f9463b1798b1742cfdf86b7852c31b6098518e6cf3bda5b29c2a2f9         83234  audit/browser/high-score-web/stale-390.png
+3c9903ae35cfcf16b744cdfd4a1d7fcc4261b7358db296983b3bb1abf12422e0           366  audit/browser/playwright-existing.cjs
+570b2df1035782bedacb70615804a2dd5e1b8162f50b5fad822837029d849cee          4345  audit/browser/quality-android-host/quality-results.json
+b15b18d7d97d833d4705e3b41df89e0260992670b50f590b7ffe2b913a32a3e1        321242  audit/browser/quality-android-host/web-1280-playing.png
+7f6e40f4587bd6707cde93de2534659b9b69d7aef31fdb0a4e72366a07904c72        213943  audit/browser/quality-android-host/web-320-playing.png
+f2ed5cd67a444f09b065c02586daa92bbee81606f3569d1aaef8d7d7f3696cb2        599816  audit/browser/quality-android-host/web-390-drag.png
+263e1585bb818f857398e3dc5c586f991811d242a1f311fd17aefb93d8f8e6a8        238795  audit/browser/quality-android-host/web-390-paused-clear.png
+fe583b35f4f902ed9096cfe4a2b63003926e8490602f576a5ecae4492221f371        338875  audit/browser/quality-android-host/web-390-playing.png
+a5f56c5840eca2d229febdb87e6fbaf31ab60ac4285828f8f80e868544bc6b4f        427672  audit/browser/quality-android-host/web-390-triple-feedback.png
+a338ee2fb62c9ce514171e582c5a928ca4c65f763c7fcf118f65a63bdd0a2abf          4333  audit/browser/quality-web/quality-results.json
+3faeaa85d4f9d86f62c591869712bed69188898698c20b6e103033a201e1186d        324147  audit/browser/quality-web/web-1280-playing.png
+5d8b4ceac2544870f8cf21542e1977ad31d08835b60ce1ba4dfed36942b27a26        200914  audit/browser/quality-web/web-320-playing.png
+00a8b7d6daad0e3398de5a2d798e302310ecea60661ced3dff78ef0b0e2e96ab        279101  audit/browser/quality-web/web-390-cross-feedback.png
+f2c2a4346d49c3d924039c30cbf6e3787faa81a712c48bdaa86791b31b12c68c        476357  audit/browser/quality-web/web-390-drag.png
+3c8584842c9d8beffa7030b682059027c42df1eb959454b2a4b7670931c1bd66        155871  audit/browser/quality-web/web-390-paused-clear.png
+546d4277f36e76034d18a9bcb39e111c8507bab17a902bfaf151289b8b2a674f        282869  audit/browser/quality-web/web-390-playing.png
+90022e632943aee340e12eb7c238c4bfe8575a89c6491a1354ece534c37c1b98        328553  audit/browser/quality-web/web-390-triple-feedback.png
+c76d7c4d153e3e1abc7f19ec6b0c687dcdb85a3ec100f979446a342d4eb00e24        497385  audit/browser/quality-web/wechat-host-390-drag.png
+d75bd93c5218176c6353ae426d775c245869e45b720a5f3ceed8b31da1521a1f        136169  audit/browser/quality-web/wechat-host-390-paused-clear.png
+e918f67612cda57655db984e59553bc7319925b7932c9620c6e972e20b84dfc6        252321  audit/browser/quality-web/wechat-host-390-playing.png
+6ff0f2b3661587998f3f0fc7157839917529ca70c35f83602623a968fbe175b9        285309  audit/browser/quality-web/wechat-host-390-triple-feedback.png
+3f96cb52ed4da1c544f3668cb57e738787ac88fa54920af8d73ec9ce2ecb5fc6         11674  audit/concurrency/CONCURRENCY-AUDIT.md
+7b1592a0ad6955f00a78f1531316e4cea23f0cf848c6985de29f65d73641dffd         15110  audit/concurrency/REDTEAM-FIX-REVIEW.md
+19dd5903c3be67debee0795ef929ee0bf80f12c2e3da05b377d4efa32eff1e11           619  audit/concurrency/browser/baseline-natural-event-race.json
+f18ced6ad0c7df37c5dc3fedbffb5c2a07e092779abc9f28a01aff1018bf1ddf          8790  audit/concurrency/browser/event-source-checks.json
+4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945             2  audit/concurrency/browser/natural-event-race.json
+1fc15147ccab20a48587cc5e0ae2a40bdcb70e3e4a533de5ae86f608761e8318        114891  audit/concurrency/browser/r1-indexeddb.png
+1fc15147ccab20a48587cc5e0ae2a40bdcb70e3e4a533de5ae86f608761e8318        114891  audit/concurrency/browser/r1-web-locks.png
+d4a329b93acf242ae3155fba15d663464eb30af6c40f10a1f093dbe10ad86b60           890  audit/concurrency/browser/results.json
+d4a5a528bc30ac1dc2f8edf75506d213eceb909143a7f8a5b12f8efb06e7140a          5220  audit/concurrency/browser-event-source-checks.mjs
+86297aa02e54ebcfd497a3685e12c5c60d23383aae27fe6ccf7cf32bb0b0a6d2          4923  audit/concurrency/browser-fix-check.mjs
+e13688fa122d476782f068b63c35d2b7a3f6e33f597f01c62a95ca3a3e89e512          4931  audit/concurrency/browser-natural-event-race.mjs
+f113fbf0e379e694a8fa0b20e6cab32917ee70faa4d56fb1d7a3590ef57a0ab0          2082  audit/concurrency/pending-threshold-equality.test.mjs
+aa1f0657b530106f88ed137434c7cef96467751a51b35c45e656751d6bb1a09d          3876  audit/concurrency/redteam-extra-paths.mjs
+296597cd0adfa4506f25bb74cee4db30775c02432072d3fb947581998cf1e2dd          2197  audit/concurrency/repro-fix-counterexamples.mjs
+2212c288e8118953f6ed27d9354054cd87e22ef198bd1e9e41084f62594f3707          4765  audit/concurrency/reproduce-state-races.mjs
+0ac8329ed1c6b683bf5baa86bfec8a5a8fc2bcd8ce50aea6b303a86a65219c35          2994  audit/concurrency/reproduce-storage-event.mjs
+b625d4875566d78ef56a55495d3b37328f36fd5023eae6fbb3438bbcb934b17f          4768  audit/concurrency/reset-reconcile-boundaries.test.mjs
+52ad67d26af669789d6fbc54b2bcebe4d5cb7059376d5eb115f34df9fa08e0cf          4256  audit/concurrency/storage-fault-matrix.mjs
+216d83df4be7f0284f11f12741a1cd4752b889ce579279c74c3bdb23260ce77d         10740  audit/core/CORE-AUDIT.md
+a420d856cdb06b956baa3c5cbde86232184710599bea083be45c1526377a4356           680  audit/core/admin-undo-baseline.log
+65484ae8d89d818dfa8649d10a12b9d4e9aefbca6603cfea3df03ebc0d4fbed7          3288  audit/core/admin-undo-repro.mjs
+7646739f7557399bad813dd738267bc170eb1b2d50de590cf1bcd690db91e8a8          1452  audit/core/combo-pause-baseline.log
+17fb0397dcb24a947ec267a37e80c82cfee3bd033e4fd958a7fbb89d47ad9dfd          1819  audit/core/combo-pause-repro.mjs
+1e28cd7d442b03d9579b410ad8ac64f45953f7bd131479039d7c1a9229254f6e         38487  audit/core/long-game-baseline-results.json
+5d33f2562e0decb20d67465eaabad81e0478dde41c78724fdeea7004f48ba698         11886  audit/core/long-game-invariants.mjs
+1e28cd7d442b03d9579b410ad8ac64f45953f7bd131479039d7c1a9229254f6e         38487  audit/core/long-game-results.json
+3ff9cfdee3329b27142b1300f9faf579af8da4980bc8d8a9dac543a7c3f73465         11613  audit/cross-platform/CROSS-PLATFORM-AUDIT.md
+778b193a252520c7d77bc7653749d41121f318f858b50ffbd42f91551fec0652          2823  audit/cross-platform/entry-config-check.json
+4251b2b28832953e1821790bf2aec967fa91d969d68975e10c163b34b017ff45          5643  audit/cross-platform/inspect-boundaries.py
+6d4aca8a79c52769cf48eaada7eb8970b7532691b442ad2c25c7c40cef0ed5ee          8752  audit/cross-platform/inventory-check.json
+82c84913d60462dbb1519548d51442ccbc1afffafc715795badfbc886da204c7           933  audit/final/assets.log
+fafcb7e0bfb332b6e490b4a24779fc7f7f4c1ce852b9e1211f08c8ff99d08f4e            86  audit/final/audio-restore-first.log
+fafcb7e0bfb332b6e490b4a24779fc7f7f4c1ce852b9e1211f08c8ff99d08f4e            86  audit/final/audio-restore-second.log
+18d30686629ced4a8c9c33b9b69dcddc04366fa826a216964b92098504f4d32d           750  audit/final/browser-high-score-android-host.log
+18d30686629ced4a8c9c33b9b69dcddc04366fa826a216964b92098504f4d32d           750  audit/final/browser-high-score-web.log
+7d23e51c8e224b782a62ec53977efe30820836e65ac21de540d6f40534081c0a           981  audit/final/browser-quality-android-host.log
+04eafc1dfe3f69896fe47c2477118e7648c93acc8373951cbcbae9549c1efdb3           981  audit/final/browser-quality-web.log
+7b7bf307bb0c0333e15b44541ad6102ac39a5b34e2881b15a04029606d81c609           714  audit/final/environment.json
+884de87f1c558d1da7319065863efe591a6806e319115339ac28f4d3af95b798         11892  audit/final/generation-10000.log
+d58393abf058e81934fb908739460ad69884e70acf13f97f87a13749a8412883          1409  audit/final/initial-hidden-regressions.log
+7921addcdf6d9fb0e810bd2610667901507cd9e39ccb10f88f493f7687018de5           271  audit/final/long-game-invariants.log
+7f68f7b668799ebb06aff6667bec92d280d1a72d05be72e3d8fd79c7676e22a6         27494  audit/final/npm-test.log
+854caac0020a6aff8785bb51065dd0a62880a189fd9eb282028ed19b52b31f3f         25682  audit/final/parity.log
+094bad7dfaed62a3527955893cb67fa3c071bc40115fb733d3d1509eea093cde           253  audit/final/verify.log
+831575eb4305ffafb025d07e4b61d4374774ac2b8ffb5dfd54235c05b4119da7         10410  audit/input/BROWSER-QA-REPORT.md
+77ff9f2b89ffa0d996bc06c9ec4a06de9cc8e8ba1902b918a6413734fe177753         15488  audit/input/INPUT-RENDERING-AUDIT.md
+5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145        436208  audit/input/browser/baseline/input-home.png
+916498da232c29b61c3bf100887bce0bb2c24632e369f02e10b44714c97b7422        327811  audit/input/browser/baseline/mouse-lost-release.png
+8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688        126279  audit/input/browser/baseline/native-keyboard-invalid-confirm.png
+f28e7853db4287f9f6c7df554445cd9f260268d17d8d6b72e37a250abe027cc1        123926  audit/input/browser/baseline/native-keyboard-typed.png
+8097f6e70a5f36e2e94d9f2a97ef235c7517b518bdedbede2528ccb41fdd789f         30786  audit/input/browser/baseline/report.json
+0cfa7ff9e80b016a386415b76c019c447ce690504a10ac5d4e2f328d117785e7        321290  audit/input/browser/baseline/viewport-1280x900.png
+9e271cd0c62508d4dd50c73799db4b6af37bf2cf782bd27287628d46f2b617b1         82021  audit/input/browser/baseline/viewport-320x568.png
+511a00d7319273df5a038b4725e81cee175e371e3e0f42e17fc4767a9317efa3        120904  audit/input/browser/baseline/viewport-390x844.png
+ec1931f9cf8c18a42a292f702b3f856f07deaab34ed987541eaee71a9b4b2315         63602  audit/input/browser/baseline/viewport-568x320.png
+c98b11f9aad8d7a0d8b878691cdbcbef8b54eb655f86e2fa3bca1cce212699c0        124232  audit/input/browser/baseline/viewport-640x360.png
+47bfe1e5b9c5075cbede4edfea44287ef16a494b8d2374944a564bc89f68fc89        117683  audit/input/browser/fixed/fallback-clear-resumed.png
+1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d        100888  audit/input/browser/fixed/fallback-frozen-clear.png
+5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145        436208  audit/input/browser/fixed/input-home.png
+ac0ff37e565355aba9d7a8dc17246a121a4cee662c2289311acda8a1b8999386        321683  audit/input/browser/fixed/mouse-lost-release.png
+52b3967b52c3bbaa326d2884338315dc97247e1e78d61b94b5bc4610555bd1b7        126992  audit/input/browser/fixed/native-keyboard-invalid-confirm.png
+8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688        126279  audit/input/browser/fixed/native-keyboard-typed.png
+86bde282e3077290b6348cd9d2ea9321063d08a797ddc37d3c0a87adc00b51fb         83132  audit/input/browser/fixed/report.json
+6441d04dc64c4a3e30d1a54d394d9dfcc6e288de27a6212d94ede7c024687c2a        320851  audit/input/browser/fixed/viewport-1280x900.png
+c49428014f64e03c87fa5e80eaf2e447d9529b49cd18b4fc14904a3ab52e7003         81067  audit/input/browser/fixed/viewport-320x568.png
+ec24b16fbd872d3a50063dd013509cb886d33675deca8395ab280cd0c162a4b4        121746  audit/input/browser/fixed/viewport-390x844.png
+81450486c4701abf9f5018b279806fe362cec5698593f3d860f46dfdfe2c2f1e        120437  audit/input/browser/fixed/viewport-568x320-restored.png
+1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d        100888  audit/input/browser/fixed/viewport-568x320.png
+71bf1a00b5b0fd409e6c83c52019b2d81a7187a3bce4f565c96f15848d11cb25        125151  audit/input/browser/fixed/viewport-640x360-restored.png
+2c3aba2ba80e07b00734fd7e1124f360ec04610886ecf97da09e8d10893f40c3        122253  audit/input/browser/fixed/viewport-640x360.png
+47bfe1e5b9c5075cbede4edfea44287ef16a494b8d2374944a564bc89f68fc89        117683  audit/input/browser/fixed-android-host/fallback-clear-resumed.png
+1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d        100888  audit/input/browser/fixed-android-host/fallback-frozen-clear.png
+5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145        436208  audit/input/browser/fixed-android-host/input-home.png
+f6943fd94cea9e805b15fa68f9480c185d2f5fa929a643a1de74eac72dd2d298        126566  audit/input/browser/fixed-android-host/keyboard-resize-recovered.png
+8f7a5fb491f778b7b17edc7d44e2090c7f2292f251905db8a45257b6e1e6528c        318461  audit/input/browser/fixed-android-host/mouse-lost-release.png
+af78ef507f998090613663afaee419b347956c8744dc2154e397103679c6c911        127316  audit/input/browser/fixed-android-host/native-keyboard-invalid-confirm.png
+8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688        126279  audit/input/browser/fixed-android-host/native-keyboard-typed.png
+0f7f420e343aa2895564542137795ef0c932f44d51455b9754223a29bd80c033         83641  audit/input/browser/fixed-android-host/report.json
+3d6de8d84d9015fd98c8a7c3bf1c13d207cadea6f6f19dd02e46fa5a3a45eaad        322065  audit/input/browser/fixed-android-host/viewport-1280x900.png
+b11428d26bf6726e8c2e2e8e492e8b32e6d3f8c8419743fc4d7cfa00ff119b3e         83287  audit/input/browser/fixed-android-host/viewport-320x568.png
+4ddd24e87ace607cd698a2261bbca38fb4d5035f6b343b4e7d65440bb775965a        122038  audit/input/browser/fixed-android-host/viewport-390x844.png
+72fc7ec83e106b75f2f6721005b2096f93086ee8dc5b9d3664646d8a59cc4ad2        122366  audit/input/browser/fixed-android-host/viewport-568x320-restored.png
+1111f37dff45f3963e1a305c27f4da3dfebd49672828e3ffa5704a5150ea113d        100888  audit/input/browser/fixed-android-host/viewport-568x320.png
+8f6c026a2fef98d9613c02623cf90284f42b7a1b3b4da0347f2b723f7e631d69        122699  audit/input/browser/fixed-android-host/viewport-640x360-restored.png
+2c3aba2ba80e07b00734fd7e1124f360ec04610886ecf97da09e8d10893f40c3        122253  audit/input/browser/fixed-android-host/viewport-640x360.png
+5d4891c98d9ac58b08b137d1fa23c4df1b6ee556aecfbb706bcd29b9b5059145        436208  audit/input/browser/fixed-keyboard-resize/input-home.png
+f6943fd94cea9e805b15fa68f9480c185d2f5fa929a643a1de74eac72dd2d298        126566  audit/input/browser/fixed-keyboard-resize/keyboard-resize-recovered.png
+c68f5c53effab6747827e3cd774430dcfebbdb7c7bb9d8303cf5a3dc9d24d28d        321786  audit/input/browser/fixed-keyboard-resize/mouse-lost-release.png
+af78ef507f998090613663afaee419b347956c8744dc2154e397103679c6c911        127316  audit/input/browser/fixed-keyboard-resize/native-keyboard-invalid-confirm.png
+8646004084bdd539aa415d25049ee6fc70ffa10a037fbf7944176e5edff47688        126279  audit/input/browser/fixed-keyboard-resize/native-keyboard-typed.png
+77a397653747d28cc3f7be35da42fe82f24ad9347c818b4628e1b3328258cad8          6043  audit/input/browser/fixed-keyboard-resize/report.json
+e86b1bccbb70a25c546b412c2968b18783b8e91a3660a4ec6459eb8dba970219         16727  audit/input/browser-qa.mjs
+40735503180461daa89d5bf668e9c958a68fc61d24f5cd7aade5718c0fb3af70          2303  audit/input/existing-targeted-tests.log
+058968b096c3391bc9d3d32ee4da59bf78a363643bcfd71a625ffa68579ce923           978  audit/input/repro-audio-redteam-results.jsonl
+0e8056c4453b262e92485e43c5c7ac7fdc27492c916b14b16b6ca5de3db411b6          2133  audit/input/repro-audio-redteam.mjs
+2888a6f51df4d9da8e8dc275819d23dedcea8a7658a346c53979b50289602b69          1720  audit/input/repro-input-results.jsonl
+a0c31feb841a31988ee2339eebf02a3afbc598b0309ced80848d99eb256bc136          8525  audit/input/repro-input.mjs
+9c7ceccfc594adb83386ed49a8b8e121826defc59ca1b1d567133d9fd5c1d33d          1531  audit/input/repro-short-viewport-results.jsonl
+919e615e77d09daae56b5be7cb842f3fa54d74208ec358c9b49fd8600620aa42          1708  audit/input/repro-short-viewport.mjs
+75d5246d7f9de157072f26f0cf90e39851d1df61e9bb9e83fd1e1933ed7b4095           378  audit/patch-verification.json
+dafd182a2b0f73028681c413beda40b9ef70180f30ad503d8fe67da5c8e21804          8256  audit/probe-portability.json
+64191a78476ceb16323e4f227b1490c52abdd3d8cb71d29178c0b2bd8cf1c8bf          4605  audit/redteam/COMBO-CLOCK-REVIEW.md
+e3b10f0d884633c57d32ea855200e09d7237ac92bdb8c2732c1f0eeb130fc8c3          9646  audit/redteam/RED-TEAM-QA.md
+b9d808ccb96c1aecb104a102db6e243c62aca88713a9b177aa3a998555f7e47f         11177  audit/redteam/adversarial-state.mjs
+392c9305da4f688fe73b0ee88fc65ac9786e4c21d9709a4c8da1865753abe339          6270  audit/redteam/baseline-combo.jsonl
+5ae1d71488380b6c9d4773ba1c79d6ead02f55a7638773848bc8598cfe83b61f          4044  audit/redteam/baseline-initial-visibility.jsonl
+7aecb11ffe61d1109c5ad7fc9c9d0436d5d2df8e2c1d27cc1c772de96b31e8f6          1807  audit/redteam/baseline-lifecycle.jsonl
+d510ed0564a101717ef26912fa3005ebf82b2073b78bdff7fdbb8ca0c87a26f5          4336  audit/redteam/baseline-state.jsonl
+9da62a66566e7a6d7667a03b32a273f2d4363701a0364229b743fd69059ea39f          9676  audit/redteam/combo-clock-countercases.mjs
+d35360a34810e4506457c6b253d90f25da1505d21665cb6d53cb98ef9c616b9a          3898  audit/redteam/final-combo.jsonl
+4c819943534f8f67d9e9ba689b15f5d3c8d82d0657264de7027009a82ebe3160          2440  audit/redteam/final-initial-visibility.jsonl
+3eb34d8db6fd32fea5d454ff73fc4c39e15b47da211257fba626f8b86d8d9abc           801  audit/redteam/final-lifecycle.jsonl
+ee80ced0fd6e174f1bbccf12b39f4ad58cb70b2e5d4c9dd99bb0060e5b64f251          2831  audit/redteam/final-state.jsonl
+adb5bea01bcfdaff9b1e74b726dd79454aad924fa065bd2d78a71bdd7b944043          8664  audit/redteam/initial-visibility-countercases.mjs
+cc3f6e88349cdcc0d5ff7193d284fc96fb1d14ecbe68cb34243d294762c7c372          8615  audit/redteam/lifecycle-callbacks.mjs
+3eb34d8db6fd32fea5d454ff73fc4c39e15b47da211257fba626f8b86d8d9abc           801  audit/redteam/patched-lifecycle.jsonl
+245da6d889e7def9bcf3763eb27435dfe68a7fe282bf05440e4937175d7d5073          2561  audit/redteam/patched-state.jsonl
+ec67d91931becde904c87b84bd7221c6aa62e5ed6ecfc56e43d395b1144f2a31          3069  audit/redteam/pre-unrelated-reset-fix-state.jsonl
+e8c2b186ebcc5f861f2003092eaea225d3e64129f247ae31c02d3ea68c266012           262  audit/redteam/reviewed-initial-visibility-sha256.json
+0a66e2e3fa69b26a952dab8d74925e981de957136b9d0b25130cf4911374e17d          1759  audit/redteam/reviewed-source-sha256.json
+9e939455924d1f435db89ef0cb12f5f322bf7d70710cec5ec4267f669e467c1b         14047  audit/resource/RESOURCE-AUDIT.md
+5c5919f32ef65c9bca62a930cc01d62c85713c71d4f2b7d421f1f26826689e70          1209  audit/resource/audio-before-after.json
+1f49272f66f96210aef6d0c9d20683ac29d35a026b30be6d0a3f98f34424b9f2          6690  audit/resource/audio-codec-results.json
+f3f97ad8bece8f9f353fcbb039471da6cecda155867c7413fa594f6ebe586a80          6739  audit/resource/baseline/android-SoundManager.mjs
+f3f97ad8bece8f9f353fcbb039471da6cecda155867c7413fa594f6ebe586a80          6739  audit/resource/baseline/web-SoundManager.mjs
+2ca56505f34bf2108c20f35a2d2ad2ea9fc44a93ccb68bf765258bf90d9878cf          6239  audit/resource/baseline/wechat-SoundManager.mjs
+c75e5bda4f1f592fe75effa196b48c87e27107dc787993d2008aea4cc81247a9          2235  audit/resource/lifecycle-resource-before-initial-hidden-fix.json
+618c9676f219e687016f96a432e034cf19a24893515480e1661e4e790f365b6a          9758  audit/resource/lifecycle-resource-probes.mjs
+8f52c65d7e3af00ef49f3ca9ffc9b96eb911617e8d94c477b43993c683171f8f          2537  audit/resource/lifecycle-resource-results.json
+0b57d151480e86a9f942f2ce635a957b0c901bb1789bf14c2434eba64f265cee          5755  audit/resource/resource-recovery-results.json
+742301dfc8377a872b9e706227c7c50d075f9bde9a4c60208ced1d4f79508daa          4123  audit/resource/verify-resource-recovery.py
+9b18bc64176854711213bf7d319ec33479e1a17fd9d7c82ffa8dd190d4d4f151         12303  audit/screenshots.json
+732a7eb7c40c5dc1d5cef933dc98174083cce854ee744ad373720c03fc916df1         11838  audit/source-change-inventory.json
+dd9260070aa04813bf36307ffb7b719b3acc6f5c67a2dfc208be16da993cbc9e           752  audit/source-path.mjs
+458d24588775e199c428bf96f7f3332eafd6849857fbe5216bb75d837b173556          1927  config/platform-manifest.json
+3808396f79e963f7cb0d7974f83f9ba90f4df5d896c8324b7547eab349972182           905  config/resource-map.json
+7b3d1a394402c0432f60d9fb46ca0e23dc0264056a803b33d87aedb813dae2cc         23347  docs/AUDIT_2026-10-10.md
+80dcb3a0e24d95b30da58ead15bf981706dde5bf051a7bb24bba40372b30fa12          9782  docs/FEEDBACK_CONTRACT.md
+79e824c8a370f82364e456c3f936279697f5a50625cb0e9e62318e811a6c1c6c          1376  docs/LAYOUT_RESPONSIVE_CHECKLIST.md
+3649d1fbc4d6d3d7d9d529842f56dc7e51127b197bb96770a4abf75635328257         42884  docs/PARITY_AUDIT.md
+374d1ad217209ee50a99828661bbcf95ac427fb7493fa3d9f93cae643946dab9          2417  docs/PLATFORM_SYNC.md
+c77c1f708ea5ed097461a198e4d73e083d1ba1057b1eb910dcf99694ab0c1e50         18294  docs/TEST_BASELINE.md
+4423cc19f6f420252c3e24689ad704773489be348d4fbf6a59f8450790577e56         13437  docs/TEST_RESULTS_2026-10-10.md
+a7c9442a9734f9811bde9fe9310f414dc8e16c3ec561e0f6aa69f275fbedaa08          2972  docs/UNDO_BEHAVIOR.md
+f6e350a8b857b5afef692ad9090d41b13fe9c7e1a38ea00a8e38e201e172a329         41302  docs/UNIFIED_SPEC.md
+1e89a15970ae1d6488a66e7f3db60e7643ada3941b1f71c825076b1e2e0213aa          9941  docs/superpowers/plans/2026-07-16-wechat-first-sync-ux.md
+1d8d4ff8ac220f52f0b0776d5f480b831dfa2fbf98122a7ed8539bf1368200b5           716  package.json
+cd5208abbb9693f87f13ca4d37a18be9d3798c67769a6e406c83c4a72782a797         48280  patches/android-working-tree.patch
+84ae38942d393b155a8b95404b225917558735662d5f7adc5ea00f1043761d1c          3840  scripts/platform-inventory.mjs
+3a89822ca968ecad39335b86a22c254db757c6e562be3b4f4d3d30e8f836621c          2118  scripts/restore-android-audio.mjs
+92f015514e54aae22263278a0f581ff905778884ec6e007db78dec5d8fefa40e         12296  scripts/simulate-piece-generation.mjs
+f30eecd93d27d3796365ddc280064cba4d34bf6afac868be7391df5e6d289ed7          1989  scripts/sync-platforms.mjs
+920bd6d1a3121091f4a4967308d61aefa23a94dd5da3a380b4962bcb16561bb7          1132  scripts/verify-apk-assets.ps1
+536ec10411500a722a10aca2e7523c48ef037fbb64306f87a242d1458de88c85          3241  scripts/verify-assets.mjs
+eab8257cdf305f391883ad229e8cd60338beec0f2ef6a8b6a55035c311627957          1182  scripts/verify-platforms.mjs
+9aa869262b057ee657233ccf70c5ecef35b653f3296f125e7c58cc072271c7f2            81  server/.dockerignore
+032510e395b9aa758941132471d796ab509fee9d5913dcb8b67d782b50bc6ada            41  server/.gitignore
+e873356df225a09cae2db61a6ef823523362cba7076c85cac47f5134109faf54           365  server/Dockerfile
+07002152efc1e8c30f1fafce61392cfad72d83e7c0f3c29ee25959a2532184b3          5290  server/README.md
+35815f2db7e24afb9d2f3970ccc0b244d3b5e1e2df63cde041d6b31ad220185e          6876  server/app.js
+e0e0031da0b3043ad1e23f38285b2b8356dd0fe3b7f3b3e562f7a5ec2bcd4e4e         29387  server/package-lock.json
+20d3cac75e0ed741d6fc290a7dce047f80ddae1bad06ffb7140bc817be9b34b4           343  server/package.json
+15d0ca027bc20da9ef3d6ceb25108614a9885696e23fad8da7949c76adcbe7f6           204  server/server.js
+07d6e65930c4d4112c1051834340a89ba31154f1ded0f26d03de279658ff9d2d           719  shared/js/config/quality.js
+79896ac23d9c8e6423c7e6d0ba1bcf3b9842313c13b195e1ccaae991d8f0cb63          4660  shared/js/game/Board.js
+4bb93143cd6ca359d96c3c0a93e5b2a2fffe36c7019f9124d42d18e39ddf9853          4352  shared/js/game/DragModel.js
+801014c60add1361e3437eac073eac5d3e8eed55e7b08d5b3901720a7478cf7b           646  shared/js/game/FrameInputQueue.js
+cc90de8ebe529a45dc796509cd5f4377533a73755d7e49991f12dc992f1b75b5         23343  shared/js/game/Piece.js
+62c619c2f756ffd471459aa6c3a9f0a793d07ca069001e7af66e33b9f5be4b8a          5097  shared/js/game/Presentation.js
+3793c088f8b6aed088c02670e4eca45b3f205f31ad923f553e004e5cdf627bbc          4000  shared/js/game/RenderPerfStats.js
+5894e697b6c752af156c9dda97cd023ea7713664834b531ae11d792ffecf9f51          1843  shared/js/game/SafeHitArea.js
+28219bad4c6355ccb8639648e0fcf3a96f20f1cbc5f701a8fb91ce5aa584b364          2551  shared/js/game/ScoreManager.js
+772ecc7f1b34151e5e6cae7f5b5e19078591702989ce51a648b101becf6525a1           306  shared/js/game/coreConstants.js
+9019bd83f29b2d029700f5bc3b5079c221ec8ec027b95d493b8b7a4a438cf636          4410  shared/js/utils/storage.js
+666c65e207e756cc84bcb51891afb09613e79c3195692d1c898b6fdb736eb14b          7665  tests/browser/android-quality.mjs
+8f3c5848ccd3f53e2bd3c91fce1baf2303a576bd035d31f38a451ce42a9ace58         11136  tests/browser/high-score.mjs
+09dfccaf4bb7da3a55c914e6b54fd317cfc9d74127b2836eb8c4c2d103ac8d61         16412  tests/browser/quality-flows.mjs
+d26cfd61584341014e068c008097f28d822db348fd83be133d063366ea68fa97          6968  tests/browser/quality.mjs
+d2d355ac80a3dd066c42b2bd7632d9f411a4a55e963cf560402b212473749d96           655  tests/fixtures/core-vectors.mjs
+c61afc235cb53a53b965b4c05e57ee791cd7f1d5a6bae54705208a4f7a90e421          5019  tests/helpers/platform-mocks.mjs
+b063c0266ca36a89ccb750522d6322d19b9d99dbbee46a93fda6161feee5186e          2997  tests/helpers/version-adapter.mjs
+f83acd771c7df8f601cba29f99707a150f24ca065751b5c53648b953b62d54e9          1616  tests/parity/android-lifecycle.test.mjs
+11e357b9beba8c3e2c68c63aef4be4668ae3652af3d6950192983e3c8f006f3c           541  tests/parity/apk-asset-boundary.test.mjs
+0aa505f84d59a243e9da2c67c736c6d463d492e57c50bc290dbc7d8d3f96c0e4          3276  tests/parity/audio-lifecycle.test.mjs
+c37366804d960bcdf02432f6379d787450df79c9e09828e7afed8d40c6bb4e79          3396  tests/parity/board.test.mjs
+6997bd122dea9638d3b5c14d1839ac13a0556b8c4c9d84dc3659fb196e63257f         13504  tests/parity/feedback-state.test.mjs
+e52f9b287a085d095ddbbd7a3d3fbe41807cc21f91cb6fb4667b24c171bc2fa0         23746  tests/parity/game-state.test.mjs
+ca800afa3e0b83ca9e3d3a7d017d4d739f3e483c790d40dba8626ddbe481da99          5143  tests/parity/high-score-monotonic.test.mjs
+1de84be7e21a8f08f578bed1cd9eea7a7c2ff986f12a3c04fb48329023d79dff          2256  tests/parity/input-feedback.test.mjs
+959cc474e77ce3bf90b7c383824cbcbc692c04a85cc5196b0ce04c9a47313586         14588  tests/parity/input-lifecycle-regressions.test.mjs
+52866fe7617c7daf2f65ce4bbc9781de31cbecedf0b19877eb1a238bfde2a5bc         13439  tests/parity/layout-metrics.test.mjs
+4c9964c6acf1029e1d7cf0843a3470ec4263cefb08b3484796ff564b8956ab8b          9077  tests/parity/main-runtime.test.mjs
+62469ce45fca91641ea5ee10d3550e3576f2764da8b2426f5f5a31be88e3a06f          5887  tests/parity/modal-closing-input.test.mjs
+3d052afb562997bbdab88f9889ec67deb67e49723138a48fadf825e5baf70820         10766  tests/parity/modal-layout.test.mjs
+372dea28348c6f624ecacc4116758fc386c1322e93c0fcc931d72e6ee45eb7bf           596  tests/parity/module-loading.test.mjs
+6ed830f256bd84b2ee3a333a97f53c791d7a8f21dce582e5df501e8a92f193ea          5218  tests/parity/paused-clock-viewport.test.mjs
+03aee2eec6a385f47841e1137d0573238a7e312f8b97c2d429c9ff7fa10b297f         10655  tests/parity/piece-family-sampling.test.mjs
+d945c52c7085a26ea4d35ac921280dff19a8624b6bf492469af9ac0f4fbc477e           755  tests/parity/piece-generation-simulation.test.mjs
+24d5b2a226fda5a91ccb6966832f7febcfb09696cb9c21b71819b5f0ce5e80af          4845  tests/parity/piece-generation.test.mjs
+a82ef408ac1b4f5675208f147050dda3285e56f6acc63f1b1413848995b6cc73          1293  tests/parity/platform-manifest.test.mjs
+4df7aaeee51bbda6154eb6606dadf20c097dee1ded69d77b00d810be9e12d1c1          9996  tests/parity/presentation-upgrade.test.mjs
+d3498a5af3edad3d50b2d557236f1dc2cdc2b4c6c260bfd38a03f27fea0a5850          2999  tests/parity/rack-history-consistency.test.mjs
+539f6c45ed15fe5b528dc3f511f0bd7ac6b8c52f4315dd0de7f751b80b97de39          2337  tests/parity/rack-hit-area.test.mjs
+1b706653bd5e1cbd56dd0a8c237752720078d59f8acdd81993004cfe3f22843e           910  tests/parity/render-scheduler.test.mjs
+3869b371e677d619a56e3cb3a3fa0b6df9de418accfd59dd6df4d801f7296b25          6545  tests/parity/reset-reconcile-regressions.test.mjs
+014bb705081eb7d1d70b465ce164d7172ded9e830ef735cc0ef500322488f4ce          3122  tests/parity/resource-budget.test.mjs
+b270c3c3877cd3049a8c8ba2cb7395fa69e93771660ef00cbf1e2ac729c3731d          5666  tests/parity/score.test.mjs
+4e27a48a29dbfb73f9e07059fce747cdc6105357e9f6800ceaf46f56ac75fdcd          9270  tests/parity/state-race-regressions.test.mjs
+a2205d56a810e20928854428258e8cc455f77e35b41753e4e313ad28ecf0022c          2435  tests/parity/storage-failures.test.mjs
+7bc0a43e649b3b444f429ccddfdc6217fe596a580ca5dfa6536eacd39f3e3a9a          4755  tests/parity/storage.test.mjs
+4547891b364e8f60975e431b66f3b513bc3caf967b764ce33c6f3e8059043b18          3712  tests/parity/sync-integrity.test.mjs
+8780d1785c0bfdbfa29204cc30c732f0555c67b7de3c69c9625aa32eca5a8876          2669  tests/parity/touch-session.test.mjs
+114e3d8ac056b7a9cd0b1b13885a4d095057275791e6bf250ea660ce527070a1          6302  tests/parity/ui-motion.test.mjs
+8cc53da7711f1dabb6409cef73726e4fbbc99c4faf72952739838c913eb03414          2443  tests/parity/viewport-events.test.mjs
+cc9cc773ba2fb707ce0b3d17d14f9ffe6747b240a2005ebc34e1c0a330cc1dcc          2496  tests/parity/web-audio-stability.test.mjs
+c3b8e2add199720a6ea382abfc3ba3e1cb80ab3852410fdcb1d352bb12b06ab2           588  tests/parity/web-module-loading.test.mjs
+fd5e0b928e8a83c58442e233759d5dd672211efda3270dd956b2871c18982204          7931  tests/parity/wechat-runtime.test.mjs
+811a34868333a4a54c73dcbf7c88b1f0540aa58ad9e05275d27a8b0a27442111          3102  tests/shared/drag-model.test.mjs
+56a7b465fac4c5d2071949be684f8d55fd82cdc780fa2a6b743b841cefa4adf3           922  tests/shared/frame-input-queue.test.mjs
+8f98963c64510edff50a9d7b46c8c311cbd2cbbea17feb957195262932c3be21          3652  tests/shared/presentation.test.mjs
+5ebf22c1109d3b8650bf095304207213f6a5750052613c67f50854009e015d4c           719  tests/shared/quality-config.test.mjs
+6b0cbdbf179d8a911ece4092a455c83bc988b5bff1c018703b39248a82a58a37          1479  tests/shared/render-perf-stats.test.mjs
+37089ac44a2e86a91aa0fbd0679d7eecfa61070e9d1a311c8e640e0ca0acbbe2          1760  tests/shared/safe-hit-area.test.mjs
+6fc56b14f69cbfeaf9e31b85bfb3035e4dbe69d8a7987a35aae4a5cb20c83fad          1241  tests/shared/shared-module-contract.test.mjs
+ade498e34a85117314bdf5317ea27b73a546fff5946fae46e29f79de31d3b260           587  we xin xiao cheng xu/.eslintrc.js
+e008584e24c605ca214525aee28e2f52f2a6677db2ffe17c0cdd1ffbc078fea5          2302  we xin xiao cheng xu/AGENTS.md
+12ebff80a5a133d0732f7d4cbbb0e9877251451af6912e7d580538b394a22ace          1651  we xin xiao cheng xu/CLAUDE.md
+8e3aff01257c98f0dc669833c035e448d7ccb8345cc9699256896c511f6654ae         20681  we xin xiao cheng xu/README.md
+a4f847ea29736d6f7208589b9c954a102d0750e6df179f515f8d2b3cf7594afb        700540  we xin xiao cheng xu/audio/bgm_1.mp3
+a226fcd5c275d2f0efaad8d48930555dc37efcb0f6d59ea333dab6a61a7f1385        603574  we xin xiao cheng xu/audio/bgm_2.mp3
+8ac050830e8b9edc84e78e2e9d8183995f19bee9f5ac689254b9fae45632e1fc        727081  we xin xiao cheng xu/audio/bgm_3.mp3
+2c98c5ae5f9f848199c761ec05abedfd41349c245dbdbbe57f0376d748addad3        637533  we xin xiao cheng xu/audio/bgm_4.mp3
+918f06a8263b4fbd9f60d457d47a9d1d3b14ac2372c3a208169ce18e81df049e         34732  we xin xiao cheng xu/audio/clear.mp3
+637ce219b25aa178febbfc979f4da83f153b4b25e1379fc3de10bf1abc92ac98         10732  we xin xiao cheng xu/audio/click.mp3
+d9a0fdd62681528a9be033ec6c9c8d87b743d3122da9cd66a6bbad3699aa61b1         42412  we xin xiao cheng xu/audio/combo.mp3
+8ea535a7ff4c83073025c050f5f35817521a4bd6a3bf629d09f6550e2aa0bc09         44332  we xin xiao cheng xu/audio/combo3.mp3
+54397506ee392b91941537981238624d27b5ea98d3a437097a825110ff5e2fa7        112849  we xin xiao cheng xu/audio/gameover.mp3
+6830f3b0d20b65db844e39659b3b5490fa87dde52dd0512bd8b975f7f5203787          8812  we xin xiao cheng xu/audio/pickup.mp3
+f8e1f0dff36ea254dcdb633747906d200a13692c69b7b224ffbc7864359ffd6f          8812  we xin xiao cheng xu/audio/place.mp3
+201e4643c277fe74e63908aedba899c9740d4d0c595030d6816bc97c1adb60f5           105  we xin xiao cheng xu/game.js
+adfce90c444cdbf96dc51598471759bca31feb5e936833b36847f3570fd4bca0            38  we xin xiao cheng xu/game.json
+15c3e4df87b4617bd9f3fc20f8413744d8ec608425f9e1aa638e0f3778b77849          6879  we xin xiao cheng xu/js/api/AuthClient.js
+230824cbbc572ead0959e5f498040700444921e3015e6c2b718d041967af274c           274  we xin xiao cheng xu/js/config/backend.js
+7463c30bb682d6e1317e06abff7d739252a09557c2205a7864d9c0b66cce7a98           783  we xin xiao cheng xu/js/config/quality.js
+0361f658b5d4b70ba8d8f4f65208b5f4e98e5596074a058e483a48666438528b          4724  we xin xiao cheng xu/js/game/Board.js
+4ff0fa4a2fecf407e94bd8bf62512c85babfce888aecf9c766f5d2ccaabd28fe          4416  we xin xiao cheng xu/js/game/DragModel.js
+cf4951f1087e7c81e44aed1532d05fe67ee73fd1d899030516e8fd9179113f8c         17383  we xin xiao cheng xu/js/game/FeedbackState.js
+21a963f9529a9eb386da4c5aae2b9fe502c874792e220441c27920b991fb3df7           710  we xin xiao cheng xu/js/game/FrameInputQueue.js
+061c433905b660e5c1b5beb042377d69e53d56ed0d878703a26f555d4d772890         47840  we xin xiao cheng xu/js/game/GameState.js
+6e7b7e7b004f9fd619a36a4303d464b472e948114e661874cf6f946b823638ac         15564  we xin xiao cheng xu/js/game/InputManager.js
+5ddd11b6b3234e1a1a8a17bf6dfde102b543982aa02639239b4ffa807812f1ed         14156  we xin xiao cheng xu/js/game/LayoutMetrics.js
+bcbc6c41691557ff51699486a6b339be8b06d0067d69dc51afe6e4773e95c7eb         23407  we xin xiao cheng xu/js/game/Piece.js
+f7a338de054b0981121c5559b363764931d0c8633604f081639d4142343b6854          5161  we xin xiao cheng xu/js/game/Presentation.js
+f721ac0a5f595778a0a9d1ed521f9623ef83d74cc734735b0f3de3b30cbbc36a          4064  we xin xiao cheng xu/js/game/RenderPerfStats.js
+8432d5c3952e3c3d094d7e74be36467cf1ca2e964b00bdf9746354ba6848a0d8         84025  we xin xiao cheng xu/js/game/Renderer.js
+ced2f9ca4d8ddf968e096f20d25e3a27d56da2b99936cf64cccd4d6b1cd87160          1907  we xin xiao cheng xu/js/game/SafeHitArea.js
+3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9          2615  we xin xiao cheng xu/js/game/ScoreManager.js
+d0a342aac71dd3264cb4104ec7b1f6815589afb11ab93c8e0e8368abd2fda203          6576  we xin xiao cheng xu/js/game/SoundManager.js
+eb73b5775bcff2303d3e5b5b441407c44ad3a9c41c09c941dd8102a1f8a2c33c          2515  we xin xiao cheng xu/js/game/constants.js
+a0851cdf69f21d3b438db07f04c3e39de9634dc06541635d8dfe9a7eb6bf1a19           370  we xin xiao cheng xu/js/game/coreConstants.js
+bdd0ded332b3fe6820e83c7b3edaebaa5efbb79b10e819291c2f3fd792bcc6b2          6516  we xin xiao cheng xu/js/main.js
+5477fca7bef3de9b47b305938576b00df29615b970c8241db5d1fdfc7e965a0f          1885  we xin xiao cheng xu/js/render.js
+f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f          4474  we xin xiao cheng xu/js/utils/storage.js
+03f53cff89489b518fdd536f7c3e5396fadb898f36b82159296f9d4072c214bb          1237  we xin xiao cheng xu/project.config.json
+a8690e286bbeda0c90fbb4951f9895f7053f896f1732f25a0c6e8b88c26fa295           283  we xin xiao cheng xu/skills-lock.json
+e197b89ca4189653ec1c2cfc8f16b171b85ef6f7d28aa483e7f2ffe8a80263fb           583  we xin xiao cheng xu-android-apk/.gitignore
+d4b1972aaddd32951072015fda495bbe3e0704b4e4d60e722e2e523ae4578219          1977  we xin xiao cheng xu-android-apk/AGENTS.md
+736ae66f0c80926b610ee5ad4dde8264b67a186d778a08cc4301e42205e1ba5d          1798  we xin xiao cheng xu-android-apk/CLAUDE.md
+66b2e87319271cf4a395f544a1c038ef249806457fe0e0d5835ef715ce0b5699         10611  we xin xiao cheng xu-android-apk/README.md
+26afd2f9496952e1f850f83fdeb074f9c5599938fdf864c9c47c6f7bd9e3e668          1121  we xin xiao cheng xu-android-apk/app/build.gradle.kts
+7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6             2  we xin xiao cheng xu-android-apk/app/proguard-rules.pro
+71c0fbcc91e014b3a7d387f6625839c6721d5ffb9e4795ab421edaa43f58bad9           793  we xin xiao cheng xu-android-apk/app/src/main/AndroidManifest.xml
+b95f92a62fadbfcc92c3d79ffe3800dbbecbb38d59912e2f0181dff49186b6e6         15882  we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js
+cc954159560f3736b32790ff04e9122cddd0237b1664c05cd93e81c273a16705            49  we xin xiao cheng xu-android-apk/app/src/main/assets/game.js
+15aac042814c7aef19fc152bca12b30842e42e01f78dd997694724825e495a6c          2747  we xin xiao cheng xu-android-apk/app/src/main/assets/index.html
+7d3fe77fd1714ea59a8afa374eb5343ebf8ba321f22f5a40075dc1fd334a57ce           151  we xin xiao cheng xu-android-apk/app/src/main/assets/js/RenderScheduler.js
+7463c30bb682d6e1317e06abff7d739252a09557c2205a7864d9c0b66cce7a98           783  we xin xiao cheng xu-android-apk/app/src/main/assets/js/config/quality.js
+be12ae7ffda13676988f113cc9f9b4449fd4357e070826d9386a76b8359e6362          4943  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Board.js
+4ff0fa4a2fecf407e94bd8bf62512c85babfce888aecf9c766f5d2ccaabd28fe          4416  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/DragModel.js
+cf4951f1087e7c81e44aed1532d05fe67ee73fd1d899030516e8fd9179113f8c         17383  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/FeedbackState.js
+21a963f9529a9eb386da4c5aae2b9fe502c874792e220441c27920b991fb3df7           710  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/FrameInputQueue.js
+e16e0bdc1eac6e6eb4058182884ad8a8df2c09eb6c8052d99e9a4e4d398d1fee         46312  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js
+a4b7f1d4d1ddc8ede63ffef09dcb2c44aef1932f0c9e59bb2e5314c6a0b5a363         16739  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js
+3a5f90c17b4c54c22949f705b824037131e2652559f69e949376b159265729af         14819  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/LayoutMetrics.js
+bcbc6c41691557ff51699486a6b339be8b06d0067d69dc51afe6e4773e95c7eb         23407  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Piece.js
+f7a338de054b0981121c5559b363764931d0c8633604f081639d4142343b6854          5161  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Presentation.js
+f721ac0a5f595778a0a9d1ed521f9623ef83d74cc734735b0f3de3b30cbbc36a          4064  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/RenderPerfStats.js
+f7f71577472c5cb2a8557afe45138e8d8dd5e3f3afb0c662cad095b98b24de26         86638  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js
+ced2f9ca4d8ddf968e096f20d25e3a27d56da2b99936cf64cccd4d6b1cd87160          1907  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SafeHitArea.js
+3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9          2615  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js
+3cd9a941a2fd866de8862bd12535dc5d27010bfbfdef240c6e85ff9fc2fcba60          6888  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js
+af8c8353be4a9e9190d40d2ef6fcc5d21e56cf0ab07e7d976c4f90e4c8716396          2465  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/constants.js
+a0851cdf69f21d3b438db07f04c3e39de9634dc06541635d8dfe9a7eb6bf1a19           370  we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/coreConstants.js
+debf1fb83d23e3286437ab054eeabe2b141cfd23f5de53829d9e1363754347be          8402  we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js
+d9655c07b63063ba1652062a7ea045c8b71ec7bc9feefa41e72c04db06370140          1650  we xin xiao cheng xu-android-apk/app/src/main/assets/js/render.js
+f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f          4474  we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js
+99863cfaa5640e2cdcf4fc40167afedb1e4fe646be6a289b6421ce61bafe574d          2736  we xin xiao cheng xu-android-apk/app/src/main/java/com/blockpuzzle/android/MainActivity.kt
+5355fcd7807465b8cbae66a470345924761e521d071294a20d78c32481b04db2       1386965  we xin xiao cheng xu-android-apk/app/src/main/res/drawable/app_icon.png
+723e4f13aff03ffc469edeb81fbda867c39ade90be1a9153a074b829d4516a73           342  we xin xiao cheng xu-android-apk/app/src/main/res/layout/activity_main.xml
+8352619fc8ad08f5d92fd965d740389c0d68c0f1d71b7f230dcd3c1ef25dbd8c           160  we xin xiao cheng xu-android-apk/app/src/main/res/values/strings.xml
+90c442391f938b2bb36bed92183ff3b4b2164cefd20a3b605e2638a3673f9c07           639  we xin xiao cheng xu-android-apk/app/src/main/res/values/themes.xml
+eec3979c183a930c5d0da725b564914bbda2b2055fa43f326691bb46d0661774           237  we xin xiao cheng xu-android-apk/app/src/main/res/values-v28/themes.xml
+7e670daa3bb8763eea86f0d92e95eee4c64f9cd4ed68d67a25952736f48d0103           142  we xin xiao cheng xu-android-apk/build.gradle.kts
+7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6             2  we xin xiao cheng xu-android-apk/docs/.nojekyll
+940ded3d638d262b87ed88882f916f2100b9eff8c3eda9015be6e838ca705b18           565  we xin xiao cheng xu-android-apk/docs/README.md
+0a36de0f9858c2ad7bfbca5d278421a3fde7bc2f7d6da63803e5e2ecf12843a5       7002412  we xin xiao cheng xu-android-apk/docs/audio/bgm_1.mp3
+a02a78c22ac130806afa5c66a90e042586fde2f288bbee8114719c0c331f8d11       6031852  we xin xiao cheng xu-android-apk/docs/audio/bgm_2.mp3
+bfc7eb6f96e0e09f2a050d5ff6ca464dc8a1705aac0a8b95f9d2212e339b21b4       7267372  we xin xiao cheng xu-android-apk/docs/audio/bgm_3.mp3
+9774a7966291a1b6433774a19b179cef639d6851bd79676c95c23fa0deb44d7b       6371692  we xin xiao cheng xu-android-apk/docs/audio/bgm_4.mp3
+918f06a8263b4fbd9f60d457d47a9d1d3b14ac2372c3a208169ce18e81df049e         34732  we xin xiao cheng xu-android-apk/docs/audio/clear.mp3
+637ce219b25aa178febbfc979f4da83f153b4b25e1379fc3de10bf1abc92ac98         10732  we xin xiao cheng xu-android-apk/docs/audio/click.mp3
+d9a0fdd62681528a9be033ec6c9c8d87b743d3122da9cd66a6bbad3699aa61b1         42412  we xin xiao cheng xu-android-apk/docs/audio/combo.mp3
+8ea535a7ff4c83073025c050f5f35817521a4bd6a3bf629d09f6550e2aa0bc09         44332  we xin xiao cheng xu-android-apk/docs/audio/combo3.mp3
+54397506ee392b91941537981238624d27b5ea98d3a437097a825110ff5e2fa7        112849  we xin xiao cheng xu-android-apk/docs/audio/gameover.mp3
+6830f3b0d20b65db844e39659b3b5490fa87dde52dd0512bd8b975f7f5203787          8812  we xin xiao cheng xu-android-apk/docs/audio/pickup.mp3
+f8e1f0dff36ea254dcdb633747906d200a13692c69b7b224ffbc7864359ffd6f          8812  we xin xiao cheng xu-android-apk/docs/audio/place.mp3
+4236761c1469c60fc0352de6e1ea5fc0916fe5d3f6eb95f453c5b5839b9b6e48         15987  we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js
+c7f30d096969a6bca735080b89f26b4913801b9b1c14f07c0f14744a894a9b9d        133953  we xin xiao cheng xu-android-apk/docs/favicon.png
+cc954159560f3736b32790ff04e9122cddd0237b1664c05cd93e81c273a16705            49  we xin xiao cheng xu-android-apk/docs/game.js
+9222d8186be35027d7afc21bef13f79a82bc41371fb292acddc9f2c14aa43314          3365  we xin xiao cheng xu-android-apk/docs/index.html
+7d3fe77fd1714ea59a8afa374eb5343ebf8ba321f22f5a40075dc1fd334a57ce           151  we xin xiao cheng xu-android-apk/docs/js/RenderScheduler.js
+7463c30bb682d6e1317e06abff7d739252a09557c2205a7864d9c0b66cce7a98           783  we xin xiao cheng xu-android-apk/docs/js/config/quality.js
+be12ae7ffda13676988f113cc9f9b4449fd4357e070826d9386a76b8359e6362          4943  we xin xiao cheng xu-android-apk/docs/js/game/Board.js
+4ff0fa4a2fecf407e94bd8bf62512c85babfce888aecf9c766f5d2ccaabd28fe          4416  we xin xiao cheng xu-android-apk/docs/js/game/DragModel.js
+cf4951f1087e7c81e44aed1532d05fe67ee73fd1d899030516e8fd9179113f8c         17383  we xin xiao cheng xu-android-apk/docs/js/game/FeedbackState.js
+21a963f9529a9eb386da4c5aae2b9fe502c874792e220441c27920b991fb3df7           710  we xin xiao cheng xu-android-apk/docs/js/game/FrameInputQueue.js
+e16e0bdc1eac6e6eb4058182884ad8a8df2c09eb6c8052d99e9a4e4d398d1fee         46312  we xin xiao cheng xu-android-apk/docs/js/game/GameState.js
+a4b7f1d4d1ddc8ede63ffef09dcb2c44aef1932f0c9e59bb2e5314c6a0b5a363         16739  we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js
+3a5f90c17b4c54c22949f705b824037131e2652559f69e949376b159265729af         14819  we xin xiao cheng xu-android-apk/docs/js/game/LayoutMetrics.js
+bcbc6c41691557ff51699486a6b339be8b06d0067d69dc51afe6e4773e95c7eb         23407  we xin xiao cheng xu-android-apk/docs/js/game/Piece.js
+f7a338de054b0981121c5559b363764931d0c8633604f081639d4142343b6854          5161  we xin xiao cheng xu-android-apk/docs/js/game/Presentation.js
+f721ac0a5f595778a0a9d1ed521f9623ef83d74cc734735b0f3de3b30cbbc36a          4064  we xin xiao cheng xu-android-apk/docs/js/game/RenderPerfStats.js
+f7f71577472c5cb2a8557afe45138e8d8dd5e3f3afb0c662cad095b98b24de26         86638  we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js
+ced2f9ca4d8ddf968e096f20d25e3a27d56da2b99936cf64cccd4d6b1cd87160          1907  we xin xiao cheng xu-android-apk/docs/js/game/SafeHitArea.js
+3ba64e05e8d0415a18aff5448186eb04e864a200f561bddf34ee95d5956f48a9          2615  we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js
+3cd9a941a2fd866de8862bd12535dc5d27010bfbfdef240c6e85ff9fc2fcba60          6888  we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js
+af8c8353be4a9e9190d40d2ef6fcc5d21e56cf0ab07e7d976c4f90e4c8716396          2465  we xin xiao cheng xu-android-apk/docs/js/game/constants.js
+a0851cdf69f21d3b438db07f04c3e39de9634dc06541635d8dfe9a7eb6bf1a19           370  we xin xiao cheng xu-android-apk/docs/js/game/coreConstants.js
+debf1fb83d23e3286437ab054eeabe2b141cfd23f5de53829d9e1363754347be          8402  we xin xiao cheng xu-android-apk/docs/js/main.js
+d9655c07b63063ba1652062a7ea045c8b71ec7bc9feefa41e72c04db06370140          1650  we xin xiao cheng xu-android-apk/docs/js/render.js
+f424e31d2e3b9a67128d0c6621fc7e21fe078354223f1a29d618c086bfe7ff0f          4474  we xin xiao cheng xu-android-apk/docs/js/utils/storage.js
+cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8         43453  we xin xiao cheng xu-android-apk/gradle/wrapper/gradle-wrapper.jar
+0bd878c7ca27287c8c6c499797abfe33e560fef1b058b63583cee6ad0d5b0a7d           257  we xin xiao cheng xu-android-apk/gradle/wrapper/gradle-wrapper.properties
+6bbd82db46cd553fb3c9d78b16dbc63a52fa359fc3099ec5d8cdb8efe6ffc176           172  we xin xiao cheng xu-android-apk/gradle.properties
+118b816808c173a1c973d1702f1e2dbf90a11a74885df433e5a61bc9645672d9          8941  we xin xiao cheng xu-android-apk/gradlew
+bdecf875b6868cbcbd36a1f85eedf0832f358ff28092c5797ed645f7edce77d9          2918  we xin xiao cheng xu-android-apk/gradlew.bat
+cea89cb482a8bbfc29c67c635fd13e9121752eef92235ac13d784cbf9a6ee1ad           448  we xin xiao cheng xu-android-apk/release-notes/v0.1.0-preview.md
+236c965fae1da1acd2dd7c0e2bcb0507f1b43e5ee21d5f727d7a8dc9addba6a1          1202  we xin xiao cheng xu-android-apk/release-notes/v1.0.1.md
+72644b7575853a9922a20270b90a712b893c7f5a7e582d210031c4319c87f114           742  we xin xiao cheng xu-android-apk/release-notes/v1.0.10.md
+17840eed06c198cf22cef79f7848d653d6061e7d5796d02d74196b2d0a79f7d6           449  we xin xiao cheng xu-android-apk/release-notes/v1.0.11.md
+8785fa64d23d79c946752e3414031b557a0af7b2f2a5870efcbb9182de3e8c06          2387  we xin xiao cheng xu-android-apk/release-notes/v1.0.12.md
+9baf53a3bc4a664984c8762425c18e27d2ac54d291300479b17a1e88ad212f05           993  we xin xiao cheng xu-android-apk/release-notes/v1.0.2.md
+b3b5037860e3d3f8699686536e6fb6c27aecdc9430029c410fece1b20cff318b          1399  we xin xiao cheng xu-android-apk/release-notes/v1.0.3.md
+05cffac3b5b9cb244bc42df6eb61ceeef1dc86585f6761b8b06af5746fccfb61           981  we xin xiao cheng xu-android-apk/release-notes/v1.0.4.md
+c43127fe73ac723006300e65c57feb2701c75037ca9d890d1b47508a4a2f9eda          2750  we xin xiao cheng xu-android-apk/release-notes/v1.0.5.md
+638ad0a77849a4bf4db4852b184343deaf6620271aae4174b0604da1cb5aed4c           692  we xin xiao cheng xu-android-apk/release-notes/v1.0.6.md
+3ad63fa3e0d262fb4e57238d61f49a0fa823d7b62fb70a96e2facbbef457472b           955  we xin xiao cheng xu-android-apk/release-notes/v1.0.8.md
+6fd4101bb5f3d1bc09a2ab6724baa1b5deef75c521eb487a06c694862f768a50           742  we xin xiao cheng xu-android-apk/release-notes/v1.0.9.md
+cb88b8c96048e462b2b012f6b4c7cefce4238f31813e4d2c9274e7916b8045ea           326  we xin xiao cheng xu-android-apk/settings.gradle.kts

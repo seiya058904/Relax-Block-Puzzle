@@ -1,0 +1,32 @@
+✔ web: real Main and state resize, freeze, consume events, and resume (280.468961ms)
+✔ android: real Main and state resize, freeze, consume events, and resume (274.901789ms)
+✔ wechat: InputManager swallows new touches while a modal close motion is visible (20.417157ms)
+✔ wechat: settings closing gate also blocks rack input during the afterimage (2.382026ms)
+✔ web: InputManager swallows new touches while a modal close motion is visible (18.751056ms)
+✔ web: settings closing gate also blocks rack input during the afterimage (1.558299ms)
+✔ web: one settings tab tap requests exactly one immediate render (1.6517ms)
+✔ android: InputManager swallows new touches while a modal close motion is visible (14.568153ms)
+✔ android: settings closing gate also blocks rack input during the afterimage (3.622774ms)
+✔ android: one settings tab tap requests exactly one immediate render (2.469749ms)
+✔ Android scheduler stays idle, wakes for work, and stops while paused (2.038065ms)
+✔ wechat: complete InputManager owns touch identity and cancels all queued input (15.572924ms)
+✔ web: complete InputManager owns touch identity and cancels all queued input (11.294998ms)
+✔ android: complete InputManager owns touch identity and cancels all queued input (10.7012ms)
+✔ web: shim re-arms DPR notifications without writing a bitmap (3.535512ms)
+✔ android: shim re-arms DPR notifications without writing a bitmap (1.920838ms)
+✔ wechat: real Main wakes on native callbacks, idles, freezes, resizes, and never replays feedback (156.606256ms)
+✔ drag model maps the pointer to a lifted visual position and candidate cell (1.967439ms)
+✔ drag model keeps a candidate until movement crosses hysteresis (0.304921ms)
+✔ drag model remembers the last valid candidate and accepts a near-valid release (0.3107ms)
+✔ drag model rejects a clearly invalid release and cancel clears all transient state (0.335729ms)
+✔ last-valid fallback covers the actual invalid branch and exact tolerance boundary (0.436561ms)
+✔ frame input queue keeps only the latest point and requests one frame (1.646002ms)
+✔ frame input queue can clear a pending point on cancellation (0.196518ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1537.161458

@@ -33,7 +33,7 @@ function sanitizeBestScores(value) {
   };
 }
 
-function readBestScores() {
+export function readBestScores() {
   try {
     const stored = wx.getStorageSync(BEST_SCORES_KEY);
     // Both wx and the browser adapter return '' for a missing key.

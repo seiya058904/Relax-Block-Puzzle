@@ -1,0 +1,290 @@
+✖ wechat: mute and background stop existing effects without replaying them on return (2.521438ms)
+✖ wechat: changing vibration leaves the current BGM playback position alone (1.211264ms)
+✖ web: mute and background stop existing effects without replaying them on return (1.048057ms)
+✔ web: changing vibration leaves the current BGM playback position alone (0.254115ms)
+✖ android: mute and background stop existing effects without replaying them on return (1.187338ms)
+✔ android: changing vibration leaves the current BGM playback position alone (0.202987ms)
+✖ web: old-round saves retain history without changing the selected home difficulty (20.319114ms)
+✖ web: reset completion reconciles a new round and preserves a newly selected difficulty (3.006653ms)
+✔ web: reset queued after an old score wins without an unlocked write (2.161292ms)
+✖ android: old-round saves retain history without changing the selected home difficulty (12.646888ms)
+✖ android: reset completion reconciles a new round and preserves a newly selected difficulty (3.197933ms)
+✔ android: reset queued after an old score wins without an unlocked write (2.23235ms)
+✖ wechat: reset failure never pretends the stored record was cleared (7.991209ms)
+✖ wechat: undo cannot requalify a round after administrator tools become available (3.906915ms)
+✖ web: reset failure never pretends the stored record was cleared (0.582281ms)
+✖ web: undo cannot requalify a round after administrator tools become available (1.676629ms)
+✖ android: reset failure never pretends the stored record was cleared (0.486156ms)
+✖ android: undo cannot requalify a round after administrator tools become available (1.265676ms)
+✖ wechat: cancelled and superseded admin verification cannot affect a later panel or round (1.44667ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 4
+ℹ fail 15
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 236.643466
+
+✖ failing tests:
+
+test at tests/parity/audio-lifecycle.test.mjs:27:3
+✖ wechat: mute and background stop existing effects without replaying them on return (2.521438ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/audio-lifecycle.test.mjs:37:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/audio-lifecycle.test.mjs:59:3
+✖ wechat: changing vibration leaves the current BGM playback position alone (1.211264ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   seek: 2,
+  +   stop: 2
+  -   seek: 1,
+  -   stop: 1
+    }
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/audio-lifecycle.test.mjs:68:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { stop: 2, seek: 2 },
+    expected: { stop: 1, seek: 1 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/audio-lifecycle.test.mjs:27:3
+✖ web: mute and background stop existing effects without replaying them on return (1.048057ms)
+  AssertionError [ERR_ASSERTION]: mute immediately stops an already playing effect
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/audio-lifecycle.test.mjs:47:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/audio-lifecycle.test.mjs:27:3
+✖ android: mute and background stop existing effects without replaying them on return (1.187338ms)
+  AssertionError [ERR_ASSERTION]: mute immediately stops an already playing effect
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/audio-lifecycle.test.mjs:47:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:24:3
+✖ web: old-round saves retain history without changing the selected home difficulty (20.319114ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  10 !== 2
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:38:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:44:3
+✖ web: reset completion reconciles a new round and preserves a newly selected difficulty (3.006653ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  100 !== 0
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:56:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 100,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:24:3
+✖ android: old-round saves retain history without changing the selected home difficulty (12.646888ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  10 !== 2
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:38:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:44:3
+✖ android: reset completion reconciles a new round and preserves a newly selected difficulty (3.197933ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  100 !== 0
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:56:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 100,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:91:3
+✖ wechat: reset failure never pretends the stored record was cleared (7.991209ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 100
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:100:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:109:3
+✖ wechat: undo cannot requalify a round after administrator tools become available (3.906915ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:120:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:91:3
+✖ web: reset failure never pretends the stored record was cleared (0.582281ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 100
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:100:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:109:3
+✖ web: undo cannot requalify a round after administrator tools become available (1.676629ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:120:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:91:3
+✖ android: reset failure never pretends the stored record was cleared (0.486156ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 100
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:100:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:109:3
+✖ android: undo cannot requalify a round after administrator tools become available (1.265676ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:120:14)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/parity/state-race-regressions.test.mjs:134:1
+✖ wechat: cancelled and superseded admin verification cannot affect a later panel or round (1.44667ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/tests/parity/state-race-regressions.test.mjs:148:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

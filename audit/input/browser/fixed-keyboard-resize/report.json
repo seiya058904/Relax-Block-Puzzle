@@ -1,0 +1,289 @@
+{
+  "mode": "fixed",
+  "root": "/workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/we xin xiao cheng xu-android-apk/docs",
+  "url": "http://127.0.0.1:37413/",
+  "reason": "Browser plugin not available; existing Playwright and existing Chromium used without installing dependencies",
+  "checks": [
+    {
+      "name": "input: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "home",
+        "raf": 0
+      }
+    },
+    {
+      "name": "input: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "mouse field focus",
+      "pass": true,
+      "evidence": {
+        "mouseFocus": "wxKeyboard"
+      }
+    },
+    {
+      "name": "native keyboard receives focus",
+      "pass": true,
+      "evidence": "wxKeyboard"
+    },
+    {
+      "name": "native keyboard updates idle Canvas",
+      "pass": true,
+      "evidence": {
+        "state": "INVALID-AUDIT",
+        "rendered": "INVALID-AUDIT",
+        "renderCount": 35,
+        "raf": 0
+      }
+    },
+    {
+      "name": "native input survives short viewport and recovery",
+      "pass": true,
+      "evidence": {
+        "blockedKeyboard": {
+          "state": "INVALID-AUDIT",
+          "blocked": true,
+          "focused": "wxKeyboard",
+          "frameText": [
+            "轻松俄罗斯方块",
+            "请转为竖屏或增大窗口"
+          ]
+        },
+        "recoveredKeyboard": {
+          "state": "INVALID-AUDITZ",
+          "rendered": "INVALID-AUDITZ",
+          "blocked": false,
+          "open": true
+        }
+      }
+    },
+    {
+      "name": "invalid native keyboard code retains error",
+      "pass": true,
+      "evidence": {
+        "error": "福利码无效",
+        "rendered": "福利码无效",
+        "open": true,
+        "focused": ""
+      }
+    },
+    {
+      "name": "lost release cancellation leaves no stale drag",
+      "pass": true,
+      "evidence": {
+        "beforeBlur": {
+          "score": 0,
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "drag": true
+        },
+        "stale": {
+          "drag": false,
+          "paused": false,
+          "score": 0,
+          "hidden": false
+        },
+        "afterClick": {
+          "score": 0,
+          "drag": false,
+          "filled": 0
+        }
+      }
+    },
+    {
+      "name": "next ordinary click cannot place stale piece",
+      "pass": true,
+      "evidence": {
+        "score": 0,
+        "drag": false,
+        "filled": 0
+      }
+    },
+    {
+      "name": "window blur preserves actual visibility lifecycle",
+      "pass": true,
+      "evidence": {
+        "drag": false,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      }
+    },
+    {
+      "name": "input flow console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "cases": [
+    {
+      "label": "input",
+      "typed": {
+        "state": "INVALID-AUDIT",
+        "rendered": "INVALID-AUDIT",
+        "renderCount": 35,
+        "raf": 0
+      },
+      "invalid": {
+        "error": "福利码无效",
+        "rendered": "福利码无效",
+        "open": true,
+        "focused": ""
+      },
+      "stale": {
+        "drag": false,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      },
+      "afterClick": {
+        "score": 0,
+        "drag": false,
+        "filled": 0
+      },
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "passed": 11,
+  "failed": 0
+}

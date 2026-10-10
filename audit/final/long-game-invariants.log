@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "totals": {
+    "games": 108,
+    "placements": 23136,
+    "clearedLines": 5715,
+    "invalidDrops": 2166,
+    "undo": 105,
+    "refresh": 213,
+    "clear": 69,
+    "maxScore": 28520,
+    "longestGame": 400
+  },
+  "crossPlatformReplayPairs": 72
+}

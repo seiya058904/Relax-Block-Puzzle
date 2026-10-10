@@ -1,0 +1,7 @@
+{"version":"wechat","name":"hidden success callback preserves scheduler and current panel","pass":true}
+{"version":"wechat","name":"hidden denied callback preserves scheduler and current panel","pass":true}
+{"version":"wechat","name":"hidden cancelled-success callback preserves scheduler and current panel","pass":true}
+{"version":"wechat","name":"hidden cancelled-failure callback preserves scheduler and current panel","pass":true}
+{"version":"web","name":"hidden score and reset completions perform no drawing and settle to idle after show","pass":true}
+{"version":"android","name":"hidden score and reset completions perform no drawing and settle to idle after show","pass":true}
+{"summary":true,"root":"/workspace/scratch/7bb2fb03b768/source/relax-block-puzzle","total":6,"passed":6,"failed":0}

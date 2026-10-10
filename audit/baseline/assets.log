@@ -1,0 +1,40 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> verify:assets
+> node scripts/verify-assets.mjs
+
+{
+  "wechatAudio": {
+    "files": 11,
+    "totalBytes": 2931409,
+    "largest": {
+      "path": "we xin xiao cheng xu/audio/bgm_3.mp3",
+      "bytes": 727081
+    },
+    "duplicateFileCount": 0,
+    "unusedFiles": [],
+    "missingFiles": []
+  },
+  "webAudio": {
+    "files": 11,
+    "totalBytes": 26936009,
+    "largest": {
+      "path": "we xin xiao cheng xu-android-apk/docs/audio/bgm_3.mp3",
+      "bytes": 7267372
+    },
+    "duplicateFileCount": 0,
+    "unusedFiles": [],
+    "missingFiles": []
+  },
+  "androidAudio": {
+    "files": 11,
+    "totalBytes": 26936009,
+    "largest": {
+      "path": "we xin xiao cheng xu-android-apk/app/src/main/assets/audio/bgm_3.mp3",
+      "bytes": 7267372
+    },
+    "duplicateFileCount": 0,
+    "unusedFiles": [],
+    "missingFiles": []
+  }
+}

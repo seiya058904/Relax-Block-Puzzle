@@ -1,0 +1,32 @@
+{
+  "platform": "wechat",
+  "firstPlacement": {
+    "baseId": "single",
+    "row": 0,
+    "col": 0
+  },
+  "initialRecord": 10,
+  "eligibilityAfterUndo": true,
+  "adminModeAfterUndo": true,
+  "scoreAfterAdminPlacements": 20,
+  "finalRecord": 20,
+  "bug": true
+}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: An administrator round must not update official high scores after undo
+
+20 !== 10
+
+    at file:///workspace/scratch/7bb2fb03b768/audit/core/admin-undo-repro.mjs:59:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 20,
+  expected: 10,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.19.0

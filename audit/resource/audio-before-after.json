@@ -1,0 +1,48 @@
+{
+  "original": {
+    "wechat": {
+      "effectContinuesOnHide": true,
+      "newEffectPlayedHidden": true,
+      "effectContinuesOnMute": true,
+      "vibrationStopsBgm": 1,
+      "vibrationSeeksBgm": 1
+    },
+    "web": {
+      "effectContinuesOnHide": false,
+      "newEffectPlayedHidden": false,
+      "effectContinuesOnMute": true,
+      "vibrationStopsBgm": 0,
+      "vibrationSeeksBgm": 0
+    },
+    "android": {
+      "effectContinuesOnHide": false,
+      "newEffectPlayedHidden": false,
+      "effectContinuesOnMute": true,
+      "vibrationStopsBgm": 0,
+      "vibrationSeeksBgm": 0
+    }
+  },
+  "current": {
+    "wechat": {
+      "effectContinuesOnHide": false,
+      "newEffectPlayedHidden": false,
+      "effectContinuesOnMute": false,
+      "vibrationStopsBgm": 0,
+      "vibrationSeeksBgm": 0
+    },
+    "web": {
+      "effectContinuesOnHide": false,
+      "newEffectPlayedHidden": false,
+      "effectContinuesOnMute": false,
+      "vibrationStopsBgm": 0,
+      "vibrationSeeksBgm": 0
+    },
+    "android": {
+      "effectContinuesOnHide": false,
+      "newEffectPlayedHidden": false,
+      "effectContinuesOnMute": false,
+      "vibrationStopsBgm": 0,
+      "vibrationSeeksBgm": 0
+    }
+  }
+}

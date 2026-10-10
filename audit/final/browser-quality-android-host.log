@@ -1,0 +1,7 @@
+PASS web-1280: actual mouse drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw
+PASS web-390: actual touch drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw; stress 30066ms/1788 frames, render p95 0.60ms
+PASS web-320: actual touch drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw
+PASS web-768: actual mouse drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw
+PASS web-360-reduced: actual touch drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw
+PASS wechat-host delayed admin success/failure/exception after idle; hidden scheduling preserved
+PASS wechat-host-390: actual touch drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw; stress 10034ms/596 frames, render p95 0.70ms

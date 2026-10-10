@@ -33,6 +33,7 @@ import { createRack } from './Piece.js';
 import {
   loadBestScores,
   loadBestScore,
+  readBestScores,
   normalizeDifficulty,
   resetBestScore as persistResetBestScore,
   saveSettings as persistSettings
@@ -208,6 +209,7 @@ export default class GameState {
   }
 
   initializeHomeState() {
+    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
     this.board.reset();
     this.score = 0;
     this.bestScores = loadBestScores();
@@ -229,6 +231,7 @@ export default class GameState {
     this.undoSnapshot = null;
     this.notice = null;
     this.comboState = createComboState();
+    this.comboClock = { pausedAt: null, excludedMs: 0 };
     this.lastRackHadSnake = false;
     this.recentRackBaseIds = [];
     this.ui = createUiState();
@@ -236,10 +239,17 @@ export default class GameState {
     this.reviveCount = this.adminModeEnabled ? Infinity : 0;
     this.reviveUsedCount = 0;
     this.pendingRevive = null;
+    this.syncComboPauseState();
   }
 
   setLayout(layout) {
     this.layout = layout;
+    const blocked = !!layout?.viewportBlocked;
+    if (blocked !== !!this.viewportBlocked) {
+      this.viewportBlocked = blocked;
+      if (blocked) this.clearDrag();
+      this.syncComboPauseState();
+    }
   }
 
   setSettings(settings) {
@@ -277,6 +287,7 @@ export default class GameState {
   setScreen(screen) {
     this.screen = screen;
     this.isGameOver = screen === 'gameover';
+    this.syncComboPauseState();
   }
 
   cycleDifficulty() {
@@ -352,6 +363,7 @@ export default class GameState {
     this.undoSnapshot = null;
     this.notice = null;
     this.comboState = createComboState();
+    this.comboClock = { pausedAt: null, excludedMs: 0 };
     this.lastRackHadSnake = false;
     this.recentRackBaseIds = [];
     this.bestScoreEligible = !this.adminModeEnabled;
@@ -366,9 +378,31 @@ export default class GameState {
   }
 
   canAdvanceTime() {
-    return this.screen === 'playing' &&
+    return !this.lifecyclePaused && !this.viewportBlocked && this.screen === 'playing' &&
       !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
       !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+  }
+
+  setLifecyclePaused(paused) {
+    this.lifecyclePaused = !!paused;
+    this.syncComboPauseState();
+  }
+
+  syncComboPauseState() {
+    const clock = this.comboClock;
+    if (!clock) return;
+    const now = Date.now();
+    if (!this.canAdvanceTime()) {
+      if (clock.pausedAt === null) clock.pausedAt = now;
+    } else if (clock.pausedAt !== null) {
+      clock.excludedMs += Math.max(0, now - clock.pausedAt);
+      clock.pausedAt = null;
+    }
+  }
+
+  getComboNow() {
+    const clock = this.comboClock;
+    return (clock.pausedAt ?? Date.now()) - clock.excludedMs;
   }
 
   update(deltaTime) {
@@ -421,6 +455,7 @@ export default class GameState {
     this.ui.isSettingsOpen = true;
     this.ui.isResetConfirmOpen = false;
     this.ui.settingsTab = 'game';
+    this.syncComboPauseState();
     triggerModalOpen(this.feedbackState, 'settings');
   }
 
@@ -428,6 +463,7 @@ export default class GameState {
     this.ui.isSettingsOpen = false;
     this.ui.isResetConfirmOpen = false;
     this.ui.isMembershipPanelOpen = false;
+    this.syncComboPauseState();
     triggerModalClose(this.feedbackState, 'settings');
   }
 
@@ -467,12 +503,14 @@ export default class GameState {
     this.clearDrag();
     this.ui.isPauseOpen = true;
     this.ui.isPauseConfirmOpen = false;
+    this.syncComboPauseState();
     triggerModalOpen(this.feedbackState, 'pause');
   }
 
   closePause() {
     this.ui.isPauseOpen = false;
     this.ui.isPauseConfirmOpen = false;
+    this.syncComboPauseState();
     triggerModalClose(this.feedbackState, 'pause');
   }
 
@@ -497,26 +535,65 @@ export default class GameState {
     this.ui.isResetConfirmOpen = false;
   }
 
+  refreshBestScores({ updateRecordThreshold = true } = {}) {
+    const stored = readBestScores();
+    if (stored.status !== 'readable') return false;
+    const difficulty = this.screen === 'home' || this.screen === 'help'
+      ? normalizeDifficulty(this.settings.difficulty) : this.activeDifficulty;
+    const best = stored.scores[difficulty];
+    if (updateRecordThreshold && best !== this.bestScore) {
+      this.startingHighScore = best < this.bestScore
+        ? best : Math.max(this.startingHighScore || 0, best);
+    }
+    this.bestScores = stored.scores;
+    this.bestScore = best;
+    return true;
+  }
+
+  retryBestScoreRefresh(ownSaved) {
+    if (!this.pendingBestScoreRefresh?.size) return;
+    const pending = this.pendingBestScoreRefresh.get(this.activeDifficulty);
+    const generation = this.bestScoreGeneration || 0;
+    let thresholdReconciled = pending?.generation === generation && pending.thresholdReconciled;
+    if (pending && !thresholdReconciled && Number.isFinite(ownSaved?.previous)) {
+      // This is the locked value before our write, unlike a fresh read that
+      // may already include this round's new score.
+      this.startingHighScore = ownSaved.previous;
+      pending.generation = generation;
+      pending.thresholdReconciled = thresholdReconciled = true;
+    }
+    if (this.refreshBestScores({ updateRecordThreshold: false })) {
+      if (pending && !thresholdReconciled) this.startingHighScore = this.bestScore;
+      this.pendingBestScoreRefresh.clear();
+    }
+  }
+
   confirmResetBestScore() {
     const difficulty = normalizeDifficulty(this.settings.difficulty);
-    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
-    const reset = persistResetBestScore(difficulty);
-    this.bestScores = {
-      ...this.bestScores,
-      [difficulty]: 0
-    };
-
-    if (
-      this.screen === 'home' ||
-      this.screen === 'help' ||
-      this.activeDifficulty === difficulty
-    ) {
-      this.bestScore = 0;
+    if (difficulty === this.activeDifficulty) {
+      this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
     }
-
+    const reset = persistResetBestScore(difficulty);
     this.ui.isResetConfirmOpen = false;
-    if (reset?.then) reset.finally(() => this.onBestScoreUpdated?.());
-    return reset;
+    const reconcile = (result) => {
+      // Read the committed state even if the user has started another round.
+      // A failed read preserves the last trustworthy cache instead of showing zero.
+      if (!this.refreshBestScores({ updateRecordThreshold: false })) {
+        if (!this.pendingBestScoreRefresh) this.pendingBestScoreRefresh = new Map();
+        const thresholdReconciled = result === true && difficulty === this.activeDifficulty;
+        if (thresholdReconciled) this.startingHighScore = 0;
+        this.pendingBestScoreRefresh.set(difficulty, {
+          generation: this.bestScoreGeneration || 0,
+          thresholdReconciled
+        });
+      } else {
+        if (difficulty === this.activeDifficulty) this.startingHighScore = this.bestScore;
+        this.pendingBestScoreRefresh?.delete(difficulty);
+      }
+      this.onBestScoreUpdated?.();
+      return result;
+    };
+    return reset?.then ? reset.then(reconcile) : reconcile(reset);
   }
 
   openAdminPanel() {
@@ -528,6 +605,7 @@ export default class GameState {
     this.adminInput = '';
     this.adminError = '';
     this.ui.isAdminPanelOpen = true;
+    this.syncComboPauseState();
     triggerModalOpen(this.feedbackState, 'admin');
     return true;
   }
@@ -536,6 +614,7 @@ export default class GameState {
     this.adminInput = '';
     this.adminError = '';
     this.ui.isAdminPanelOpen = false;
+    this.syncComboPauseState();
     triggerModalClose(this.feedbackState, 'admin');
   }
 
@@ -545,7 +624,9 @@ export default class GameState {
   }
 
   setMembershipInput(value) {
-    this.membershipInput = String(value || '').slice(0, 32);
+    const nextInput = String(value || '').slice(0, 32);
+    if (nextInput === this.membershipInput) return;
+    this.membershipInput = nextInput;
     this.membershipError = '';
   }
 
@@ -597,12 +678,14 @@ export default class GameState {
       remainingCount: this.isAdminModeActive() ? Infinity : this.reviveCount
     };
     this.ui.isRevivePromptOpen = true;
+    this.syncComboPauseState();
     triggerModalOpen(this.feedbackState, 'revive');
   }
 
   closeRevivePrompt() {
     this.pendingRevive = null;
     this.ui.isRevivePromptOpen = false;
+    this.syncComboPauseState();
     triggerModalClose(this.feedbackState, 'revive');
   }
 
@@ -902,7 +985,7 @@ export default class GameState {
       return;
     }
 
-    const now = Date.now();
+    const now = this.getComboNow();
     const comboState = this.comboState || createComboState();
 
     if (
@@ -1073,7 +1156,7 @@ export default class GameState {
     };
     this.reviveCount = snapshot.reviveCount;
     this.reviveUsedCount = snapshot.reviveUsedCount;
-    this.bestScoreEligible = snapshot.bestScoreEligible;
+    this.bestScoreEligible = this.bestScoreEligible && snapshot.bestScoreEligible && !this.adminModeEnabled;
     this.pendingRevive = null;
     this.comboState = snapshot.comboState
       ? {
@@ -1250,6 +1333,8 @@ export default class GameState {
   canDragPieces() {
     return (
       this.screen === 'playing' &&
+      !this.lifecyclePaused &&
+      !this.viewportBlocked &&
       !this.inputLocked &&
       !this.pendingClear &&
       !this.ui.isSettingsOpen &&
@@ -1263,6 +1348,8 @@ export default class GameState {
   canUseTool() {
     return (
       this.screen === 'playing' &&
+      !this.lifecyclePaused &&
+      !this.viewportBlocked &&
       !this.inputLocked &&
       !this.pendingClear &&
       !this.ui.isSettingsOpen &&
@@ -1369,7 +1456,6 @@ export default class GameState {
 
   cancelDrag() {
     const wasDragging = this.dragState.isDragging || this.feedbackState.drag.active;
-    clearFeedbackState(this.feedbackState);
     this.clearDrag();
     return wasDragging;
   }

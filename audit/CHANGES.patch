@@ -1,0 +1,3491 @@
+diff --git a/CLOUD-HANDOFF.md b/CLOUD-HANDOFF.md
+index f21d6ae..c04f5d9 100644
+--- a/CLOUD-HANDOFF.md
++++ b/CLOUD-HANDOFF.md
+@@ -1,184 +1,145 @@
+ # CLOUD HANDOFF — Relax Block Puzzle
+ 
+-> Prepared 2026-10-09 · read this before the first edit.
+-
+-## 1. What this project is
+-
+-A relaxed 10 × 10 block-placement puzzle — fit the pieces, complete rows/columns, keep
+-the board alive. One shared ruleset runs on **three platforms**: a WeChat Mini Game, an
+-Android WebView APK and a browser build.
+-
+-- **GitHub:** https://github.com/seiya058904/Relax-Block-Puzzle
+-- **Live (browser):** https://seiya058904.github.io/Relax-Block-Puzzle/
+-- **Android release:** v1.0.12 (debug-signed preview, not a production release)
+-- **Version source:** `we xin xiao cheng xu-android-apk/app/build.gradle.kts` owns
+-  Android version metadata
+-- **Branch / commit:** `main` @ `4d1c30889c95b4458bb16c2704efba885553316a`
+-- **Working tree at packaging time:** clean
+-
+-## 2. Tech stack
+-
+-Plain JavaScript ES modules — **no bundler, no framework, no build step**. The Android
+-shell is Kotlin/Gradle. Tests use Node's built-in test runner (`node --test`, `.test.mjs`).
+-
+-```text
+-shared/js/                              SOURCE OF TRUTH for platform-independent modules
+-we xin xiao cheng xu/                   WeChat Mini Game project (open in WeChat DevTools)
+-we xin xiao cheng xu-android-apk/
+-  docs/                                 browser build served for GitHub Pages (+ full audio)
+-  app/                                  Android Kotlin/WebView app (web assets mirror)
+-  release-notes/, gradle wrapper
+-tests/                                  board, state, feedback, drag, layout, resources, parity
+-config/platform-manifest.json           shared / platform-specific inventory + target paths
+-config/resource-map.json                audio + resource mapping
+-scripts/                                sync, parity, resource-budget, piece-simulation, APK checks
+-docs/                                   frozen product rules, ADRs, audits, test baseline
+-patches/, server/                       patch tooling and an optional backend
++> Audited source handoff · 2026-10-10 · based on `4d1c308`.
++
++## 1. Identity and first step
++
++This is the complete audited source for the existing 10 × 10 puzzle, with its
++three difficulties, scoring, tools and platform-specific presentation preserved.
++
++- Repository: https://github.com/seiya058904/Relax-Block-Puzzle
++- Reference commit: `4d1c30889c95b4458bb16c2704efba885553316a`
++- The supplied 2026-10-09 source ZIP is the comparison baseline. This archive adds
++  the audit fixes and regression tests; it is **not a new Git commit**.
++- No commit, push, PR/issue, deployment, APK publication or signing change was made.
++- The archive has no `.git`, installed dependencies, SDK, build output or APK/AAB.
++- The Android duplicate audio mirror is omitted to keep the ZIP below 50,000,000
++  bytes. All retained audio is unchanged. **Restore it before tests or a build:**
++
++```bash
++node scripts/restore-android-audio.mjs
+ ```
+ 
+-### The generated-copy model (read this first)
++This cross-platform Node command is safe to run more than once. It restores all
++11 mapped full-quality files (26,936,009 bytes) and verifies every SHA-256 against
++the retained Web file. It refuses unrelated target entries instead of deleting them.
+ 
+-`shared/js` is copied — with a generated marker prefix — into all three targets listed
+-in `config/platform-manifest.json`:
++## 2. Authoritative source boundary
+ 
+-| Target | Path |
++| Directory | Role |
+ | --- | --- |
+-| wechat | `we xin xiao cheng xu/js` |
+-| web | `we xin xiao cheng xu-android-apk/docs/js` |
+-| android | `we xin xiao cheng xu-android-apk/app/src/main/assets/js` |
++| `shared/js/` | Authoritative source for platform-independent modules |
++| `we xin xiao cheng xu/` | WeChat Mini Game, light audio and native adapters |
++| `we xin xiao cheng xu-android-apk/docs/` | Browser build and retained full audio |
++| `we xin xiao cheng xu-android-apk/app/src/main/assets/` | Android WebView-specific HTML, shim and JS |
++| `tests/`, `scripts/`, `config/` | Existing tests, synchronization and resource contracts |
++| `docs/AUDIT_2026-10-10.md` | Integrated audit, severity, reproduction, fixes and limitations |
++| `audit/` | Independent review reports, raw results, selected screenshots and source diff |
++| `MANIFEST-SHA256.txt` | SHA-256 and byte counts of this archive's files, excluding itself |
++
++The manifest `config/platform-manifest.json` defines **11 shared modules and three
++targets**. Edit the shared source once and use `npm run sync`. Never hand-edit the
++33 generated copies. Audio, Renderer, GameState, InputManager, LayoutMetrics,
++main/render, HTML, shims and the Kotlin shell remain platform-specific.
+ 
+-**`npm run sync` is the only normal synchronisation path. Never hand-edit a generated
+-copy.** Platform renderers and input/lifecycle adapters are intentionally independent.
++## 3. Reproduce the software gates
+ 
+-## 3. Commands
++Run these from the extracted project root after audio restoration:
+ 
+ ```bash
+-npm test                 # node --test tests/**/*.test.mjs (zero dependencies)
+-npm run test:parity      # cross-platform parity suite
+-npm run verify           # sync --check + verify-platforms  (generated drift gate)
+-npm run verify:assets    # audio/resource mapping + budget check
++npm test
++npm run test:parity
++npm run verify
++npm run verify:assets
+ npm run simulate:generation -- --samples 10000
+-node tests/browser/high-score.mjs     # Playwright/Chromium browser checks
+-node tests/browser/quality.mjs
+ ```
+ 
+-Android (JDK 17, repo Gradle wrapper; from `we xin xiao cheng xu-android-apk/`):
++No installation is required for these Node-only commands. The original restored
++baseline passed 242/242 main tests and 222/222 parity tests. The earlier three
++missing-audio failures and two `spawnSync EBUSY` environment failures were all
++retested; none was counted as a product defect. Current results and exact evidence
++are in `docs/AUDIT_2026-10-10.md` and `audit/final/`.
+ 
+-```powershell
+-.\gradlew.bat assembleDebug --no-daemon
+-npm run verify:apk-assets    # requires a freshly built debug APK
++For a shared edit, run `npm run sync` before the gates. A second sync must be a no-op.
++The generation simulation intentionally has a bounded failure protocol; its exit
++status and each metric, including failed attempts, are recorded in the audit.
++
++## 4. Browser regression
++
++With an existing Playwright/Chromium installation:
++
++```bash
++node tests/browser/high-score.mjs
++node tests/browser/quality.mjs
+ ```
+ 
+-No root lint, type-check or formatting script is defined.
+-
+-## 4. Current quality baseline
+-
+-Verified on 2026-10-09 by extracting this ZIP into a fresh directory:
+-
+-- `npm test` — **239 / 242 pass, 3 fail** on a machine that permits child processes. The
+-  three failures are the repository's own duplicate-audio assertions and are a direct
+-  consequence of removing the Android audio mirror — see §5 and §7:
+-  - `web and Android retain the full audio budget` — ENOENT on
+-    `app/src/main/assets/audio`
+-  - `published audio directories contain only mapped audio files` — same ENOENT
+-  - `Android and web full audio files remain byte-identical` — ENOENT on
+-    `.../audio/pickup.mp3` (this test is itself the proof that the two trees were
+-    byte-identical duplicates)
+-- `npm run test:parity` — **219 / 222 pass**, same 3 audio-mirror failures
+-- ⚠️ **Two further tests need a real child process.** `tests/parity/sync-integrity.test.mjs`
+-  (`sync inventory is complete, normalized and independently checks orphan files` and
+-  `sync is idempotent, accepts a single normalized spelling, and detects drift and
+-  partial I/O failure`) builds a temp fixture and drives it with
+-  `spawnSync(process.execPath, ...)`. Where child-process spawning is blocked the child
+-  returns `status: null` and both assertions fail — **these two have nothing to do with
+-  audio**, and they pass on any machine that can spawn `node`. A reading of
+-  `237 / 242` means *both* the audio mirror and child processes are unavailable, which is
+-  what a locked-down sandbox produces; do not read it as five audio failures.
+-- `npm run verify` — **passes**: "platforms are in sync" and "verified 11 shared files
+-  across 3 targets" (the generated-file drift gate is fully green)
+-- `npm run simulate:generation -- --samples 2000` — runs headlessly and prints the
+-  piece-generation distribution
+-- ⚠️ `npm run verify:assets` and `npm run verify:apk-assets` **cannot pass in this
+-  archive** for the same reason. Restore the audio with the one command in §5 and
+-  everything above goes green (242/242, 222/222).
+-- Playwright browser checks (`tests/browser/*.mjs`) were **not executed here** (no
+-  Chromium provisioned in this packaging environment).
+-
+-## 5. Restoring the Android audio (one command)
+-
+-`app/src/main/assets/audio/*` is **byte-identical** to `docs/audio/*` (verified by
+-SHA-256 for several files). To restore it:
++Use the repository's `QA_PLAYWRIGHT_PACKAGE` and `QA_SCREENSHOTS` overrides when
++needed. Set `QA_DOCS_ROOT` to `we xin xiao cheng xu-android-apk/app/src/main/assets`
++to test the packaged Android web resources. The audit ran both roots and the
++WeChat Chromium host. These checks do not establish native Android or WeChat
++acceptance. See `audit/README.md` for optional independent probes.
++
++## 5. Android audio and build
++
++The browser audio directory is the complete retained source for the **Android
++mirror only**. The WeChat encodings are different and must never be overwritten.
+ 
+ ```bash
+-cp -r "we xin xiao cheng xu-android-apk/docs/audio" "we xin xiao cheng xu-android-apk/app/src/main/assets/audio"
++node scripts/restore-android-audio.mjs
+ npm run verify:assets
+ ```
+ 
+-Then build the APK normally and run `npm run verify:apk-assets`.
+-
+-## 6. Known issues and unverified risks
+-
+-- **Cross-platform parity is a contract, not a suggestion.** `config/platform-manifest.json`
+-  lists every shared file and every target. `npm run verify` fails on drift.
+-- **Do not merge platform audio.** WeChat intentionally uses *light* encodings
+-  (`resources.wechat.audioMaxBytes = 4.5 MB`, `qualityProfile: light`); the web and
+-  Android targets use the **full** audio (`audioMinBytes = 25 MB`,
+-  `qualityProfile: full`). `syncAudio` is `false` — audio is not synced by the tool.
+-- **Do not move `wx` / WebView-specific code into shared modules.**
+-- **Storage semantics are a compatibility contract.** Best-score mutations go through a
+-  single coordinator that keeps the whole read/merge/write inside it, including legacy
+-  migration. Native WeChat storage is synchronous; browser/WebView adapters supply an
+-  asynchronous `wx.withStorageLock` via Web Locks or an IndexedDB readwrite
+-  transaction. **Never write before acquiring the lock, and never fall back to an
+-  uncoordinated write when coordination fails.** `ScoreManager` ignores completions
+-  from an obsolete game generation.
+-- Delayed authentication and score-write completion must request the existing render
+-  path. Preserve idle-frame shutdown and hidden/paused scheduling guards — do not add a
+-  permanent frame loop.
+-- **Native Android device acceptance was not performed here.** The available APK is a
+-  debug-signed preview; Chromium WeChat-host tests supplement but do not replace
+-  DevTools/device checks. No root lint/type-check exists.
+-
+-## 7. What was excluded to control size
+-
+-| Excluded | Bytes | Reason / how to restore |
+-| --- | ---: | --- |
+-| `we xin xiao cheng xu-android-apk/app/src/main/assets/audio/` | 25.1 MB | **Byte-identical duplicate** of `we xin xiao cheng xu-android-apk/docs/audio/`. Restore with the one-line `cp` in §5 |
+-| `node_modules/`, `dist/`, `coverage/`, test/browser output, `__pycache__/`, `.playwright-cli/` | — | generated / local |
+-
+-**Kept on purpose:**
+-
+-- `we xin xiao cheng xu-android-apk/docs/` (27 MB, incl. the full 26 MB audio) — this
+-  **is** the browser build that GitHub Pages serves; it is not a duplicate.
+-- The rest of `app/src/main/assets/` (Android-specific `index.html` with its own
+-  `data:` favicon and `html, body, canvas` CSS, `js/`, `browser-wx-shim.js`) — these
+-  differ from the browser build and are required for the WebView app.
+-- `shared/`, `we xin xiao cheng xu/` (WeChat source, light audio), `tests/`, `scripts/`,
+-  `config/`, `docs/`, `patches/`, `server/`, `release-notes/` and the Gradle wrapper.
+-- The APK build output was never tracked, so no APK/AAB is present (and none should be
+-  committed).
+-
+-## 8. Recovering anything not in this ZIP
++Do not copy the containing `audio` directory into an already existing target:
++that older command could create `audio/audio`. If a prior attempt left unexpected
++entries, inspect them before rerunning; the restoration script reports them.
+ 
+-```bash
+-git clone https://github.com/seiya058904/Relax-Block-Puzzle.git
+-cd Relax-Block-Puzzle && git checkout 4d1c30889c95b4458bb16c2704efba885553316a
+-cp -r "we xin xiao cheng xu-android-apk/docs/audio" "we xin xiao cheng xu-android-apk/app/src/main/assets/audio"
++Use JDK 17 and the existing Gradle wrapper 8.7, SDK Platform 34 and Build Tools
++34.0.0. From `we xin xiao cheng xu-android-apk/` on the configured Windows host:
++
++```powershell
++.\gradlew.bat assembleDebug --no-daemon
++```
++
++Then from the project root:
++
++```powershell
++npm run verify:apk-assets
+ ```
+ 
+-## 9. Engineering constraints to keep
+-
+-- 10 × 10 board, three difficulties, one shared ruleset. Two-space indentation,
+-  semicolons, single-quoted strings, ES modules, `PascalCase` class files, `camelCase`
+-  functions/variables, `UPPER_SNAKE_CASE` constants.
+-- Keep rules in `GameState`/model modules, input in `InputManager`, drawing/layout in
+-  `Renderer`/`LayoutMetrics`, persistence in `storage.js`.
+-- **Storage keys, scoring, difficulty, drag semantics and feedback timing are
+-  compatibility contracts.**
+-- Run `npm test` after any gameplay, shared-module, rendering-state or resource change;
+-  `npm run test:parity` for cross-platform work.
+-- Touch, audio, vibration, safe-area, lifecycle, WebView or Canvas changes additionally
+-  require WeChat Developer Tools and real-device checks — report skipped manual checks
+-  honestly.
+-- Review `git status --short`, `git diff` and generated drift before handoff.
+-- Do not upgrade AGP/Gradle/compileSdk/Build Tools without explicit authorization.
++The latter requires a freshly built debug APK and PowerShell. This audit environment
++had JDK 17 but no Android SDK, adb/emulator or WeChat Developer Tools/device, so
++native builds and device acceptance were not run. No toolchain or signing upgrade
++was made. Follow `AGENTS.md` for the existing device workflow.
++
++## 6. What is preserved and omitted
++
++The original source files are retained, including the Gradle wrapper, all three
++platform entries, Android-specific HTML/shim, optional `server/`, `patches/`,
++configuration, release notes, shared source and original tests. The audit adds
++focused tests and the idempotent audio-restoration script.
++
++Only the recoverable Android duplicate audio directory is intentionally omitted
++from source content. Local dependencies, original comparison extracts, tool helper
++copies, temporary browser profiles and build outputs are not deliverables. The
++evidence directory keeps selected screenshots plus complete selected result logs;
++large duplicate screenshot matrices can be regenerated with the recorded commands.
++
++For historical comparison, fetch the exact repository commit above. Cloning that
++commit does not include these unpushed audit changes; use this ZIP or the included
++source diff for the audited version.
++
++## 7. Contracts and device limitations
++
++- Keep all best-score read/merge/write operations inside the existing coordinator.
++  Web Locks / IndexedDB and native WeChat synchronous storage are preserved.
++- Delayed results must respect the current game, difficulty, panel and visibility.
++  Keep idle rendering shutdown and do not add a permanent frame loop.
++- Keep the 3000 ms Combo window, 180 ms clear delay, score formula, fixed shape
++  library, probabilities, generation budgets, tools and storage keys unchanged.
++- Unusable viewports show a size/orientation prompt, freeze play and retain the
++  same round for recovery. Supported portrait layouts remain unchanged.
++- Validate native IME, actual audio output, Activity/context recreation and WeChat
++  APIs on the appropriate devices. The container lacks CJK fonts, so screenshots
++  prove geometry and state but do not prove Chinese font rendering on devices.
++- Read the integrated audit for confirmed fixes and explicitly unverified risks;
++  do not interpret a missing SDK/device as a successful native release gate.
+diff --git b/docs/AUDIT_2026-10-10.md b/docs/AUDIT_2026-10-10.md
+new file mode 100644
+index 0000000..4d689f7
+--- /dev/null
++++ b/docs/AUDIT_2026-10-10.md
+@@ -0,0 +1,262 @@
++# Relax Block Puzzle — 对抗审计与修复报告
++
++日期：2026-10-10。参考提交：`4d1c30889c95b4458bb16c2704efba885553316a`。
++
++## 1. 结论与交付边界
++
++已完成六个独立专项审计、交叉反证、主代理统一修改及可执行的软件门禁。确认的 16 条问题路径已修复：**P0 为 0，P1 为 1，P2 为 10，P3 为 5**；其中 15 条是运行时行为，1 条是交接恢复流程。另修正文档的过时源码边界，不将其计作游戏缺陷。
++
++10×10 棋盘、三种难度、固定形状、概率、重复惩罚、救援规则、20 次候选尝试预算、180 ms 清线等待、3000 ms Combo 窗口、道具、分数公式和正常视口的整体视觉均保留。`Board.js`、`Piece.js`、`DragModel.js`、`FrameInputQueue.js`、共享常量及质量配置没有修改。没有新增玩法、升级工具链、修改后端/生产配置或签名。
++
++此次结论覆盖真实源码、Node 状态/故障注入、Chromium 两种存储协调器及实际鼠标/触摸交互。**没有 Android SDK/adb/模拟器，也没有微信开发者工具或设备，因此没有声称 Android Debug 构建、原生 WebView、微信原生音频/输入已经验收。** 未进行 commit、push、Issue/PR、部署或 APK 发布。
++
++### 基线来源
++
++输入 ZIP：`relax-block-puzzle-cloud-handoff-20261009-4d1c308.zip`，27,604,522 字节。
++
++SHA-256：`f62a15701963d9f3474063c99d69a83b5c1324cd58e08d116cc79f2df8a0b021`。
++
++只读 GitHub 元数据核对：审计时 `main` 指向上述完整 SHA。原始 226 个文件保全；ZIP 无 `.git`，本轮修改是未提交的交付补丁。最终当前文件清单在根目录 `MANIFEST-SHA256.txt`，原始文件哈希在 `audit/baseline-input-manifest.json`。
++
++审计前已恢复 Android 音频镜像，逐一核对全部 11 文件。随后原基线 `npm test` **242/242**、parity **222/222**，sync 与 assets 均通过。因此原交接说明中的 3 个缺失镜像失败和 2 个 `spawnSync EBUSY` 相关失败全部重新验证，**均未计入产品缺陷**。[原始门禁日志](../audit/baseline/)
++
++## 2. 独立审计组织与证据约束
++
++| 独立角色 | 负责内容 | 报告 |
++| --- | --- | --- |
++| Core Logic Auditor | Board/Piece、生成、清线、道具、撤销、Combo、结束判定 | [CORE-AUDIT](../audit/core/CORE-AUDIT.md) |
++| Concurrency Auditor | 锁内读改写、跨标签页、旧回调、清分失败/恢复 | [最终并发复审](../audit/concurrency/REDTEAM-FIX-REVIEW.md) |
++| Cross-Platform Auditor | 清单、33 份生成副本、入口、Kotlin/配置、导入图 | [跨平台报告](../audit/cross-platform/CROSS-PLATFORM-AUDIT.md) |
++| Input & Rendering Auditor | 实际鼠标/触摸、键盘、窗口、布局、停帧 | [浏览器输入报告](../audit/input/BROWSER-QA-REPORT.md) |
++| Resource Auditor | 音频、资源映射、缓存、初始隐藏、恢复命令 | [资源报告](../audit/resource/RESOURCE-AUDIT.md) |
++| Red-Team QA | 管理员高影响反例、状态/计时、生命周期及补丁反证 | [Red-Team 报告](../audit/redteam/RED-TEAM-QA.md) |
++
++独立代理只读产品源码并提供复现，主代理实施修改和集成。并发修复接受第二轮反证后才关闭：同难度首页陈旧、真实自然 storage 事件、自身已排队写入、读恢复后的等值缓存等反例均得到处理。
++
++P1 的有效管理员验证污染路径由核心、并发和 Red-Team 独立核对；输入问题在真实 Chromium 中复现；音频基线直接从原 ZIP 提取 SoundManager 执行，未用现版推测旧行为。受控状态、故障注入和真实浏览器自然事件在各报告内分别标注。
++
++## 3. 权威源码与定位方式
++
++`shared/js/` 是共享权威源。只修改其中 `game/ScoreManager.js` 和 `utils/storage.js`，全部生成副本均通过 `npm run sync` 产生。没有同时手改三份共享模块。
++
++下文代码位置使用这些路径缩写，行号指本轮修复后的源码；原始行号及更完整的调用链见独立报告和 `audit/CHANGES.patch`。
++
++| 缩写 | 根路径 |
++| --- | --- |
++| S | `shared/js/` |
++| WX | `we xin xiao cheng xu/js/` |
++| WEB | `we xin xiao cheng xu-android-apk/docs/js/` |
++| AND | `we xin xiao cheng xu-android-apk/app/src/main/assets/js/` |
++| Web shim / Android shim | 对应平台根目录下的 `browser-wx-shim.js` |
++
++三端的 GameState、Main、Renderer、InputManager、SoundManager 是独立适配文件，按各端实现局部修改。Web 透明 inputLayer、Android Canvas、微信云认证和同步存储、轻量音频、Web/Android `playPickup()` 原有 no-op 均保留。
++
++## 4. 已确认问题、复现与最小修复
++
++分级：P1 表示破坏正式成绩隔离；P2 表示可达的功能、输入或生命周期故障；P3 表示较低影响的反馈/表现或交接可靠性问题。本次没有确认 P0。置信度针对列明的复现路径，不代表未执行设备平台也已实测。
++
++### F01 · P1 · 旧有效管理员验证 + 撤销污染正式最高分
++
++**平台与位置：** 微信可通过正常 UI 到达。`WX/game/GameState.js:1566 submitAdminCode`、`:1146 useUndoTool`；三端共同资格边界及 `S/game/ScoreManager.js:44`。
++
++**复现与影响：** 首页提交有效管理员验证，返回尚未完成时关闭面板；开普通局并合法放置；旧成功响应返回后启用管理员；撤销普通局快照，旧代码恢复 `bestScoreEligible=true`，之后管理员放置把正式最高分从 10 写至 20。需要真正有效的认证结果，**不是服务器身份验证绕过**。Web/Android 提交是同步路径，没有宣称其正常 UI 也存在这条异步链。
++
++**根因与修复：** 请求没有面板/局代际归属；资格被无条件从快照恢复。微信用递增验证代际，关闭、重开/新局使旧回调失效；仍有效的后台验证可正常完成。三端撤销资格取当前资格、快照资格和管理员状态的共同约束；共享计分器再拒绝管理员写分。
++
++**验证/置信度：** 高。原始真实生成/拖放复现、独立 Red-Team 成功/失败/异常/取消/重复提交反例，`state-race-regressions.test.mjs`。管理员关闭后本局仍不合格；新普通局可以正常计分。
++
++### F02 · P2 · 旧局最高分完成回调写错当前显示或留下陈旧首页
++
++**平台与位置：** Web、Android 异步适配；`S/game/ScoreManager.js:44`，三端 `GameState.initializeHomeState/refreshBestScores`。微信同步存储没有同一延迟完成竞争。
++
++**复现与影响：** normal 的保存等待锁时回首页并选 easy，旧结果曾把 easy 的显示 2 改为 normal 的 10；只丢弃旧回调又会使同难度首页继续显示 5，而存档已是 10。
++
++**修复：** 捕获难度/局代际，过期结果不直接修改当前局纪录；保留合法历史写入，并为当前展示难度做可信重读。页面隐藏时沿既有回调门禁等待恢复绘制。
++
++**验证/置信度：** 高。实际 Chromium 的 Web Locks、IndexedDB 两条路径均验证 persisted=10/display=10，另测不同难度隔离。[证据](../audit/concurrency/browser/results.json)
++
++### F03 · P2 · 清分未提交即显示 0，或完成后旧缓存长期残留
++
++**平台与位置：** Web/Android 的异步新局竞争，三端的读写失败恢复；`WEB/game/GameState.js:538/553/571` 及对应 WX/AND，`S/utils/storage.js:36`、ScoreManager。
++
++**复现与影响：** 锁中的清分尚未提交时重开，存档最终为 0 而新局显示仍为 100；写入配额失败时存档仍 100，却曾显示清空成功。进一步反证：写入后事务拒绝、紧随其后的读取失败、下一次或已经排队的得分完成，均可能使旧 best/庆祝门槛残留。
++
++**修复：** 清分提交后才按可信读取协调显示，失败读取保留可信缓存。待恢复的难度/代际与阈值是否已处理保存在运行时 Map，下次写入前、当前写入完成及前台恢复重试。`saved.previous` 取自锁内自身写入之前，可修复未知清分结果的阈值；显示已先变为 0 时也明确处理等值阈值。清分其他难度不会使当前局回调失效。
++
++**验证/置信度：** 高。独立 13 项排队/错误边界 + 4 项等值反例全过；源 `reset-reconcile-regressions.test.mjs` 另含正常提交但显示提前刷新的路径。事务模拟与原生设备明确区分。未改变锁、存储键或格式。
++
++### F04 · P3 · 其他难度事件被误认为当前局外部纪录
++
++**平台与位置：** Web、Android；`WEB/main.js:50` 及 AND；`GameState.confirmResetBestScore`。微信无浏览器 storage event。
++
++**复现与影响：** 本局 normal 首次保存 10 已写 localStorage、Promise 尚未完成；迟到的事件只改 easy，重读却看到自身 normal=10，旧代码抬高门槛，第二次放置错误庆祝。设置选择下局 easy 再清 easy 也曾错误作废 normal 的回调。
++
++**修复：** 最新可信读用于显示；外部阈值取事件 `oldValue/newValue` 中当前难度真正变化的值。只有清分目标为 activeDifficulty 才递增其局代际；无关难度不改当前门槛。
++
++**验证/置信度：** 高。真实 IndexedDB 双页面自然调度捕获 15 个关键交错：easy-only/自身10、外部20/自身30、清零/自身10，每组 5 次都通过。它们不是手工交换事件完成顺序。[原始事件](../audit/concurrency/browser/event-source-checks.json)
++
++### F05 · P2 · 暂停消耗 3000 ms Combo 窗口
++
++**平台与位置：** 三端 `GameState.syncComboPauseState/getComboNow/handleLineClear` 及 Main 生命周期；例如 `WEB/game/GameState.js:403`。
++
++**复现与影响：** 首次清线后暂停 10 秒，有效游戏时间仅 1 秒，再清线曾重置为单次清除。设置、后台也受影响；分数公式未因此改变。
++
++**修复：** 从墙钟扣除暂停区间，多个暂停原因全部解除才恢复；覆盖 Screen、Settings、Pause、Admin、Revive、后台及不可用视口。Undo 不回滚时钟偏移，新局重建时钟但保留宿主隐藏状态。未使用停止 RAF 时也会停止的动画时钟。
++
++**验证/置信度：** 高。独立 36 项三端反例包含嵌套/重复 hide/show、无帧 idle 仍过期、3000/3001 ms 边界、暂停后撤销、新局、真实复活、短视口组合；新增源测试全部通过。
++
++### F06 · P2 · 原生键盘回调在 idle 后不更新 Canvas
++
++**平台与位置：** Web、Android；`WEB/game/InputManager.js:538 bindKeyboard` 及 AND。微信原有回调已有刷新。
++
++**复现与影响：** 福利码字段已聚焦，停止 RAF 后输入 INVALID-AUDIT，状态变更但 Canvas 仍显示旧值，隐藏 DOM input 不能补上显示。
++
++**修复：** input/confirm/complete 更新状态后请求既有即时渲染入口；保留面板已关闭及后台守护，没有永久 RAF。
++
++**验证/置信度：** 高。真实 touch 聚焦与键盘输入、三类回调、隐藏/关闭迟到回调均通过；Web 和 Android 资源宿主都覆盖。
++
++### F07 · P3 · 无效福利码的错误立即被 complete 清除
++
++**平台与位置：** Web、Android 正常确认路径；三端 `GameState.setMembershipInput` 作共同幂等保护，例如 `WEB/game/GameState.js:626`。微信无相同的正常 complete 竞争证据。
++
++**复现与影响：** 确认无效值后先产生“福利码无效”，hideKeyboard 导致同值 complete，再次 setter 把错误清空。
++
++**修复：** 只有输入值真正改变才清除旧错误；保留各平台原文案及校验规则。
++
++**验证/置信度：** 高。真实 Chromium 确认路径与源回归；只修提示状态，没有改变会员/管理员校验结果。
++
++### F08 · P2 · 鼠标点击原生字段后默认动作夺走焦点
++
++**平台与位置：** Web/Android shim 的 mousedown，例如 Web shim:121；微信没有浏览器鼠标默认动作。
++
++**复现与影响：** Canvas 字段在 touch 流程可聚焦，但实际鼠标点击后 activeElement 立即变 BODY，实体键盘无法输入。
++
++**修复：** 仅游戏 Canvas/透明输入层的主按钮 mousedown 阻止默认动作，保留控制器请求的输入焦点；Android 补主按钮守护。未拦截真实 DOM input 的输入操作。
++
++**验证/置信度：** 高。真实鼠标点字段后保持 wxKeyboard 焦点，两端资源宿主及 preventDefault 行为断言通过。
++
++### F09 · P2 · 丢失 mouseup 后旧拖动延续到下一点击
++
++**平台与位置：** Web 鼠标、Android JS 的外接鼠标路径；两端 shim:112 附近。微信 native touch session 原有取消语义保留。
++
++**复现与影响：** 拾取方块后失焦，释放发生于窗口外；返回时 buttons=0 仍拖动，下一次普通点击曾放下旧块并加 40 分。释放次按钮也不应结束主按钮拖动。
++
++**修复：** blur 和 buttons=0 取消鼠标所有权；mouseup 仅主按钮结束拖动。blur 只取消输入，声音与主循环继续依据真实页面可见性。
++
++**验证/置信度：** 高（事件/实际鼠标路径）。Chromium 中的受控 blur 信号 + 真实 CDP buttons=0 移动验证；未声称物理 OS 窗口切换已实测。棋盘、得分、触摸标识与音频可见性断言均保留。
++
++### F10 · P2 · 短视口负格子导致 Canvas 启动错误
++
++**平台与位置：** Web 的窗口旋转/缩小可实际到达；Android/微信固定竖屏只验证相同适配器的受控短视口保护。三端 Renderer.getLayout/render、GameState.setLayout、InputManager、Main；如 `WEB/game/Renderer.js:258/349`。
++
++**复现与影响：** Web 568×320 产生负 cellSize，`arcTo` 收到 -11 半径，抛 IndexSizeError，启动错误覆盖层隐藏 Canvas；恢复尺寸也不能解除，需要刷新。640×360 的格子也不可用。
++
++**修复：** 实际宽<320、高<560 或可用格子<=4 时显示“请转为竖屏或增大窗口”，格子数值保持正数，清空点击区、冻结玩法/Combo/UI 动画并停帧。恢复可用尺寸后继续同一局。320×568 等正常视口原几何保持。
++
++**验证/置信度：** 高。真实 Web、Android 资源宿主；180 ms 清线中缩小，等待 500 ms 后 remainingTime/棋盘/分数保持，恢复只结算一次至 160。还验证键盘输入在缩小及恢复间保留。原生虚拟 IME 的布局/确认体验待设备验收。[输入报告](../audit/input/BROWSER-QA-REPORT.md)
++
++### F11 · P3 · 取消下一拖动清除上一次得分反馈
++
++**平台与位置：** Web/Android `GameState.cancelDrag`，如 WEB:1457。微信原本只清拖动。
++
++**复现与影响：** 合法放置后的 gain 尚在显示，立即拾取下一块再 TouchCancel/失焦，旧代码清除整份 feedbackState，使已完成放置的反馈消失。
++
++**修复：** cancelDrag 只清拖动反馈；保留已完成动作的表现。正常 Undo/reset 清理规则仍保留。
++
++**验证/置信度：** 高。三端源回归先确认实际 gain.active，再取消下一拖动，保持得分及历史反馈一致。
++
++### F12 · P2 · 关闭效果音开关不停止正在播放的效果
++
++**平台与位置：** 三端 SoundManager.setSettings，例如 WEB:45、WX:45。
++
++**复现与影响：** 声音已在播放时关闭 soundEnabled，旧版只阻止未来音效，当前音效继续。
++
++**修复：** 开关从开到关时立即 stopAllEffects；不改变 BGM 开关，重新开启不重播旧效果。
++
++**验证/置信度：** 高（API 行为）。原 ZIP/现版对照，三端每端 200 次隐藏/换曲/静音周期；实际扬声器/耳机输出待设备验证。
++
++### F13 · P2 · 微信后台只停 BGM，旧效果及新效果仍播放
++
++**平台与位置：** 微信 `SoundManager.playEffect:161`、`stopAllEffects:223`、`handleAppHide:253`。Web/Android 原先已有后台效果门禁。
++
++**复现与影响：** 音效中 wx.onHide 后效果未停止，隐藏状态还接受新的 playEffect。
++
++**修复：** hide 停全部效果，playEffect 检查 appHidden；前台只恢复设置允许的 BGM，不重播效果。
++
++**验证/置信度：** 高（实际类与受控 wx 音频对象）。原始行为与修复后周期压力都有证据；微信原生音频打断/静音键行为尚未验收。
++
++### F14 · P3 · 微信无关设置重启当前 BGM
++
++**平台与位置：** 微信 `SoundManager.playBgm:194`；Web/Android 无该 stop/seek 路径。
++
++**复现与影响：** BGM 正在播放时切换振动设置，旧 playBgm 每次 stop/seek(0)，音乐从头开始。
++
++**修复：** 普通同步不再 stop/seek；真正换曲、关闭 BGM、后台停止等既有操作保留。
++
++**验证/置信度：** 高（调用语义）。独立旧版/现版对照、200 周期及同一 context 的 stop/seek 次数断言。
++
++### F15 · P2 · 初始隐藏页面没有立即进入生命周期门禁
++
++**平台与位置：** Web/Android `Main.constructor`，如 WEB:21。微信保留原生入口，未确认同一 document.hidden 初始化路径。
++
++**复现与影响：** 以 document.hidden=true 初始化真实 shim/Main，保存 BGM 开启；旧版 mainPaused=false、SoundManagerHidden=false、play=1、RAF=1，重复 hidden 通知被 shim 去重而不补发 hide。
++
++**修复：** Main 从当前 document.hidden 初始化暂停；立即同步 GameState 生命周期，在应用音频设置之前令 SoundManager 隐藏。无 document 宿主仍兼容。
++
++**验证/置信度：** 高（受控初始状态确定复现）；自然后台标签页/原生冷启动未实测。独立 Red-Team 10/10，覆盖初始可见/隐藏、BGM开/关、非默认曲目、重复通知及无 document 宿主。Headless Chromium 未提供自然 hidden 页，报告没有假称设备通过。
++
++### F16 · P3 · 交接音频恢复命令不可重复执行
++
++**平台与位置：** 原 CLOUD-HANDOFF §5/§8；新 `scripts/restore-android-audio.mjs`。
++
++**复现与影响：** 旧 cp -r 在目标 audio 已存在时再运行，生成 audio/audio，资源验证失败且重复增大包。涉及 Android 交接镜像，微信轻量音频不受影响。
++
++**修复：** 按 resource-map 逐文件复制 Web→Android，检查源完整性、拒绝额外目标条目、读回核对全部 SHA-256；不删除未知文件。
++
++**验证/置信度：** 高。全 11 文件哈希核对及重复执行成功；最终包省略镜像但保留全部可恢复源，交付前从 ZIP 新解包再恢复验证。
++
++### D01 · P3 文档维护（不计运行时缺陷）
++
++更正 PLATFORM_SYNC 中“根目录非 Git、仅 Android 子树为 Git”的历史描述，补齐 Presentation 共享清单；更新 UNDO_BEHAVIOR 的管理员资格单向约束，保留历史修复说明。CLOUD-HANDOFF 区分历史失败与本轮结果；MANIFEST-SHA256 重建为当前交付文件。
++
++## 5. 测试、反证与未改规则
++
++[完整测试报告](TEST_RESULTS_2026-10-10.md)列出命令、矩阵及证据路径。最终主测试 **301/301**、parity **281/281**；相比恢复后的原基线增加 59 条回归。
++
++新增 5 个 focused test 文件覆盖上述真实缺陷。两处既有测试作必要调整：Combo 用例补开始游戏前置状态，所有原数值断言保留；blur 的笼统源码字符串禁令换为实际 shim 行为断言，明确“只取消鼠标，不伪造可见性”。没有删除/放宽棋盘、得分、概率、资源或平台 parity 断言。
++
++### 生成与长局
++
++- 每个难度 10,000 次，共 30,000 样本；所有非计时指标与基线逐字段一致。
++- easy/normal 返回失败率 0；master 5/10,000（0.05%），基线完全相同。`UNIFIED_SPEC` 明确限定 20 次尝试并允许明确失败；未把受预算限制的失败解释成“数学上绝无解”，也没有为清零此指标更改规则。
++- 成功候选中的即时零可放置比例均为 0；完整三步可放比例为 easy 100%、normal 89.78%、master 约79.98%。这些是固定种子/棋盘夹具的统计，不是玩家总体概率估计。
++- 独立 occupancy/计分 oracle 跑 108 局，23,136 次合法放置、5,715 条清线、2,166 次无效拖放、105 次撤销、213 次刷新、69 次清除，72 对跨端重放一致。最终全部结果 JSON 与基线一致。
++- HUD 原有高分布局测试覆盖至 2,147,483,647；长局最高观测 28,520。没有证据证明正常游戏可达到 JavaScript 安全整数上界，因此未凭任意注入超大值增加分数截断或修改规则。超过安全整数范围的任意长期积累不是此次有限测试建立的保证。
++
++### 保持的存储和性能机制
++
++全部最高分修改继续使用现有协调器；Web Locks 优先、IndexedDB readwrite 备用，失败闭合，不降级成无锁覆盖。微信同步存储保留。读错、坏数据、迁移失败、锁拒绝及 reset 排队的测试全通过。
++
++继续保留 idle 停帧、单帧输入合并、DPR/Canvas 单一尺寸控制、缓存像素预算及有限音频池。此次没有为了“性能优化”重写 Renderer 或改变反馈节奏。资源压力验证三端各 200 音频周期、各 1,000 缓存重建；清理后存活缓存像素为 0。
++
++## 6. 未验证项与不成立的疑点
++
++| 项目 | 本轮结论 / 下一步 |
++| --- | --- |
++| Android Debug 构建和 verify:apk-assets | 未执行：缺 SDK、adb/模拟器、PowerShell。JDK17存在；Gradle/AGP/SDK配置保持原样。需在既有配置的主机运行既有命令。 |
++| 原生 WebView Activity 暂停/销毁/重建、进程回收 | 静态检查 Kotlin 与入口未发现确定新缺陷；需设备操作与 logcat，未用 Chromium host 替代。 |
++| 微信 DevTools 编译/预览/真机 | 缺工具与设备；云认证回调使用明确的本地 fixture，没有接触生产后端。 |
++| 原生音频、系统打断、静音键、扬声器 | 验证了调用顺序、池和资源，未验证真实听感/系统策略。 |
++| 虚拟 IME 与短视口 | 实际键盘输入在尺寸缩小/恢复间保留；原生 IME 的系统 resize、完成键和 Canvas 控件可达性仍需设备验收。 |
++| 物理 OS 失焦与 Canvas context 丢失 | blur/touchcancel、宿主 hide/show、DPR/resize 已测；物理切窗、系统回收 context/极限原生内存压力未建立设备结论。 |
++| 中文字体视觉 | 容器无 CJK 字体，截图有方框。Canvas 文本值与几何已查，不能当作中文字体真机验收。未为测试环境改变游戏字体。 |
++| 低层 API 畸形 cells/NaN、任意高分注入 | 未建立从正常输入到这些低层畸形参数的路径，不据此虚构产品 Bug。 |
++| 三件套不能全部放下、剩余工具却结束/复活 | 依据冻结规则，不擅自改成保送三块或结束弹层可继续用工具。 |
++
++没有可靠证据的项目保持“未验证/受限”，不以 P0/P1 缺陷包装，也不自动判为通过。
++
++## 7. 交接与复原
++
++完整源代码和报告在同一 ZIP。原有源文件全部保全，只有 Android 重复音频镜像可省略；微信 11 文件 **2,931,409 字节**、Web 11 文件 **26,936,009 字节** 均与原始 ZIP 完全一致。恢复后 Android 的 11 文件、名称、字节数、SHA-256 与 Web 全部一致。
++
++从解压根目录先执行 `node scripts/restore-android-audio.mjs`，再运行测试报告中的五个命令。重复执行恢复命令不会产生嵌套目录。`CLOUD-HANDOFF.md` 给出完整说明。交付 ZIP 严格小于 **50,000,000 字节**；最终字节数和整个 ZIP 的 SHA-256 在交付消息中给出。
+diff --git a/docs/PLATFORM_SYNC.md b/docs/PLATFORM_SYNC.md
+index f36880e..2c7516c 100644
+--- a/docs/PLATFORM_SYNC.md
++++ b/docs/PLATFORM_SYNC.md
+@@ -8,7 +8,7 @@
+ - 共享源码：`shared/js/`
+ - 清单：`config/platform-manifest.json`
+ 
+-根目录不是 Git 工作树；只有 Android 子目录有独立 Git。同步和测试脚本位于根目录，Android 修改会显示在其现有 Git 工作树中。
++统一仓库以本项目根目录为边界，三端、共享源码和验证脚本均在同一仓库中。源码交接 ZIP 不包含 `.git`；解压后的目录没有 Git 历史，不代表 Android 子目录是另一个权威仓库。以交接说明记录的基线和文件清单核对离线修改。
+ 
+ ## 命令
+ 
+@@ -29,7 +29,7 @@ npm test
+ 
+ ## 文件分类
+ 
+-共享基线：`Board.js`、`Piece.js`、`ScoreManager.js`、`utils/storage.js`、`coreConstants.js`、`DragModel.js`、`FrameInputQueue.js`、`SafeHitArea.js`、`RenderPerfStats.js` 和 `config/quality.js`。
++共享基线：`Board.js`、`Piece.js`、`ScoreManager.js`、`utils/storage.js`、`coreConstants.js`、`DragModel.js`、`FrameInputQueue.js`、`SafeHitArea.js`、`RenderPerfStats.js`、`Presentation.js` 和 `config/quality.js`。
+ 
+ 平台独立：`GameState.js`、`InputManager.js`、`Renderer.js`、`LayoutMetrics.js`、`constants.js`、`main.js`、`render.js`、HTML、shim、Android Kotlin 和全部音频。上述平台层现在调用共享拖拽模型和输入队列，但仍保留各自的生命周期、Canvas/DPR 和 Renderer 适配。
+ 
+@@ -39,5 +39,5 @@ npm test
+ 
+ - 源文件和生成文件统一使用 UTF-8、LF、无 BOM。
+ - `npm run sync` 必须可重复执行；第二次执行应显示无差异。
+-- 不复制音频；微信约 3.9 MB 的轻量音频与 Android/Web 完整音频保持独立。
++- JS 同步工具不复制音频；微信轻量音频与 Android/Web 完整音频保持独立。交接包省略的 Android 重复镜像用 `node scripts/restore-android-audio.mjs` 恢复，再运行 `npm run verify:assets`。
+ - `npm run verify` 失败时先修复共享源或重新运行同步，再进行平台构建。
+diff --git b/docs/TEST_RESULTS_2026-10-10.md b/docs/TEST_RESULTS_2026-10-10.md
+new file mode 100644
+index 0000000..f8b3ac1
+--- /dev/null
++++ b/docs/TEST_RESULTS_2026-10-10.md
+@@ -0,0 +1,176 @@
++# Relax Block Puzzle — 测试与验收记录
++
++日期：2026-10-10。参考基线：`4d1c30889c95b4458bb16c2704efba885553316a`。
++
++本报告配合 [审计与修复报告](AUDIT_2026-10-10.md)、根目录 `CLOUD-HANDOFF.md` 和 `audit/` 原始记录使用。报告区分源测试、真实 Chromium 交互、受控宿主/故障注入与尚未执行的原生验收。
++
++## 1. 软件门禁结果
++
++所有命令都从项目根目录运行。先按交接说明恢复 Android 音频，再验证。
++
++| 命令 | 恢复镜像后的原始基线 | 最终修复源码 | 证据 |
++| --- | --- | --- | --- |
++| `npm test` | 242/242，0 fail | **301/301，0 fail、0 skip** | `audit/baseline/npm-test.log`、`audit/final/npm-test.log` |
++| `npm run test:parity` | 222/222，0 fail | **281/281，0 fail、0 skip** | `audit/baseline/parity.log`、`audit/final/parity.log` |
++| `npm run verify` | 通过 | **通过，11 模块 × 3 目标无漂移** | 两目录的 `verify.log` |
++| `npm run verify:assets` | 通过 | **通过，三端全部资源、路径和预算** | 两目录的 `assets.log` |
++| `npm run simulate:generation -- --samples 10000` | exit 0 | **exit 0，非计时结果逐字段相同** | 两目录的 `generation-10000.log` |
++| `npm run sync`，重复执行 | 已同步 | **生成副本一致，重复执行无内容变化** | `verify.log` 与当前 SHA-256 清单 |
++| `node scripts/restore-android-audio.mjs`，重复两次 | 新交接工具 | **两次成功，11 文件、26,936,009 字节** | `audit/final/audio-restore-first.log`、`audio-restore-second.log` |
++
++原先交接中记录的五项失败没有被当作五个产品缺陷：三项缺失音频镜像和两项 `spawnSync EBUSY` 相关失败，恢复输入并在当前环境重跑后全部消失。其余缺陷来自另行复现的真实路径，而不是原始测试失败数量。
++
++主测试包含 parity，不能把 301 和 281 相加解释为独立测试数。独立代理的部分反例也与新增回归覆盖相同路径，下文按各次执行记录报告，不合计成一个夸大的总数。
++
++## 2. 新增与调整的回归
++
++新增 59 条测试，位于五个文件，全部使用实际平台模块或产品 shim：
++
++| 文件（位于 `tests/parity/`） | 新增数量 | 主要保护 |
++| --- | ---: | --- |
++| `state-race-regressions.test.mjs` | 15 | 管理员请求归属、不可逆成绩资格、过期写分及清分竞争 |
++| `audio-lifecycle.test.mjs` | 6 | 静音即时停止、微信后台音效门禁、BGM 同步不重启 |
++| `input-lifecycle-regressions.test.mjs` | 13 | 真实 shim 鼠标所有权/焦点、键盘即时刷新、取消拖动反馈、初始隐藏 |
++| `reset-reconcile-regressions.test.mjs` | 19 | 清分提交/失败、读恢复、排队写入、锁内 previous、等值缓存和难度隔离 |
++| `paused-clock-viewport.test.mjs` | 6 | 三端 Combo 暂停、短视口冻结与恢复 |
++
++两处既有测试的改变具有明确原因：
++
++- 原 Combo 测试在首页直接触发计时逻辑；现在先开始一局，仍用原来的数值和边界断言，匹配首页不消耗游戏时间的约定。
++- 原 blur 检查禁止任何 blur 监听器，只能检查源码字符串。现用实际 shim 事件断言明确验证：失焦取消鼠标拖动，却不调用生命周期隐藏或停止音频。没有放宽触摸/可见性语义。
++
++Board、Piece、DragModel、布局/资源契约及既有概率和 parity 数值断言没有删除或弱化。没有增加永久绘制循环来让刷新测试通过。
++
++## 3. 生成分布和长局不变量
++
++### 3.1 既有生成模拟
++
++命令中的 10,000 指每个难度的样本数，总计 30,000；使用脚本原有固定种子及 empty、quarter、half、fragmented、narrowLanes、nearlyFullRow、nearlyFullColumn、critical 夹具。
++
++| 指标 | easy | normal | master |
++| --- | ---: | ---: | ---: |
++| 样本 | 10,000 | 10,000 | 10,000 |
++| 返回失败数 | 0 | 0 | 5 |
++| 返回失败率 | 0% | 0% | 0.05% |
++| 成功候选中零个即时可放方块比例 | 0 | 0 | 0 |
++| 完整三步可放比例 | 100% | 89.78% | 约 79.98% |
++| 所有非计时字段相对基线 | 相同 | 相同 | 相同 |
++
++master 的 5 次失败原基线即存在。`UNIFIED_SPEC` 明确保留最多 20 次尝试及显式失败返回；最后的放宽阶段要求至少一个可放置方块，并不保证全部三块都能依次放下。这不是数学上无合法移动的证明，也不是修改概率以降低难度的理由。代码及上述全部分布/历史/救援统计没有改变。
++
++计时数据也保留在原日志中，但测试在共享容器及并行任务下运行，不能据此宣称生成器加速或退化。此次没有性能相关生成器修改。
++
++### 3.2 独立长局 oracle
++
++`audit/core/long-game-invariants.mjs` 使用独立 occupancy/行列清除/计分计算，分别对三端、三难度、12 个种子操作；每局最多 400 步。结果为：
++
++| 检查 | 结果 |
++| --- | ---: |
++| 游戏局数 | 108 |
++| 合法放置 | 23,136 |
++| 清除的行/列 | 5,715 |
++| 无效拖放 | 2,166 |
++| 撤销 / 刷新 / 清除道具 | 105 / 213 / 69 |
++| 跨端重放配对 | 72 对，全部一致 |
++| 单局最多步骤 / 最高观测分 | 400 / 28,520 |
++| 最终与基线完整结果 JSON | **完全相同** |
++
++证据：`audit/core/long-game-baseline-results.json`、`long-game-results.json` 和 `audit/final/long-game-invariants.log`。既有 HUD 高分测试覆盖至 2,147,483,647；有限长局测试没有建立任意长时间累积到 JavaScript 安全整数上界后的保证，因此未凭人工超大值注入改变分数规则。
++
++## 4. 真实浏览器回归
++
++浏览器插件不可用，使用仓库原有 Playwright 脚本和环境中已有浏览器：Playwright **1.62.1**、Chromium Headless Shell **141.0.7390.37**。默认 Playwright 要求的另一浏览器 revision 不在环境中，使用既有可执行文件覆盖启动路径，没有安装/升级仓库依赖。详见 `audit/final/environment.json`。
++
++### 4.1 仓库原有高分与质量脚本
++
++| 运行 | 覆盖和结果 | 原始日志 |
++| --- | --- | --- |
++| 高分：Web docs | 2 视口 × Web Locks/IndexedDB，4/4 通过 | `browser-high-score-web.log` |
++| 高分：Android assets | 相同矩阵，4/4 通过 | `browser-high-score-android-host.log` |
++| 质量：Web docs | 5 个 Web 配置 + 1 个微信 Chromium 宿主配置，全部通过 | `browser-quality-web.log` |
++| 质量：Android assets | 5 个 Android assets 配置 + 同一微信宿主配置再次运行，全部通过 | `browser-quality-android-host.log` |
++
++上述日志位于 `audit/final/`，质量 JSON 位于 `audit/browser/quality-web/` 与 `quality-android-host/`。脚本内部对 Android assets 仍用 `web-*` 测试名称；本报告以实际资源根目录区分两次运行，没有把 Android 浏览器资源检查误称原生 APK。
++
++质量回归包括真实鼠标/触摸的合法和非法拖放、撤销、1/2/3 行列消除、Combo、道具、暂停、复活、游戏结束、缓存与停帧，以及 DPR、安全区、缩放/尺寸变化和 reduced-motion。微信宿主还检查 idle 后的延迟管理员成功/失败/异常回调、隐藏期间不调度及恢复刷新。
++
++压力观测为 Web 390 配置 30,092 ms/1,683 帧，render p95 1.30 ms；Android assets 390 配置 30,066 ms/1,788 帧，p95 0.60 ms；微信 Chromium 宿主约 10 秒，p95 0.70 ms。它们是此容器本次运行的观测，不是原生 FPS、设备基准或修复后的加速比例。
++
++### 4.2 独立真实输入反证
++
++Input Auditor 在原始资源和修复资源上运行同一浏览器：修复后 Web 矩阵 **42/42**、补充键盘缩放 **11/11**、Android assets 宿主 **43/43**。这 96 个记录包含跨端/不同运行的重复路径，不是 96 种独立用户流程。
++
++验证了以下实际结果：
++
++- 原 Web 568×320 的 `arcTo` 半径 -11 启动错误消失；568×320、640×360 显示方向/尺寸提示，无残留点击区，RAF 为 0。
++- 1280×900、390×844、320×568 的正常玩法保留；短视口恢复后继续同一棋盘/三件套/分数。
++- 正在 180 ms 清线时缩小，等待 500 ms 仍保持 pendingClear；恢复后只结算一次至 160 分。
++- 原生 DOM 键盘回调立即绘制，无效福利码错误保留；输入 `INVALID-AUDIT`，缩小后继续输入 `Z` 再恢复，状态和 Canvas 都为 `INVALID-AUDITZ`。
++- 鼠标字段点击保持原生 input 焦点；受控 blur 加实际 CDP `buttons=0` 取消旧拖动，下一点击不落旧方块。
++- 三次最终运行均无 page error / console error。
++
++证据含 `audit/input/BROWSER-QA-REPORT.md`、四组 `browser/*/report.json` 及完整对应截图。原始 baseline 中的失败 health check 是缺陷证据，不算通过的验收项。
++
++### 4.3 实际跨页并发
++
++独立 Concurrency Auditor 使用真实 Web Locks 与 IndexedDB 各验证旧写分完成后同难度首页可信刷新；两种路径均为存档 10、显示 10，且无浏览器错误。
++
++另用真实 IndexedDB 双页面自然 storage 事件捕获 15 个关键交错（3 类 × 5 次）：事件只改 easy 而 fresh normal 是自身 10；外部 normal 20 而 fresh 已是自身 30；外部清零而 fresh 已是自身 10。最终庆祝阈值分别为 0、20、0，均符合事件来源。捕获这些交错分别用了 37、130、27 轮；这是实际命中的验证，不是没有命中就宣称通过。
++
++证据：`audit/concurrency/browser/event-source-checks.json`、`results.json` 和 `REDTEAM-FIX-REVIEW.md`。早期探索的 `natural-event-race.json` 空数组保留为历史记录，不能替代上述后续有效捕获结果。
++
++## 5. 独立反例、资源与初始隐藏
++
++| 专项 | 结果与范围 |
++| --- | --- |
++| Red-Team 状态反例 | 24 条通过，覆盖高影响管理员/撤销路径与难度/局代际等 |
++| Red-Team 实际 Main 回调 | 6 条通过，延迟完成、隐藏和 idle 守护 |
++| Combo 时钟反证 | 36 条通过，三端嵌套暂停、3000/3001 ms、撤销/新局/复活、短视口 |
++| 最后追加的初始可见性反证 | 10 条通过；原版同脚本 6 pass/4 fail；追加后未声称重新跑过前述完整 66 条 |
++| 清分未知结果与恢复 | 独立 13 条边界 + 4 条等值缓存反例全部通过；与源回归有覆盖重叠 |
++| Web/Android 低层存储失败矩阵 | 协调器不可用、锁拒绝、读取/迁移失败、写入失败和事务异常均按既有保护规则处理 |
++| 音频池压力 | 每端 200 次 hide/换曲/恢复/静音周期；最多 7 效果 context + 1 BGM，隐藏后播放中对象 0 |
++| 实际 Web/Android shim 音频释放 | 各 200 次 BGM 替换；重试集合最多 1，最终 0，旧 Audio.src 释放 |
++| Canvas 缓存压力 | 每端 1,000 次重建；微信最大 750,000 像素，Web/Android 最大 1,249,524；均在预算内，清理后 0 |
++| 音频文件 | 微信 11 文件/2,931,409 bytes；Web/Android 各 11 文件/26,936,009 bytes；原编码 SHA-256 不变 |
++| MP3 检查 | 22 个保留编码文件通过 ffprobe 格式和正时长检查 |
++
++初始隐藏用例运行实际 shim/Main，但 `document.hidden=true` 为受控初始浏览器状态。修复后 Main、GameState、SoundManager 初始均暂停；保存 BGM 开启也为 play=0、RAF=0，前台恢复按设置播放。已有 headless shell 的自然 background/frozen target 仍报告 visible，不能以此声称自然后台标签页或原生冷启动已实测。
++
++## 6. 可复现命令
++
++Node 软件门禁不需要先安装依赖：
++
++```bash
++node scripts/restore-android-audio.mjs
++node scripts/restore-android-audio.mjs
++npm test
++npm run test:parity
++npm run verify
++npm run verify:assets
++npm run simulate:generation -- --samples 10000
++```
++
++共享源码修改后必须 `npm run sync`，再次执行应无内容变化。当前 ZIP 的哈希清单对应未恢复镜像的包内内容；恢复出的 Android 音频由恢复工具和 assets 门禁逐文件验证。
++
++在已有 Playwright/Chromium 的环境运行浏览器脚本：
++
++```bash
++node tests/browser/high-score.mjs
++node tests/browser/quality.mjs
++```
++
++`QA_DOCS_ROOT` 可切换到 Android assets；`QA_SCREENSHOTS` 指定输出，`QA_PLAYWRIGHT_PACKAGE` 指定已有模块。本轮使用的可选启动包装器为 `audit/browser/playwright-existing.cjs`，需要 `CODEX_PRIMARY_RUNTIME_NODE_MODULES` 与 `QA_CHROMIUM_EXECUTABLE` 指向本机已有依赖/浏览器；它不属于产品启动文件。可移植的完整示例及独立探针运行说明见 `audit/README.md`。
++
++## 7. 明确未执行的验收
++
++| 门禁 | 状态 / 原因 |
++| --- | --- |
++| Android `assembleDebug` | 未执行：容器缺 Android SDK；保留 JDK17、现有 Gradle/AGP/SDK 配置 |
++| `npm run verify:apk-assets` | 未执行：无新建 APK、PowerShell |
++| Android 设备/模拟器回归 | 未执行：无 adb、模拟器或设备；Activity、WebView、外接鼠标、系统 IME、进程回收需原生验证 |
++| 微信开发者工具与真机 | 未执行：无工具/设备；原生键盘、音频、系统中断和真实 API 行为需验收 |
++| 中文字体最终视觉 | 容器无 CJK 字体，截图中文字可能为方框；真实文本值及布局已检查，设备字形未检查 |
++| 任意长期数值稳定性、系统极限内存/context 回收 | 有限压力范围通过；没有把有限测试扩大成无限时间或原生系统回收保证 |
++
++已有 Windows Android 流程见 `CLOUD-HANDOFF.md`；没有为了绕过工具缺失升级工具链、发布 APK、修改签名或访问生产后端。
+diff --git a/docs/UNDO_BEHAVIOR.md b/docs/UNDO_BEHAVIOR.md
+index f38f215..5da728a 100644
+--- a/docs/UNDO_BEHAVIOR.md
++++ b/docs/UNDO_BEHAVIOR.md
+@@ -12,7 +12,8 @@
+ - 棋盘恢复到放置前。
+ - 当前分数恢复到放置前。
+ - 候选方块恢复到放置前，包含每个方块的 `used` 状态。
+-- 待清除状态、放置脉冲、组合状态、复活次数、最高分资格按快照恢复。
++- 待清除状态、放置脉冲、组合状态和复活次数按快照恢复；暂停时钟本身不随撤回回滚。
++- 最高分资格同时受当前局资格和快照约束：已经因管理员模式失效的资格，不能通过撤回恢复；之后新开的普通局仍可正常计分。
+ - 撤回次数扣减 1 次。
+ - 同一个快照只能使用一次。
+ - 拖动状态、预览状态、输入锁和反馈状态被清理。
+diff --git b/scripts/restore-android-audio.mjs b/scripts/restore-android-audio.mjs
+new file mode 100644
+index 0000000..68a982c
+--- /dev/null
++++ b/scripts/restore-android-audio.mjs
+@@ -0,0 +1,44 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { createHash } from 'node:crypto';
++import { fileURLToPath } from 'node:url';
++
++const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
++const resourceMap = JSON.parse(await fs.readFile(path.join(rootDir, 'config/resource-map.json'), 'utf8'));
++const sourceDir = path.join(rootDir, 'we xin xiao cheng xu-android-apk/docs/audio');
++const targetDir = path.join(rootDir, 'we xin xiao cheng xu-android-apk/app/src/main/assets/audio');
++const names = [...new Set(Object.values(resourceMap).map(mapping => {
++  if (!/^audio\/[A-Za-z0-9_.-]+$/.test(mapping.full)) throw new Error('Unexpected full audio path');
++  return mapping.full.slice('audio/'.length);
++}))].sort();
++
++async function checkDirectory(directory, allowMissing) {
++  let entries;
++  try { entries = await fs.readdir(directory, { withFileTypes: true }); }
++  catch (error) {
++    if (allowMissing && error.code === 'ENOENT') return;
++    throw error;
++  }
++  for (const entry of entries) {
++    if (!entry.isFile() || !names.includes(entry.name)) {
++      throw new Error(`Unmapped entry in ${path.relative(rootDir, directory)}: ${entry.name}`);
++    }
++  }
++  if (!allowMissing && entries.length !== names.length) throw new Error('The retained full audio source is incomplete');
++}
++
++// Never copy the containing directory into an existing target (audio/audio).
++// Refuse unrelated entries instead of deleting files to make verification pass.
++await checkDirectory(sourceDir, false);
++await checkDirectory(targetDir, true);
++await fs.mkdir(targetDir, { recursive: true });
++let bytes = 0;
++const sha256 = data => createHash('sha256').update(data).digest('hex');
++for (const name of names) {
++  const source = await fs.readFile(path.join(sourceDir, name));
++  const target = path.join(targetDir, name);
++  await fs.writeFile(target, source);
++  if (sha256(await fs.readFile(target)) !== sha256(source)) throw new Error(`Audio hash mismatch: ${name}`);
++  bytes += source.length;
++}
++console.log(`Restored and SHA-256 verified ${names.length} Android audio files (${bytes} bytes). Safe to rerun.`);
+diff --git a/shared/js/game/ScoreManager.js b/shared/js/game/ScoreManager.js
+index 97f89c1..3f7c192 100644
+--- a/shared/js/game/ScoreManager.js
++++ b/shared/js/game/ScoreManager.js
+@@ -42,15 +42,24 @@ export default class ScoreManager {
+   }
+ 
+   syncBestScore(state) {
+-    if (!state.bestScoreEligible) {
++    if (!state.bestScoreEligible || state.adminModeEnabled) {
+       return;
+     }
+ 
++    // A transient read failure after reset must recover before another own
++    // score is merged into the cached record.
++    state.retryBestScoreRefresh?.();
+     const difficulty = state.activeDifficulty || 'normal';
+     const generation = state.bestScoreGeneration || 0;
+     const result = saveBestScore(difficulty, state.score);
+     const apply = (saved) => {
+-      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
++      if (!saved) return;
++      if (generation !== (state.bestScoreGeneration || 0) ||
++        difficulty !== (state.activeDifficulty || 'normal')) {
++        state.refreshBestScores?.();
++        return;
++      }
++      state.retryBestScoreRefresh?.(saved);
+       // An external higher record changes the threshold; our own earlier writes
+       // must not turn a first-ever game into a new-record celebration.
+       if (saved.previous > state.bestScore) {
+diff --git a/shared/js/utils/storage.js b/shared/js/utils/storage.js
+index 1d67776..4dde83d 100644
+--- a/shared/js/utils/storage.js
++++ b/shared/js/utils/storage.js
+@@ -33,7 +33,7 @@ function sanitizeBestScores(value) {
+   };
+ }
+ 
+-function readBestScores() {
++export function readBestScores() {
+   try {
+     const stored = wx.getStorageSync(BEST_SCORES_KEY);
+     // Both wx and the browser adapter return '' for a missing key.
+diff --git b/tests/parity/audio-lifecycle.test.mjs b/tests/parity/audio-lifecycle.test.mjs
+new file mode 100644
+index 0000000..0bf6841
+--- /dev/null
++++ b/tests/parity/audio-lifecycle.test.mjs
+@@ -0,0 +1,73 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { pathToFileURL } from 'node:url';
++import { getVersionPath } from '../helpers/version-adapter.mjs';
++
++function installAudio() {
++  const previous = globalThis.wx;
++  const contexts = [];
++  globalThis.wx = { createInnerAudioContext() {
++    const context = {
++      playing: false, playCalls: 0, stopCalls: 0, seekCalls: 0,
++      play() { this.playing = true; this.playCalls++; },
++      stop() { this.playing = false; this.stopCalls++; },
++      seek() { this.seekCalls++; },
++      destroy() { this.playing = false; }
++    };
++    contexts.push(context);
++    return context;
++  } };
++  return { contexts, restore() {
++    if (previous === undefined) delete globalThis.wx;
++    else globalThis.wx = previous;
++  } };
++}
++
++for (const version of ['wechat', 'web', 'android']) {
++  test(`${version}: mute and background stop existing effects without replaying them on return`, async () => {
++    const api = installAudio();
++    try {
++      const { default: SoundManager } = await import(pathToFileURL(getVersionPath(version, 'game/SoundManager.js')));
++      const manager = new SoundManager();
++      manager.setSettings({ soundEnabled: true, bgmEnabled: true, bgmTrack: 2 });
++      const bgm = api.contexts[0];
++      manager.playClear();
++      const effect = api.contexts[1];
++      manager.handleAppHide();
++      assert.equal(effect.playing, false);
++      assert.equal(bgm.playing, false);
++      const effectPlays = effect.playCalls;
++      manager.playClear();
++      assert.equal(effect.playCalls, effectPlays, 'hidden effect requests are ignored');
++      manager.handleAppShow();
++      assert.equal(bgm.playing, true);
++      assert.equal(effect.playCalls, effectPlays, 'foreground resumes BGM only');
++      manager.playClear();
++      manager.setSettings({ ...manager.settings, soundEnabled: false });
++      assert.equal(effect.playing, false, 'mute immediately stops an already playing effect');
++      assert.equal(bgm.playing, true, 'effect mute does not mute BGM');
++      manager.playClear();
++      assert.equal(effect.playCalls, effectPlays + 1);
++      manager.setSettings({ ...manager.settings, soundEnabled: true });
++      assert.equal(effect.playCalls, effectPlays + 1, 'unmute never replays old effects');
++      manager.playClear();
++      assert.equal(effect.playCalls, effectPlays + 2);
++      assert.equal(api.contexts.length, 2, 'repeated effects reuse their existing context');
++    } finally { api.restore(); }
++  });
++
++  test(`${version}: changing vibration leaves the current BGM playback position alone`, async () => {
++    const api = installAudio();
++    try {
++      const { default: SoundManager } = await import(pathToFileURL(getVersionPath(version, 'game/SoundManager.js')));
++      const manager = new SoundManager();
++      manager.setSettings({ soundEnabled: true, bgmEnabled: true, bgmTrack: 2, vibrationEnabled: true });
++      const bgm = api.contexts[0];
++      const before = { stop: bgm.stopCalls, seek: bgm.seekCalls };
++      manager.setSettings({ ...manager.settings, vibrationEnabled: false });
++      assert.deepEqual({ stop: bgm.stopCalls, seek: bgm.seekCalls }, before);
++      assert.equal(bgm.playing, true);
++      assert.equal(api.contexts.length, 1);
++    } finally { api.restore(); }
++  });
++}
+diff --git a/tests/parity/game-state.test.mjs b/tests/parity/game-state.test.mjs
+index a64d155..99dadc3 100644
+--- a/tests/parity/game-state.test.mjs
++++ b/tests/parity/game-state.test.mjs
+@@ -234,6 +234,8 @@ for (const version of versions) {
+   test(`${version}: combo state exposes deterministic feedback data`, async () => {
+     const game = await createGame(version);
+     try {
++      // Combo time advances only in an active round; the home screen is paused.
++      await withFixedDateNow(1_000, () => game.state.startNewGame());
+       await withFixedDateNow(1_000, () => game.state.handleLineClear(1));
+       assert.equal(game.state.comboState.comboCount, 1);
+       assert.equal(game.state.consumeEvents().at(-1).type, 'clear');
+diff --git b/tests/parity/input-lifecycle-regressions.test.mjs b/tests/parity/input-lifecycle-regressions.test.mjs
+new file mode 100644
+index 0000000..e063344
+--- /dev/null
++++ b/tests/parity/input-lifecycle-regressions.test.mjs
+@@ -0,0 +1,281 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { pathToFileURL } from 'node:url';
++import { readFile } from 'node:fs/promises';
++import { runInThisContext } from 'node:vm';
++import { getVersionPath, loadVersion } from '../helpers/version-adapter.mjs';
++import { installBrowserEnvironment, createMemoryStorage, installWxStorage } from '../helpers/platform-mocks.mjs';
++
++const key = 'block_puzzle_best_scores_v1';
++const tickPromises = () => new Promise(resolve => setImmediate(resolve));
++
++function attachEvents(target) {
++  const listeners = new Map();
++  target.addEventListener = (type, callback) => {
++    if (!listeners.has(type)) listeners.set(type, []);
++    listeners.get(type).push(callback);
++  };
++  target.removeEventListener = (type, callback) => {
++    listeners.set(type, (listeners.get(type) || []).filter(item => item !== callback));
++  };
++  return (type, event = {}) => {
++    event.preventDefault ||= () => { event.defaultPrevented = true; };
++    for (const handler of listeners.get(type) || []) handler(event);
++    return event;
++  };
++}
++
++async function withMain(version, check, { hidden = false, bgmEnabled = false } = {}) {
++  const env = installBrowserEnvironment({
++    [key]: JSON.stringify({ easy: 0, normal: 0, master: 0 }),
++    block_puzzle_settings_v1: JSON.stringify({ bgmEnabled, bgmTrack: 2 })
++  });
++  document.hidden = hidden;
++  const dispatchWindow = attachEvents(globalThis);
++  const dispatchDocument = attachEvents(document);
++  const surface = document.getElementById('gameCanvas');
++  const keyboard = document.getElementById('wxKeyboard');
++  const inputLayer = { style: {} };
++  const dispatchCanvas = attachEvents(surface);
++  const dispatchInput = attachEvents(inputLayer);
++  const dispatchKeyboard = attachEvents(keyboard);
++  keyboard.blur = () => dispatchKeyboard('blur');
++  const getElement = document.getElementById.bind(document);
++  document.getElementById = id => id === 'inputLayer' ? inputLayer : getElement(id);
++  const ctx = new Proxy({
++    measureText: text => ({ width: String(text).length * 8 }),
++    createLinearGradient: () => ({ addColorStop() {} }),
++    createRadialGradient: () => ({ addColorStop() {} }),
++    getTransform: () => ({ a: 2 })
++  }, { get: (target, name) => name in target ? target[name] : () => {} });
++  surface.getContext = () => ctx;
++  const frames = new Map();
++  const previousRaf = globalThis.requestAnimationFrame;
++  const previousCancel = globalThis.cancelAnimationFrame;
++  let nextId = 0, time = 1, renders = 0, main;
++  globalThis.requestAnimationFrame = callback => { frames.set(++nextId, callback); return nextId; };
++  globalThis.cancelAnimationFrame = id => frames.delete(id);
++  const tick = () => {
++    const pending = [...frames.values()]; frames.clear(); time += 16;
++    pending.forEach(callback => callback(time));
++    assert.ok(frames.size <= 1);
++  };
++  const settle = () => {
++    for (let i = 0; i < 300 && frames.size; i++) tick();
++    assert.equal(frames.size, 0, 'idle rendering must stop');
++  };
++  try {
++    const shimPath = getVersionPath(version, '../browser-wx-shim.js');
++    runInThisContext(`(() => {\n${await readFile(shimPath, 'utf8')}\n})();`, { filename: shimPath });
++    wx.withStorageLock = (_, update) => Promise.resolve().then(update);
++    let audioPlayCalls = 0;
++    const createAudio = wx.createInnerAudioContext.bind(wx);
++    wx.createInnerAudioContext = () => {
++      const audio = createAudio();
++      const play = audio.play.bind(audio);
++      audio.play = () => { audioPlayCalls++; return play(); };
++      return audio;
++    };
++    const { default: Main } = await import(pathToFileURL(getVersionPath(version, 'main.js')));
++    main = new Main();
++    const render = main.renderer.render.bind(main.renderer);
++    main.renderer.render = state => { renders++; return render(state); };
++    settle();
++    await check({ main, frames, keyboard, tick, settle, renders: () => renders,
++      audioPlays: () => audioPlayCalls,
++      dispatchWindow, dispatchDocument, dispatchKeyboard,
++      dispatchPointer: version === 'web' ? dispatchInput : dispatchCanvas });
++  } finally {
++    main?.handleAppBackground();
++    if (previousRaf) globalThis.requestAnimationFrame = previousRaf;
++    else delete globalThis.requestAnimationFrame;
++    if (previousCancel) globalThis.cancelAnimationFrame = previousCancel;
++    else delete globalThis.cancelAnimationFrame;
++    delete globalThis.removeEventListener;
++    delete globalThis.ANDROID_APP_BACKGROUND;
++    delete globalThis.ANDROID_APP_FOREGROUND;
++    delete globalThis.__syncKeyboardInputPosition;
++    env.restore();
++  }
++}
++
++for (const version of ['web', 'android']) {
++  test(`${version}: initially hidden startup neither plays saved BGM nor schedules drawing`, async () => {
++    await withMain(version, async ({ main, frames, renders, audioPlays, dispatchDocument, settle }) => {
++      assert.equal(main.isPaused, true);
++      assert.equal(main.gameState.lifecyclePaused, true);
++      assert.equal(main.soundManager.appHidden, true);
++      assert.equal(audioPlays(), 0);
++      assert.equal(renders(), 0);
++      assert.equal(frames.size, 0);
++      dispatchDocument('visibilitychange');
++      assert.equal(audioPlays(), 0, 'duplicate hidden notifications remain inert');
++      assert.equal(frames.size, 0);
++      document.hidden = false; dispatchDocument('visibilitychange'); settle();
++      assert.equal(main.isPaused, false);
++      assert.equal(main.gameState.lifecyclePaused, false);
++      assert.equal(main.soundManager.appHidden, false);
++      assert.ok(audioPlays() > 0, 'the saved BGM preference resumes when the page is visible');
++      assert.ok(renders() > 0);
++      assert.equal(frames.size, 0);
++    }, { hidden: true, bgmEnabled: true });
++  });
++
++  test(`${version}: delayed storage events use their own values while an own write is pending`, async () => {
++    await withMain(version, async ({ main, dispatchWindow }) => {
++      const state = main.gameState;
++      const releases = [];
++      wx.withStorageLock = (_, update) => {
++        const result = update();
++        return new Promise(resolve => releases.push(() => resolve(result)));
++      };
++      state.startNewGame();
++      state.scoreManager.applyPlacement(state, 1);
++      assert.equal(state.pendingBestScoreWrites, 1);
++      assert.equal(state.bestScore, 0);
++      localStorage.setItem(key, JSON.stringify({ easy: 90, normal: 10, master: 0 }));
++      dispatchWindow('storage', { key,
++        oldValue: JSON.stringify({ easy: 0, normal: 0, master: 0 }),
++        newValue: JSON.stringify({ easy: 90, normal: 0, master: 0 }) });
++      assert.equal(state.bestScore, 10);
++      assert.equal(state.startingHighScore, 0, 'an unrelated event cannot attribute our own in-flight write to another tab');
++      releases.shift()(); await tickPromises();
++      state.scoreManager.applyPlacement(state, 1);
++      releases.shift()(); await tickPromises();
++      assert.equal(state.hasShownNewRecord, false);
++      localStorage.setItem(key, JSON.stringify({ easy: 90, normal: 30, master: 0 }));
++      dispatchWindow('storage', { key,
++        oldValue: JSON.stringify({ easy: 90, normal: 0, master: 0 }),
++        newValue: JSON.stringify({ easy: 90, normal: 20, master: 0 }) });
++      assert.equal(state.bestScore, 30);
++      assert.equal(state.startingHighScore, 20, 'the event record, not our later persisted score, supplies the threshold');
++      localStorage.setItem(key, JSON.stringify({ easy: 90, normal: 10, master: 0 }));
++      dispatchWindow('storage', { key,
++        oldValue: JSON.stringify({ easy: 90, normal: 30, master: 0 }),
++        newValue: JSON.stringify({ easy: 90, normal: 0, master: 0 }) });
++      assert.equal(state.bestScore, 10);
++      assert.equal(state.startingHighScore, 0, 'a reset notification preserves the first-record rule');
++    });
++  });
++
++  test(`${version}: real keyboard callbacks redraw idle input and preserve validation feedback`, async () => {
++    await withMain(version, async ({ main, keyboard, dispatchKeyboard, settle, frames, renders }) => {
++      const state = main.gameState;
++      state.openSettings(); state.openMembershipPanel(); main.requestImmediateRender(); settle();
++      for (const [event, value] of [['input', 'INVALID-AUDIT'], ['keydown', 'INVALID-AUDIT-2'], ['blur', 'INVALID-AUDIT-3']]) {
++        const before = renders();
++        keyboard.value = value;
++        dispatchKeyboard(event, { key: 'Enter' }); settle();
++        assert.equal(state.membershipInput, value);
++        assert.ok(renders() > before, `${event} must invalidate the canvas`);
++      }
++      main.renderer.getMembershipKeyHit = () => null;
++      main.renderer.getMembershipAction = () => 'confirm';
++      main.inputManager.handleMembershipTouch({ x: 0, y: 0 });
++      assert.equal(state.membershipError, '福利码无效');
++      settle();
++      const beforeHide = renders();
++      main.handleAppBackground();
++      keyboard.value = 'DELAYED-HIDDEN'; dispatchKeyboard('input');
++      assert.equal(frames.size, 0);
++      assert.equal(renders(), beforeHide, 'hidden callbacks cannot restart rendering');
++      main.handleAppForeground(); settle();
++      assert.ok(renders() > beforeHide);
++      state.closeMembershipPanel(); main.requestImmediateRender(); settle();
++      const closed = state.membershipInput;
++      keyboard.value = 'LATE-CLOSED'; dispatchKeyboard('input');
++      assert.equal(state.membershipInput, closed);
++      assert.equal(frames.size, 0);
++    });
++  });
++
++  test(`${version}: losing a mouse release cancels only input and never changes audio visibility`, async () => {
++    await withMain(version, async ({ main, dispatchPointer, dispatchWindow, dispatchDocument, settle }) => {
++      const state = main.gameState;
++      state.startNewGame(); main.requestImmediateRender(); settle();
++      let hides = 0, shows = 0;
++      wx.onHide(() => hides++); wx.onShow(() => shows++);
++      const pick = () => {
++        const area = main.renderer.rackHitAreas[0];
++        const event = dispatchPointer('mousedown', { button: 0, buttons: 1,
++          clientX: area.x + area.width / 2, clientY: area.y + area.height / 2 });
++        assert.equal(event.defaultPrevented, true, 'canvas actions retain requested native input focus');
++        assert.equal(state.dragState.isDragging, true);
++      };
++      pick();
++      const board = state.board.getSnapshot();
++      dispatchWindow('mouseup', { button: 2, buttons: 1, clientX: 0, clientY: 0 });
++      assert.equal(state.dragState.isDragging, true, 'releasing a secondary button does not release the owned drag');
++      dispatchWindow('blur');
++      assert.equal(state.dragState.isDragging, false);
++      assert.equal(main.inputManager.activeTouchIdentifier, null);
++      assert.deepEqual({ hides, shows, paused: main.isPaused }, { hides: 0, shows: 0, paused: false });
++      pick();
++      dispatchPointer('mousemove', { buttons: 0, clientX: 100, clientY: 200 });
++      assert.equal(state.dragState.isDragging, false, 'button-state recovery also cancels a lost release');
++      dispatchWindow('mouseup', { button: 0, buttons: 0, clientX: 100, clientY: 200 });
++      assert.deepEqual(state.board.getSnapshot(), board);
++      assert.equal(state.score, 0);
++      settle();
++      document.hidden = true; dispatchDocument('visibilitychange');
++      assert.deepEqual({ hides, shows, paused: main.isPaused }, { hides: 1, shows: 0, paused: true });
++      document.hidden = false; dispatchDocument('visibilitychange');
++      assert.deepEqual({ hides, shows, paused: main.isPaused }, { hides: 1, shows: 1, paused: false });
++    });
++  });
++
++  test(`${version}: another difficulty's storage event does not invent a first-game record threshold`, async () => {
++    await withMain(version, async ({ main, dispatchWindow }) => {
++      const state = main.gameState;
++      state.startNewGame();
++      state.scoreManager.applyPlacement(state, 1); await tickPromises();
++      assert.equal(state.bestScore, 10);
++      assert.equal(state.startingHighScore, 0);
++      localStorage.setItem(key, JSON.stringify({ easy: 90, normal: 10, master: 0 }));
++      dispatchWindow('storage', { key,
++        oldValue: JSON.stringify({ easy: 0, normal: 10, master: 0 }),
++        newValue: JSON.stringify({ easy: 90, normal: 10, master: 0 }) });
++      assert.equal(state.bestScores.easy, 90);
++      assert.equal(state.startingHighScore, 0);
++      state.scoreManager.applyPlacement(state, 1); await tickPromises();
++      assert.equal(state.hasShownNewRecord, false);
++      localStorage.setItem(key, JSON.stringify({ easy: 90, normal: 50, master: 0 }));
++      dispatchWindow('storage', { key,
++        oldValue: JSON.stringify({ easy: 90, normal: 20, master: 0 }),
++        newValue: JSON.stringify({ easy: 90, normal: 50, master: 0 }) });
++      assert.equal(state.startingHighScore, 50, 'a real external higher record still updates the threshold');
++      const read = wx.getStorageSync;
++      wx.getStorageSync = () => { throw new Error('read failure'); };
++      dispatchWindow('storage', { key });
++      assert.equal(state.bestScore, 50);
++      wx.getStorageSync = read;
++    });
++  });
++}
++
++for (const version of ['wechat', 'web', 'android']) {
++  test(`${version}: cancelling the next drag preserves feedback from the previous placement`, async () => {
++    const restore = installWxStorage(createMemoryStorage());
++    Object.assign(wx, { onTouchStart() {}, onTouchMove() {}, onTouchEnd() {}, onTouchCancel() {} });
++    try {
++      const { GameState, InputManager } = await loadVersion(version);
++      const state = new GameState(); state.startNewGame();
++      state.setLayout({ cellSize: 30, boardRect: { x: 0, y: 0, width: 300, height: 300 } });
++      state.rackPieces = [0, 1].map(index => ({ id: `single-${index}`, baseId: 'single', category: 'rescue',
++        bounds: { width: 1, height: 1 }, cells: [{ x: 0, y: 0 }], color: '#abcdef', used: false }));
++      state.dragState.activePieceIndex = 0;
++      state.previewState = { row: 0, col: 0, visible: true, canPlace: true };
++      assert.equal(state.tryPlaceDraggedPiece(), true);
++      const gain = structuredClone(state.feedbackState.gain);
++      assert.equal(gain.active, true);
++      const input = new InputManager(state, {}, {}, () => {});
++      assert.equal(state.startDrag(1, 100, 500, { x: 100, y: 450, cellSize: 24 }), true);
++      input.activeTouchIdentifier = 7;
++      input.handleTouchCancel({ changedTouches: [{ identifier: 7 }] });
++      assert.equal(state.dragState.isDragging, false);
++      assert.deepEqual(state.feedbackState.gain, gain);
++      assert.equal(state.score, 10);
++      assert.equal(state.board.grid.flat().filter(Boolean).length, 1);
++    } finally { restore(); }
++  });
++}
+diff --git b/tests/parity/paused-clock-viewport.test.mjs b/tests/parity/paused-clock-viewport.test.mjs
+new file mode 100644
+index 0000000..e318f25
+--- /dev/null
++++ b/tests/parity/paused-clock-viewport.test.mjs
+@@ -0,0 +1,95 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { pathToFileURL } from 'node:url';
++import { getVersionPath, loadVersion } from '../helpers/version-adapter.mjs';
++import { createMemoryStorage, installWxStorage } from '../helpers/platform-mocks.mjs';
++
++for (const version of ['wechat', 'web', 'android']) {
++  test(`${version}: combo excludes nested pauses but still expires during idle play without frames`, async () => {
++    const restore = installWxStorage(createMemoryStorage());
++    const originalNow = Date.now;
++    let now = 10000;
++    Date.now = () => now;
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState(); state.startNewGame();
++      state.handleLineClear(1);
++      now = 11000; state.openPause();
++      now = 16000; state.setLifecyclePaused(true);
++      now = 18000; state.setLifecyclePaused(true);
++      now = 21000; state.closePause();
++      assert.equal(state.canAdvanceTime(), false);
++      now = 24000; state.setLifecyclePaused(false);
++      now = 24500; state.setLifecyclePaused(false);
++      now = 25000; state.handleLineClear(1);
++      assert.equal(state.comboState.comboCount, 2, 'only 2000ms of active time elapsed');
++      now = 28000; state.handleLineClear(1);
++      assert.equal(state.comboState.comboCount, 3, 'the existing 3000ms boundary remains inclusive');
++      now = 31001; state.handleLineClear(1);
++      assert.equal(state.comboState.comboCount, 1, 'idle time expires the window without any update() calls');
++      now = 32000; state.openSettings();
++      now = 50000; state.closeSettings();
++      now = 51000; state.handleLineClear(1);
++      assert.equal(state.comboState.comboCount, 2);
++    } finally { Date.now = originalNow; restore(); }
++  });
++
++  test(`${version}: an unusable viewport cannot draw negative cells or advance a pending clear`, async () => {
++    const restore = installWxStorage(createMemoryStorage());
++    Object.assign(wx, { onTouchStart() {}, onTouchMove() {}, onTouchEnd() {}, onTouchCancel() {} });
++    try {
++      const { GameState, InputManager } = await loadVersion(version);
++      const { default: Renderer } = await import(pathToFileURL(getVersionPath(version, 'game/Renderer.js')));
++      const texts = [];
++      const ctx = new Proxy({
++        measureText: value => ({ width: String(value).length * 8 }),
++        createLinearGradient: () => ({ addColorStop() {} }),
++        createRadialGradient: () => ({ addColorStop() {} }),
++        getTransform: () => ({ a: 1 }),
++        fillText: text => texts.push(text),
++        arcTo: (x1, y1, x2, y2, radius) => assert.ok(radius >= 0, 'Canvas arc radius must be nonnegative')
++      }, { get: (target, name) => name in target ? target[name] : () => {} });
++      const viewport = (width, height) => ({ screenWidth: width, screenHeight: height, pixelRatio: 1 });
++      const safeArea = { menuButton: null, safeArea: null };
++      const state = new GameState(); state.startNewGame();
++      const renderer = new Renderer(ctx, viewport(390, 844), safeArea);
++      const input = new InputManager(state, renderer, {});
++      renderer.render(state);
++      state.board.grid[0].fill({ color: '#abcdef' }, 0, 9);
++      state.rackPieces = [{ id: 'single', baseId: 'single', category: 'rescue', isSnake: false,
++        bounds: { width: 1, height: 1 }, cells: [{ x: 0, y: 0 }], color: '#abcdef', used: false }];
++      state.dragState.activePieceIndex = 0;
++      state.previewState = { row: 0, col: 9, visible: true, canPlace: true };
++      assert.equal(state.tryPlaceDraggedPiece(), true);
++      assert.equal(state.score, 10);
++      const pending = structuredClone(state.pendingClear);
++      const board = state.board.getSnapshot();
++      for (const [width, height] of [[568, 320], [640, 360], [280, 640]]) {
++        renderer.setViewport(viewport(width, height), safeArea); renderer.render(state);
++        assert.equal(renderer.layout.viewportBlocked, true);
++        assert.ok(renderer.layout.cellSize > 0);
++        assert.equal(state.canAdvanceTime(), false);
++        assert.equal(state.canDragPieces(), false);
++        assert.equal(state.canUseTool(), false);
++        assert.deepEqual(renderer.rackHitAreas, []);
++        assert.deepEqual(renderer.homeActionRects, {});
++        assert.equal(renderer.settingsButtonRect, null);
++        const finger = { identifier: 0, clientX: 100, clientY: 100 };
++        input.handleTouchStart({ touches: [finger], changedTouches: [finger] });
++        assert.equal(input.activeTouchIdentifier, null);
++        state.update(500);
++        assert.deepEqual(state.pendingClear, pending);
++        assert.deepEqual(state.board.getSnapshot(), board);
++        assert.equal(state.score, 10);
++      }
++      assert.ok(texts.includes('请转为竖屏或增大窗口'));
++      renderer.setViewport(viewport(320, 568), safeArea); renderer.render(state);
++      assert.equal(renderer.layout.viewportBlocked, false, 'the established compact portrait remains supported');
++      state.update(180);
++      assert.equal(state.pendingClear, null);
++      assert.equal(state.score, 160);
++      state.update(500);
++      assert.equal(state.score, 160, 'the frozen line clears exactly once after recovery');
++    } finally { restore(); }
++  });
++}
+diff --git b/tests/parity/reset-reconcile-regressions.test.mjs b/tests/parity/reset-reconcile-regressions.test.mjs
+new file mode 100644
+index 0000000..9c67851
+--- /dev/null
++++ b/tests/parity/reset-reconcile-regressions.test.mjs
+@@ -0,0 +1,133 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { loadVersion } from '../helpers/version-adapter.mjs';
++import { createMemoryStorage, installWxStorage } from '../helpers/platform-mocks.mjs';
++
++const key = 'block_puzzle_best_scores_v1';
++const initial = { easy: 12, normal: 100, master: 30 };
++const tick = () => new Promise(resolve => setImmediate(resolve));
++
++function holdLocks() {
++  const queue = [];
++  wx.withStorageLock = (_, update) => new Promise((resolve, reject) => queue.push({ update, resolve, reject }));
++  return queue;
++}
++
++for (const version of ['wechat', 'web', 'android']) {
++  test(`${version}: a failed read after a successful reset recovers before the next own score`, async () => {
++    const restore = installWxStorage(createMemoryStorage({ [key]: initial }));
++    try {
++      const { GameState } = await loadVersion(version);
++      const queue = version === 'wechat' ? [] : holdLocks();
++      const state = new GameState(); state.startNewGame();
++      const read = wx.getStorageSync;
++      if (version === 'wechat') {
++        let reads = 0;
++        wx.getStorageSync = name => {
++          if (++reads === 2) throw new Error('one reconciliation read fails');
++          return read(name);
++        };
++        await state.confirmResetBestScore();
++      } else {
++        const pending = state.confirmResetBestScore();
++        const operation = queue.shift();
++        const outcome = operation.update();
++        wx.getStorageSync = () => { throw new Error('one reconciliation read fails'); };
++        operation.resolve(outcome); await pending;
++      }
++      wx.getStorageSync = read;
++      assert.equal(read(key).normal, 0);
++      state.scoreManager.applyPlacement(state, 1);
++      if (queue.length) {
++        const operation = queue.shift(); operation.resolve(operation.update()); await tick();
++      }
++      assert.deepEqual(read(key), { ...initial, normal: 10 });
++      assert.equal(state.bestScore, 10);
++      assert.equal(state.startingHighScore, 0);
++      assert.equal(state.hasShownNewRecord, false);
++    } finally { restore(); }
++  });
++}
++
++for (const version of ['web', 'android']) {
++  for (const queuedBeforeReconcile of [false, true]) {
++    test(`${version}: display-only refresh cannot hide a pending reset threshold (${queuedBeforeReconcile ? 'queued' : 'next'} own score)`, async () => {
++      const restore = installWxStorage(createMemoryStorage({ [key]: initial }));
++      try {
++        const { GameState } = await loadVersion(version);
++        const queue = holdLocks();
++        const state = new GameState(); state.startNewGame();
++        const pending = state.confirmResetBestScore();
++        if (queuedBeforeReconcile) state.scoreManager.applyPlacement(state, 1);
++        const reset = queue.shift(); reset.update();
++        const read = wx.getStorageSync;
++        wx.getStorageSync = () => { throw new Error('one reconciliation read fails'); };
++        reset.reject(new Error('abort after the update')); await pending;
++        wx.getStorageSync = read;
++        wx.setStorageSync(key, { ...initial, easy: 20, normal: 0 });
++        // Main does this for an event that changes only another difficulty.
++        state.refreshBestScores({ updateRecordThreshold: false });
++        assert.equal(state.bestScore, 0);
++        assert.equal(state.startingHighScore, 100);
++        if (!queuedBeforeReconcile) state.scoreManager.applyPlacement(state, 1);
++        const save = queue.shift(); save.resolve(save.update()); await tick();
++        assert.equal(read(key).normal, 10);
++        assert.equal(state.bestScore, 10);
++        assert.equal(state.startingHighScore, 0);
++        assert.equal(state.hasShownNewRecord, false);
++      } finally { restore(); }
++    });
++  }
++
++  test(`${version}: reset completion reconciles its threshold even when display is already current`, async () => {
++    const restore = installWxStorage(createMemoryStorage({ [key]: initial }));
++    try {
++      const { GameState } = await loadVersion(version);
++      const queue = holdLocks();
++      const state = new GameState(); state.startNewGame();
++      const pending = state.confirmResetBestScore();
++      const reset = queue.shift(); const outcome = reset.update();
++      state.refreshBestScores({ updateRecordThreshold: false });
++      assert.equal(state.bestScore, 0);
++      assert.equal(state.startingHighScore, 100);
++      reset.resolve(outcome); await pending;
++      assert.equal(state.startingHighScore, 0);
++      state.scoreManager.applyPlacement(state, 1);
++      const save = queue.shift(); save.resolve(save.update()); await tick();
++      assert.equal(state.hasShownNewRecord, false);
++    } finally { restore(); }
++  });
++
++  for (const mode of ['success', 'reject-after-update', 'reject-before-update']) {
++    for (const queuedBeforeReconcile of [false, true]) {
++      // The synchronous success path without a queued write is covered above.
++      if (mode === 'success' && !queuedBeforeReconcile) continue;
++      test(`${version}: reset ${mode}, failed read, own write queued ${queuedBeforeReconcile ? 'before' : 'after'} completion`, async () => {
++        const restore = installWxStorage(createMemoryStorage({ [key]: initial }));
++        try {
++          const { GameState } = await loadVersion(version);
++          const queue = holdLocks();
++          const state = new GameState(); state.startNewGame();
++          const pending = state.confirmResetBestScore();
++          if (queuedBeforeReconcile) state.scoreManager.applyPlacement(state, 1);
++          const reset = queue.shift();
++          const outcome = mode === 'reject-before-update' ? undefined : reset.update();
++          const read = wx.getStorageSync;
++          wx.getStorageSync = () => { throw new Error('reconciliation read unavailable'); };
++          if (mode === 'success') reset.resolve(outcome);
++          else reset.reject(new Error('coordinator failure'));
++          await pending;
++          wx.getStorageSync = read;
++          if (!queuedBeforeReconcile) state.scoreManager.applyPlacement(state, 1);
++          const save = queue.shift(); save.resolve(save.update()); await tick();
++          const expectedBest = mode === 'reject-before-update' ? 100 : 10;
++          assert.deepEqual(read(key), { ...initial, normal: expectedBest });
++          assert.equal(state.bestScore, expectedBest);
++          assert.equal(state.startingHighScore, mode === 'reject-before-update' ? 100 : 0);
++          assert.equal(state.hasShownNewRecord, false);
++          assert.equal(state.pendingBestScoreWrites, 0);
++        } finally { restore(); }
++      });
++    }
++  }
++}
+diff --git b/tests/parity/state-race-regressions.test.mjs b/tests/parity/state-race-regressions.test.mjs
+new file mode 100644
+index 0000000..f571c54
+--- /dev/null
++++ b/tests/parity/state-race-regressions.test.mjs
+@@ -0,0 +1,194 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { loadVersion } from '../helpers/version-adapter.mjs';
++import { createMemoryStorage, installWxStorage } from '../helpers/platform-mocks.mjs';
++
++const key = 'block_puzzle_best_scores_v1';
++const tick = () => new Promise(resolve => setImmediate(resolve));
++
++function holdLocks() {
++  const queue = [];
++  wx.withStorageLock = (_, update) => new Promise(resolve => queue.push(() => resolve(update())));
++  return queue;
++}
++
++function place(state, col) {
++  state.rackPieces = [{ id: 'single', baseId: 'single', category: 'rescue', isSnake: false,
++    bounds: { width: 1, height: 1 }, cells: [{ x: 0, y: 0 }], color: '#abcdef', used: false }];
++  state.dragState.activePieceIndex = 0;
++  state.previewState = { row: 0, col, canPlace: true, visible: true };
++  assert.equal(state.tryPlaceDraggedPiece(), true);
++}
++
++for (const version of ['web', 'android']) {
++  test(`${version}: resetting next round's difficulty does not invalidate active-round saves`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 50, normal: 0, master: 30 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState();
++      const queue = holdLocks();
++      state.startNewGame(); place(state, 0); place(state, 1); place(state, 2);
++      const generation = state.bestScoreGeneration;
++      state.openSettings(); state.setSettings({ difficulty: 'easy' });
++      const reset = state.confirmResetBestScore();
++      state.closeSettings();
++      while (queue.length) { queue.shift()(); await tick(); }
++      await reset;
++      assert.equal(state.bestScoreGeneration, generation);
++      assert.equal(state.activeDifficulty, 'normal');
++      assert.equal(state.startingHighScore, 0);
++      place(state, 3); queue.shift()(); await tick();
++      assert.equal(state.hasShownNewRecord, false);
++      assert.deepEqual(memory.snapshot()[key], { easy: 0, normal: 40, master: 30 });
++    } finally { restore(); }
++  });
++
++  test(`${version}: old-round saves retain history without changing the selected home difficulty`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 2, normal: 5, master: 3 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState();
++      const queue = holdLocks();
++      state.startNewGame();
++      place(state, 0);
++      state.openPause(); state.requestReturnHome(); state.confirmReturnHome();
++      state.setSettings({ difficulty: 'easy' });
++      queue.shift()(); await tick();
++      assert.deepEqual(memory.snapshot()[key], { easy: 2, normal: 10, master: 3 });
++      assert.equal(state.activeDifficulty, 'easy');
++      assert.equal(state.bestScore, 2);
++      assert.equal(state.bestScores.easy, 2);
++      assert.equal(state.hasShownNewRecord, false);
++      state.setSettings({ difficulty: 'normal' });
++      state.startNewGame(); place(state, 0); place(state, 1);
++      state.openPause(); state.requestReturnHome(); state.confirmReturnHome();
++      while (queue.length) { queue.shift()(); await tick(); }
++      assert.equal(state.bestScore, 20, 'same-difficulty home also reflects the newly committed history');
++      assert.equal(state.bestScores.normal, 20);
++    } finally { restore(); }
++  });
++
++  test(`${version}: reset completion reconciles a new round and preserves a newly selected difficulty`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 12, normal: 100, master: 30 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState();
++      const queue = holdLocks();
++      state.requestResetBestScore();
++      const reset = state.confirmResetBestScore();
++      state.startNewGame();
++      queue.shift()(); await reset; await tick();
++      assert.equal(memory.snapshot()[key].normal, 0);
++      assert.equal(state.bestScore, 0);
++      assert.equal(state.startingHighScore, 0);
++      place(state, 0);
++      queue.shift()(); await tick();
++      assert.equal(state.bestScore, 10);
++      assert.equal(state.hasShownNewRecord, false, 'own first record after reset is not an external record');
++      state.confirmReturnHome();
++      const secondReset = state.confirmResetBestScore();
++      state.setSettings({ difficulty: 'easy' });
++      queue.shift()(); await secondReset;
++      assert.equal(state.bestScore, 12);
++      assert.deepEqual(memory.snapshot()[key], { easy: 12, normal: 0, master: 30 });
++    } finally { restore(); }
++  });
++
++  test(`${version}: reset queued after an old score wins without an unlocked write`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 12, normal: 5, master: 30 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState();
++      const queue = holdLocks();
++      state.startNewGame(); place(state, 0);
++      const reset = state.confirmResetBestScore();
++      assert.equal(memory.snapshot()[key].normal, 5, 'no write before lock acquisition');
++      queue.shift()(); await tick();
++      queue.shift()(); await reset; await tick();
++      assert.deepEqual(memory.snapshot()[key], { easy: 12, normal: 0, master: 30 });
++      assert.equal(state.bestScore, 0);
++      assert.equal(state.pendingBestScoreWrites, 0);
++    } finally { restore(); }
++  });
++}
++
++for (const version of ['wechat', 'web', 'android']) {
++  test(`${version}: reset failure never pretends the stored record was cleared`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 12, normal: 100, master: 30 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState } = await loadVersion(version);
++      const state = new GameState();
++      if (version !== 'wechat') wx.withStorageLock = (_, update) => Promise.resolve().then(update);
++      wx.setStorageSync = () => { throw new Error('quota'); };
++      await state.confirmResetBestScore();
++      assert.equal(state.bestScore, 100);
++      assert.deepEqual(state.bestScores, { easy: 12, normal: 100, master: 30 });
++      assert.deepEqual(memory.snapshot()[key], state.bestScores);
++      wx.getStorageSync = () => { throw new Error('read unavailable'); };
++      await state.confirmResetBestScore();
++      assert.equal(state.bestScore, 100, 'failed reads must preserve the last trustworthy cache');
++    } finally { restore(); }
++  });
++
++  test(`${version}: undo cannot requalify a round after administrator tools become available`, async () => {
++    const memory = createMemoryStorage({ [key]: { easy: 0, normal: 0, master: 0 } });
++    const restore = installWxStorage(memory);
++    try {
++      const { GameState, ScoreManager } = await loadVersion(version);
++      const state = new GameState();
++      state.startNewGame(); place(state, 0);
++      state.applyAuthState({ isAdminAllowed: true });
++      state.enableAdminMode();
++      assert.equal(state.bestScoreEligible, false);
++      assert.equal(state.useUndoTool(), true);
++      assert.equal(state.bestScoreEligible, false);
++      place(state, 0); place(state, 1);
++      state.disableAdminMode();
++      place(state, 2);
++      assert.equal(memory.snapshot()[key].normal, 10);
++      // The persistence boundary also rejects an inconsistent eligibility flag.
++      const inconsistent = { score: 999, bestScore: 10, activeDifficulty: 'normal',
++        bestScores: { normal: 10 }, bestScoreEligible: true, adminModeEnabled: true };
++      new ScoreManager().syncBestScore(inconsistent);
++      assert.equal(memory.snapshot()[key].normal, 10);
++    } finally { restore(); }
++  });
++}
++
++test('wechat: cancelled and superseded admin verification cannot affect a later panel or round', async () => {
++  const memory = createMemoryStorage({ [key]: { easy: 0, normal: 0, master: 0 } });
++  const restore = installWxStorage(memory);
++  try {
++    const { GameState } = await loadVersion('wechat');
++    const state = new GameState();
++    const requests = [];
++    state.setAuthClient({ verifyAdmin: () => new Promise((resolve, reject) => requests.push({ resolve, reject })) });
++    assert.equal(state.openAdminPanel(), true);
++    state.setAdminInput('local-test-fixture');
++    const cancelled = state.submitAdminCode();
++    state.closeAdminPanel();
++    state.startNewGame(); place(state, 0);
++    requests.shift().resolve({ adminMode: true });
++    assert.equal(await cancelled, false);
++    assert.equal(state.isAdminModeActive(), false);
++    assert.equal(state.bestScoreEligible, true);
++    assert.equal(state.adminError, '');
++    state.confirmReturnHome();
++    assert.equal(state.openAdminPanel(), true);
++    state.setAdminInput('local-test-fixture');
++    const oldRequest = state.submitAdminCode();
++    const currentRequest = state.submitAdminCode();
++    const old = requests.shift(), current = requests.shift();
++    current.resolve({ adminMode: true });
++    assert.equal(await currentRequest, true);
++    old.reject(new Error('late failure'));
++    assert.equal(await oldRequest, false);
++    assert.equal(state.isAdminModeActive(), true);
++    assert.equal(state.adminError, '', 'old failures cannot overwrite a newer successful result');
++  } finally { restore(); }
++});
+diff --git a/tests/parity/web-audio-stability.test.mjs b/tests/parity/web-audio-stability.test.mjs
+index 5425ecc..b19b223 100644
+--- a/tests/parity/web-audio-stability.test.mjs
++++ b/tests/parity/web-audio-stability.test.mjs
+@@ -66,7 +66,8 @@ for (const [name, target] of targets) {
+ 
+   test(`${name}: browser shim reserves lifecycle callbacks for real page visibility`, async () => {
+     const shim = await fs.readFile(path.join(target, 'browser-wx-shim.js'), 'utf8');
+-    assert.doesNotMatch(shim, /window\.addEventListener\('blur'/);
++    // Input-only blur cancellation is exercised with real shim events in
++    // input-lifecycle-regressions; it must not emit audio/lifecycle hide/show.
+     assert.doesNotMatch(shim, /window\.addEventListener\('focus'/);
+     assert.match(shim, /document\.addEventListener\('visibilitychange'/);
+     assert.match(shim, /resumeRequestedLoopingAudio/);
+diff --git a/we xin xiao cheng xu/js/game/GameState.js b/we xin xiao cheng xu/js/game/GameState.js
+index 9437356..6ca4869 100644
+--- a/we xin xiao cheng xu/js/game/GameState.js	
++++ b/we xin xiao cheng xu/js/game/GameState.js	
+@@ -33,6 +33,7 @@ import { createRack } from './Piece.js';
+ import {
+   loadBestScores,
+   loadBestScore,
++  readBestScores,
+   normalizeDifficulty,
+   resetBestScore as persistResetBestScore,
+   saveSettings as persistSettings
+@@ -208,6 +209,8 @@ export default class GameState {
+   }
+ 
+   initializeHomeState() {
++    this.adminVerificationGeneration = (this.adminVerificationGeneration || 0) + 1;
++    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+     this.board.reset();
+     this.score = 0;
+     this.bestScores = loadBestScores();
+@@ -230,6 +233,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.ui = createUiState();
+@@ -237,10 +241,17 @@ export default class GameState {
+     this.reviveCount = this.adminModeEnabled ? Infinity : 0;
+     this.reviveUsedCount = 0;
+     this.pendingRevive = null;
++    this.syncComboPauseState();
+   }
+ 
+   setLayout(layout) {
+     this.layout = layout;
++    const blocked = !!layout?.viewportBlocked;
++    if (blocked !== !!this.viewportBlocked) {
++      this.viewportBlocked = blocked;
++      if (blocked) this.clearDrag();
++      this.syncComboPauseState();
++    }
+   }
+ 
+   setSettings(settings) {
+@@ -278,6 +289,7 @@ export default class GameState {
+   setScreen(screen) {
+     this.screen = screen;
+     this.isGameOver = screen === 'gameover';
++    this.syncComboPauseState();
+   }
+ 
+   cycleDifficulty() {
+@@ -369,6 +381,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.bestScoreEligible = !this.adminModeEnabled;
+@@ -383,11 +396,33 @@ export default class GameState {
+   }
+ 
+   canAdvanceTime() {
+-    return this.screen === 'playing' &&
++    return !this.lifecyclePaused && !this.viewportBlocked && this.screen === 'playing' &&
+       !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
+       !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+   }
+ 
++  setLifecyclePaused(paused) {
++    this.lifecyclePaused = !!paused;
++    this.syncComboPauseState();
++  }
++
++  syncComboPauseState() {
++    const clock = this.comboClock;
++    if (!clock) return;
++    const now = Date.now();
++    if (!this.canAdvanceTime()) {
++      if (clock.pausedAt === null) clock.pausedAt = now;
++    } else if (clock.pausedAt !== null) {
++      clock.excludedMs += Math.max(0, now - clock.pausedAt);
++      clock.pausedAt = null;
++    }
++  }
++
++  getComboNow() {
++    const clock = this.comboClock;
++    return (clock.pausedAt ?? Date.now()) - clock.excludedMs;
++  }
++
+   update(deltaTime) {
+     if (!this.canAdvanceTime()) return;
+ 
+@@ -418,6 +453,7 @@ export default class GameState {
+   }
+ 
+   startNewGame() {
++    this.adminVerificationGeneration = (this.adminVerificationGeneration || 0) + 1;
+     this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+     this.reset();
+   }
+@@ -438,6 +474,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = true;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.settingsTab = 'game';
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'settings');
+   }
+ 
+@@ -445,6 +482,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = false;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.isMembershipPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'settings');
+   }
+ 
+@@ -484,12 +522,14 @@ export default class GameState {
+     this.clearDrag();
+     this.ui.isPauseOpen = true;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'pause');
+   }
+ 
+   closePause() {
+     this.ui.isPauseOpen = false;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'pause');
+   }
+ 
+@@ -514,26 +554,65 @@ export default class GameState {
+     this.ui.isResetConfirmOpen = false;
+   }
+ 
+-  confirmResetBestScore() {
+-    const difficulty = normalizeDifficulty(this.settings.difficulty);
+-    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+-    const reset = persistResetBestScore(difficulty);
+-    this.bestScores = {
+-      ...this.bestScores,
+-      [difficulty]: 0
+-    };
++  refreshBestScores({ updateRecordThreshold = true } = {}) {
++    const stored = readBestScores();
++    if (stored.status !== 'readable') return false;
++    const difficulty = this.screen === 'home' || this.screen === 'help'
++      ? normalizeDifficulty(this.settings.difficulty) : this.activeDifficulty;
++    const best = stored.scores[difficulty];
++    if (updateRecordThreshold && best !== this.bestScore) {
++      this.startingHighScore = best < this.bestScore
++        ? best : Math.max(this.startingHighScore || 0, best);
++    }
++    this.bestScores = stored.scores;
++    this.bestScore = best;
++    return true;
++  }
+ 
+-    if (
+-      this.screen === 'home' ||
+-      this.screen === 'help' ||
+-      this.activeDifficulty === difficulty
+-    ) {
+-      this.bestScore = 0;
++  retryBestScoreRefresh(ownSaved) {
++    if (!this.pendingBestScoreRefresh?.size) return;
++    const pending = this.pendingBestScoreRefresh.get(this.activeDifficulty);
++    const generation = this.bestScoreGeneration || 0;
++    let thresholdReconciled = pending?.generation === generation && pending.thresholdReconciled;
++    if (pending && !thresholdReconciled && Number.isFinite(ownSaved?.previous)) {
++      // This is the locked value before our write, unlike a fresh read that
++      // may already include this round's new score.
++      this.startingHighScore = ownSaved.previous;
++      pending.generation = generation;
++      pending.thresholdReconciled = thresholdReconciled = true;
++    }
++    if (this.refreshBestScores({ updateRecordThreshold: false })) {
++      if (pending && !thresholdReconciled) this.startingHighScore = this.bestScore;
++      this.pendingBestScoreRefresh.clear();
+     }
++  }
+ 
++  confirmResetBestScore() {
++    const difficulty = normalizeDifficulty(this.settings.difficulty);
++    if (difficulty === this.activeDifficulty) {
++      this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
++    }
++    const reset = persistResetBestScore(difficulty);
+     this.ui.isResetConfirmOpen = false;
+-    if (reset?.then) reset.finally(() => this.onBestScoreUpdated?.());
+-    return reset;
++    const reconcile = (result) => {
++      // Read the committed state even if the user has started another round.
++      // A failed read preserves the last trustworthy cache instead of showing zero.
++      if (!this.refreshBestScores({ updateRecordThreshold: false })) {
++        if (!this.pendingBestScoreRefresh) this.pendingBestScoreRefresh = new Map();
++        const thresholdReconciled = result === true && difficulty === this.activeDifficulty;
++        if (thresholdReconciled) this.startingHighScore = 0;
++        this.pendingBestScoreRefresh.set(difficulty, {
++          generation: this.bestScoreGeneration || 0,
++          thresholdReconciled
++        });
++      } else {
++        if (difficulty === this.activeDifficulty) this.startingHighScore = this.bestScore;
++        this.pendingBestScoreRefresh?.delete(difficulty);
++      }
++      this.onBestScoreUpdated?.();
++      return result;
++    };
++    return reset?.then ? reset.then(reconcile) : reconcile(reset);
+   }
+ 
+   openAdminPanel() {
+@@ -545,14 +624,17 @@ export default class GameState {
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'admin');
+     return true;
+   }
+ 
+   closeAdminPanel() {
++    this.adminVerificationGeneration = (this.adminVerificationGeneration || 0) + 1;
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'admin');
+   }
+ 
+@@ -562,7 +644,9 @@ export default class GameState {
+   }
+ 
+   setMembershipInput(value) {
+-    this.membershipInput = String(value || '').slice(0, 32);
++    const nextInput = String(value || '').slice(0, 32);
++    if (nextInput === this.membershipInput) return;
++    this.membershipInput = nextInput;
+     this.membershipError = '';
+   }
+ 
+@@ -614,12 +698,14 @@ export default class GameState {
+       remainingCount: this.isAdminModeActive() ? Infinity : this.reviveCount
+     };
+     this.ui.isRevivePromptOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'revive');
+   }
+ 
+   closeRevivePrompt() {
+     this.pendingRevive = null;
+     this.ui.isRevivePromptOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'revive');
+   }
+ 
+@@ -934,7 +1020,7 @@ export default class GameState {
+       return;
+     }
+ 
+-    const now = Date.now();
++    const now = this.getComboNow();
+     const comboState = this.comboState || createComboState();
+ 
+     if (
+@@ -1105,7 +1191,7 @@ export default class GameState {
+     };
+     this.reviveCount = snapshot.reviveCount;
+     this.reviveUsedCount = snapshot.reviveUsedCount;
+-    this.bestScoreEligible = snapshot.bestScoreEligible;
++    this.bestScoreEligible = this.bestScoreEligible && snapshot.bestScoreEligible && !this.adminModeEnabled;
+     this.pendingRevive = null;
+     this.comboState = snapshot.comboState
+       ? {
+@@ -1283,6 +1369,8 @@ export default class GameState {
+   canDragPieces() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1296,6 +1384,8 @@ export default class GameState {
+   canUseTool() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1474,6 +1564,10 @@ export default class GameState {
+   }
+ 
+   async submitAdminCode() {
++    const generation = this.adminVerificationGeneration = (this.adminVerificationGeneration || 0) + 1;
++    const isCurrent = () => generation === this.adminVerificationGeneration &&
++      this.ui.isAdminPanelOpen && this.screen === 'home';
++    if (!isCurrent()) return false;
+     if (!DEBUG_CODE_ENABLED) {
+       this.adminError = '验证失败';
+       return false;
+@@ -1486,6 +1580,7 @@ export default class GameState {
+ 
+     try {
+       const result = await this.authClient.verifyAdmin(this.adminInput);
++      if (!isCurrent()) return false;
+       if (result && result.adminMode) {
+         this.applyAuthState({
+           ...this.authState,
+@@ -1501,6 +1596,7 @@ export default class GameState {
+       // Keep local play available when backend validation fails.
+     }
+ 
++    if (!isCurrent()) return false;
+     this.adminError = '验证失败';
+     return false;
+   }
+diff --git a/we xin xiao cheng xu/js/game/InputManager.js b/we xin xiao cheng xu/js/game/InputManager.js
+index 2a63825..df0ee23 100644
+--- a/we xin xiao cheng xu/js/game/InputManager.js	
++++ b/we xin xiao cheng xu/js/game/InputManager.js	
+@@ -33,6 +33,7 @@ export default class InputManager {
+   }
+ 
+   handleTouchStart(event) {
++    if (this.gameState.viewportBlocked || this.gameState.lifecyclePaused) return;
+     this.reconcileInputSession();
+     if (this.activeTouchIdentifier !== null) return;
+     const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
+@@ -137,7 +138,8 @@ export default class InputManager {
+   }
+ 
+   canContinueInputSession() {
+-    return this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
++    return !this.gameState.viewportBlocked && !this.gameState.lifecyclePaused &&
++      this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
+       this.gameState.screen === 'playing' &&
+       !this.gameState.ui.isSettingsOpen && !this.gameState.ui.isAdminPanelOpen &&
+       !this.gameState.ui.isMembershipPanelOpen && !this.gameState.ui.isRevivePromptOpen &&
+diff --git a/we xin xiao cheng xu/js/game/Renderer.js b/we xin xiao cheng xu/js/game/Renderer.js
+index 465386f..8ac724c 100644
+--- a/we xin xiao cheng xu/js/game/Renderer.js	
++++ b/we xin xiao cheng xu/js/game/Renderer.js	
+@@ -212,12 +212,14 @@ export default class Renderer {
+       toolGap -
+       rackGap -
+       8;
+-    const cellSize = Math.floor(
++    const availableCellSize = Math.floor(
+       Math.min(
+         (boardOuterWidth - BOARD_PADDING * 2) / BOARD_SIZE,
+         (boardAvailableHeight - BOARD_PADDING * 2) / BOARD_SIZE
+       )
+     );
++    const cellSize = Math.max(1, availableCellSize);
++    const viewportBlocked = screenWidth < 320 || screenHeight < 560 || availableCellSize <= 4;
+     const boardSizePx = cellSize * BOARD_SIZE + BOARD_PADDING * 2;
+     const boardPanelRect = {
+       x: Math.round((screenWidth - boardSizePx) / 2),
+@@ -277,6 +279,7 @@ export default class Renderer {
+     return {
+       screenWidth,
+       screenHeight,
++      viewportBlocked,
+       sideMargin,
+       cellSize,
+       bottomInset,
+@@ -304,7 +307,7 @@ export default class Renderer {
+       this.clearSurfaceCache();
+     }
+     state.setLayout(this.layout);
+-    const damage = this.getFrameDamage(state);
++    const damage = this.layout.viewportBlocked ? null : this.getFrameDamage(state);
+     this.ctx.save();
+     if (damage) {
+       // Clip on physical pixel boundaries; fractional DPR clips otherwise
+@@ -326,6 +329,22 @@ export default class Renderer {
+     this.clearCanvas();
+     this.drawBackground(state.screen !== 'playing');
+ 
++    if (this.layout.viewportBlocked) {
++      this.ctx.textAlign = 'center';
++      this.ctx.textBaseline = 'middle';
++      this.ctx.fillStyle = TEXT_PRIMARY;
++      this.ctx.font = 'bold 20px sans-serif';
++      this.ctx.fillText('轻松俄罗斯方块', this.layout.screenWidth / 2, this.layout.screenHeight / 2 - 18);
++      this.ctx.fillStyle = TEXT_SECONDARY;
++      this.ctx.font = '16px sans-serif';
++      this.ctx.fillText('请转为竖屏或增大窗口', this.layout.screenWidth / 2, this.layout.screenHeight / 2 + 18);
++      globalThis.__syncKeyboardInputPosition?.(null);
++      this.lastScene = null;
++      this.ctx.restore();
++      this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
++      return;
++    }
++
+     if (state.screen === 'home' || state.screen === 'help') {
+       this.drawHome(state);
+     } else {
+diff --git a/we xin xiao cheng xu/js/game/ScoreManager.js b/we xin xiao cheng xu/js/game/ScoreManager.js
+index ee192dd..c1ac98b 100644
+--- a/we xin xiao cheng xu/js/game/ScoreManager.js	
++++ b/we xin xiao cheng xu/js/game/ScoreManager.js	
+@@ -43,15 +43,24 @@ export default class ScoreManager {
+   }
+ 
+   syncBestScore(state) {
+-    if (!state.bestScoreEligible) {
++    if (!state.bestScoreEligible || state.adminModeEnabled) {
+       return;
+     }
+ 
++    // A transient read failure after reset must recover before another own
++    // score is merged into the cached record.
++    state.retryBestScoreRefresh?.();
+     const difficulty = state.activeDifficulty || 'normal';
+     const generation = state.bestScoreGeneration || 0;
+     const result = saveBestScore(difficulty, state.score);
+     const apply = (saved) => {
+-      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
++      if (!saved) return;
++      if (generation !== (state.bestScoreGeneration || 0) ||
++        difficulty !== (state.activeDifficulty || 'normal')) {
++        state.refreshBestScores?.();
++        return;
++      }
++      state.retryBestScoreRefresh?.(saved);
+       // An external higher record changes the threshold; our own earlier writes
+       // must not turn a first-ever game into a new-record celebration.
+       if (saved.previous > state.bestScore) {
+diff --git a/we xin xiao cheng xu/js/game/SoundManager.js b/we xin xiao cheng xu/js/game/SoundManager.js
+index f71830e..60026c5 100644
+--- a/we xin xiao cheng xu/js/game/SoundManager.js	
++++ b/we xin xiao cheng xu/js/game/SoundManager.js	
+@@ -43,6 +43,7 @@ export default class SoundManager {
+   }
+ 
+   setSettings(settings) {
++    const previousSoundEnabled = this.settings.soundEnabled;
+     const previousEnabled = this.settings.bgmEnabled;
+     const previousTrack = normalizeTrackId(this.settings.bgmTrack);
+     const nextTrack = normalizeTrackId(settings.bgmTrack);
+@@ -54,6 +55,8 @@ export default class SoundManager {
+     };
+     this.currentBgmTrack = nextTrack;
+ 
++    if (previousSoundEnabled && !this.settings.soundEnabled) this.stopAllEffects();
++
+     if (previousTrack !== nextTrack) {
+       this.switchBgmTrack(nextTrack);
+       return;
+@@ -156,7 +159,7 @@ export default class SoundManager {
+   }
+ 
+   playEffect(key) {
+-    if (!this.settings.soundEnabled) {
++    if (!this.settings.soundEnabled || this.appHidden) {
+       return;
+     }
+ 
+@@ -199,10 +202,6 @@ export default class SoundManager {
+     }
+ 
+     try {
+-      audio.stop();
+-      if (audio.seek) {
+-        audio.seek(0);
+-      }
+       audio.play();
+     } catch (error) {
+       this.warnOnce(`bgm_play_${this.currentBgmTrack}`, 'bgm play failed');
+@@ -221,6 +220,16 @@ export default class SoundManager {
+     }
+   }
+ 
++  stopAllEffects() {
++    Object.values(this.effectContexts).forEach((audio) => {
++      try {
++        audio?.stop();
++      } catch (error) {
++        this.warnOnce('effect_stop', 'effect stop failed');
++      }
++    });
++  }
++
+   switchBgmTrack(trackId) {
+     const normalizedTrack = normalizeTrackId(trackId);
+     this.settings.bgmTrack = normalizedTrack;
+@@ -243,6 +252,7 @@ export default class SoundManager {
+ 
+   handleAppHide() {
+     this.appHidden = true;
++    this.stopAllEffects();
+     this.stopBgm();
+   }
+ 
+diff --git a/we xin xiao cheng xu/js/main.js b/we xin xiao cheng xu/js/main.js
+index 267c245..6f4b026 100644
+--- a/we xin xiao cheng xu/js/main.js	
++++ b/we xin xiao cheng xu/js/main.js	
+@@ -114,7 +114,7 @@ export default class Main {
+   }
+ 
+   update(deltaTime) {
+-    if (this.isPaused) return;
++    if (this.isPaused || this.gameState.viewportBlocked) return;
+     this.inputManager.flushPendingInput();
+     this.gameState.update(deltaTime);
+     // UI motion (button press, modal transitions) advances independently of
+@@ -153,6 +153,7 @@ export default class Main {
+   }
+ 
+   hasActiveAnimation() {
++    if (this.gameState.viewportBlocked) return false;
+     return hasActiveUiMotion(this.gameState.feedbackState) || (this.gameState.canAdvanceTime() && !!(
+       this.gameState.dragState.isDragging || this.gameState.pendingClear || this.gameState.placementPulse.length ||
+       this.gameState.notice || hasActiveFeedback(this.gameState.feedbackState)
+@@ -173,6 +174,7 @@ export default class Main {
+   handleAppBackground() {
+     if (this.isPaused) return;
+     this.isPaused = true;
++    this.gameState.setLifecyclePaused(true);
+     this.inputManager.cancelInputSession();
+     this.gameState.consumeEvents();
+     this.stopLoop();
+@@ -192,6 +194,8 @@ export default class Main {
+   handleAppForeground() {
+     const wasPaused = this.isPaused;
+     this.isPaused = false;
++    this.gameState.setLifecyclePaused(false);
++    this.gameState.retryBestScoreRefresh();
+     if (wasPaused) this.soundManager.handleAppShow();
+     this.handleViewportChange();
+   }
+diff --git a/we xin xiao cheng xu/js/utils/storage.js b/we xin xiao cheng xu/js/utils/storage.js
+index ab1bc83..ffadf88 100644
+--- a/we xin xiao cheng xu/js/utils/storage.js	
++++ b/we xin xiao cheng xu/js/utils/storage.js	
+@@ -34,7 +34,7 @@ function sanitizeBestScores(value) {
+   };
+ }
+ 
+-function readBestScores() {
++export function readBestScores() {
+   try {
+     const stored = wx.getStorageSync(BEST_SCORES_KEY);
+     // Both wx and the browser adapter return '' for a missing key.
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js
+index 310bd6e..40e27a8 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/browser-wx-shim.js	
+@@ -109,8 +109,19 @@ function registerTouchHandlers() {
+   }, { passive: false });
+ 
+   let mouseDown = false;
++  const cancelMouseDrag = (event = {}) => {
++    if (!mouseDown) return;
++    mouseDown = false;
++    emitTouch('cancel', event);
++  };
++
++  // Losing focus cancels only pointer ownership; audio follows real visibility.
++  window.addEventListener('blur', cancelMouseDrag);
+ 
+   canvas.addEventListener('mousedown', (event) => {
++    if (event.button !== 0) return;
++    // Keep focus requested by a canvas control (for example the code field).
++    event.preventDefault();
+     mouseDown = true;
+     emitTouch('start', event);
+   });
+@@ -119,11 +130,15 @@ function registerTouchHandlers() {
+     if (!mouseDown) {
+       return;
+     }
++    if (event.buttons === 0) {
++      cancelMouseDrag(event);
++      return;
++    }
+     emitTouch('move', event);
+   });
+ 
+   window.addEventListener('mouseup', (event) => {
+-    if (!mouseDown) {
++    if (!mouseDown || (event.button != null && event.button !== 0)) {
+       return;
+     }
+     mouseDown = false;
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js
+index 4964ec7..68f0e62 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/GameState.js	
+@@ -33,6 +33,7 @@ import { createRack } from './Piece.js';
+ import {
+   loadBestScores,
+   loadBestScore,
++  readBestScores,
+   normalizeDifficulty,
+   resetBestScore as persistResetBestScore,
+   saveSettings as persistSettings
+@@ -208,6 +209,7 @@ export default class GameState {
+   }
+ 
+   initializeHomeState() {
++    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+     this.board.reset();
+     this.score = 0;
+     this.bestScores = loadBestScores();
+@@ -229,6 +231,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.ui = createUiState();
+@@ -236,10 +239,17 @@ export default class GameState {
+     this.reviveCount = this.adminModeEnabled ? Infinity : 0;
+     this.reviveUsedCount = 0;
+     this.pendingRevive = null;
++    this.syncComboPauseState();
+   }
+ 
+   setLayout(layout) {
+     this.layout = layout;
++    const blocked = !!layout?.viewportBlocked;
++    if (blocked !== !!this.viewportBlocked) {
++      this.viewportBlocked = blocked;
++      if (blocked) this.clearDrag();
++      this.syncComboPauseState();
++    }
+   }
+ 
+   setSettings(settings) {
+@@ -277,6 +287,7 @@ export default class GameState {
+   setScreen(screen) {
+     this.screen = screen;
+     this.isGameOver = screen === 'gameover';
++    this.syncComboPauseState();
+   }
+ 
+   cycleDifficulty() {
+@@ -352,6 +363,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.bestScoreEligible = !this.adminModeEnabled;
+@@ -366,11 +378,33 @@ export default class GameState {
+   }
+ 
+   canAdvanceTime() {
+-    return this.screen === 'playing' &&
++    return !this.lifecyclePaused && !this.viewportBlocked && this.screen === 'playing' &&
+       !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
+       !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+   }
+ 
++  setLifecyclePaused(paused) {
++    this.lifecyclePaused = !!paused;
++    this.syncComboPauseState();
++  }
++
++  syncComboPauseState() {
++    const clock = this.comboClock;
++    if (!clock) return;
++    const now = Date.now();
++    if (!this.canAdvanceTime()) {
++      if (clock.pausedAt === null) clock.pausedAt = now;
++    } else if (clock.pausedAt !== null) {
++      clock.excludedMs += Math.max(0, now - clock.pausedAt);
++      clock.pausedAt = null;
++    }
++  }
++
++  getComboNow() {
++    const clock = this.comboClock;
++    return (clock.pausedAt ?? Date.now()) - clock.excludedMs;
++  }
++
+   update(deltaTime) {
+     if (!this.canAdvanceTime()) return;
+ 
+@@ -421,6 +455,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = true;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.settingsTab = 'game';
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'settings');
+   }
+ 
+@@ -428,6 +463,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = false;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.isMembershipPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'settings');
+   }
+ 
+@@ -467,12 +503,14 @@ export default class GameState {
+     this.clearDrag();
+     this.ui.isPauseOpen = true;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'pause');
+   }
+ 
+   closePause() {
+     this.ui.isPauseOpen = false;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'pause');
+   }
+ 
+@@ -497,26 +535,65 @@ export default class GameState {
+     this.ui.isResetConfirmOpen = false;
+   }
+ 
+-  confirmResetBestScore() {
+-    const difficulty = normalizeDifficulty(this.settings.difficulty);
+-    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+-    const reset = persistResetBestScore(difficulty);
+-    this.bestScores = {
+-      ...this.bestScores,
+-      [difficulty]: 0
+-    };
++  refreshBestScores({ updateRecordThreshold = true } = {}) {
++    const stored = readBestScores();
++    if (stored.status !== 'readable') return false;
++    const difficulty = this.screen === 'home' || this.screen === 'help'
++      ? normalizeDifficulty(this.settings.difficulty) : this.activeDifficulty;
++    const best = stored.scores[difficulty];
++    if (updateRecordThreshold && best !== this.bestScore) {
++      this.startingHighScore = best < this.bestScore
++        ? best : Math.max(this.startingHighScore || 0, best);
++    }
++    this.bestScores = stored.scores;
++    this.bestScore = best;
++    return true;
++  }
+ 
+-    if (
+-      this.screen === 'home' ||
+-      this.screen === 'help' ||
+-      this.activeDifficulty === difficulty
+-    ) {
+-      this.bestScore = 0;
++  retryBestScoreRefresh(ownSaved) {
++    if (!this.pendingBestScoreRefresh?.size) return;
++    const pending = this.pendingBestScoreRefresh.get(this.activeDifficulty);
++    const generation = this.bestScoreGeneration || 0;
++    let thresholdReconciled = pending?.generation === generation && pending.thresholdReconciled;
++    if (pending && !thresholdReconciled && Number.isFinite(ownSaved?.previous)) {
++      // This is the locked value before our write, unlike a fresh read that
++      // may already include this round's new score.
++      this.startingHighScore = ownSaved.previous;
++      pending.generation = generation;
++      pending.thresholdReconciled = thresholdReconciled = true;
+     }
++    if (this.refreshBestScores({ updateRecordThreshold: false })) {
++      if (pending && !thresholdReconciled) this.startingHighScore = this.bestScore;
++      this.pendingBestScoreRefresh.clear();
++    }
++  }
+ 
++  confirmResetBestScore() {
++    const difficulty = normalizeDifficulty(this.settings.difficulty);
++    if (difficulty === this.activeDifficulty) {
++      this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
++    }
++    const reset = persistResetBestScore(difficulty);
+     this.ui.isResetConfirmOpen = false;
+-    if (reset?.then) reset.finally(() => this.onBestScoreUpdated?.());
+-    return reset;
++    const reconcile = (result) => {
++      // Read the committed state even if the user has started another round.
++      // A failed read preserves the last trustworthy cache instead of showing zero.
++      if (!this.refreshBestScores({ updateRecordThreshold: false })) {
++        if (!this.pendingBestScoreRefresh) this.pendingBestScoreRefresh = new Map();
++        const thresholdReconciled = result === true && difficulty === this.activeDifficulty;
++        if (thresholdReconciled) this.startingHighScore = 0;
++        this.pendingBestScoreRefresh.set(difficulty, {
++          generation: this.bestScoreGeneration || 0,
++          thresholdReconciled
++        });
++      } else {
++        if (difficulty === this.activeDifficulty) this.startingHighScore = this.bestScore;
++        this.pendingBestScoreRefresh?.delete(difficulty);
++      }
++      this.onBestScoreUpdated?.();
++      return result;
++    };
++    return reset?.then ? reset.then(reconcile) : reconcile(reset);
+   }
+ 
+   openAdminPanel() {
+@@ -528,6 +605,7 @@ export default class GameState {
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'admin');
+     return true;
+   }
+@@ -536,6 +614,7 @@ export default class GameState {
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'admin');
+   }
+ 
+@@ -545,7 +624,9 @@ export default class GameState {
+   }
+ 
+   setMembershipInput(value) {
+-    this.membershipInput = String(value || '').slice(0, 32);
++    const nextInput = String(value || '').slice(0, 32);
++    if (nextInput === this.membershipInput) return;
++    this.membershipInput = nextInput;
+     this.membershipError = '';
+   }
+ 
+@@ -597,12 +678,14 @@ export default class GameState {
+       remainingCount: this.isAdminModeActive() ? Infinity : this.reviveCount
+     };
+     this.ui.isRevivePromptOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'revive');
+   }
+ 
+   closeRevivePrompt() {
+     this.pendingRevive = null;
+     this.ui.isRevivePromptOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'revive');
+   }
+ 
+@@ -902,7 +985,7 @@ export default class GameState {
+       return;
+     }
+ 
+-    const now = Date.now();
++    const now = this.getComboNow();
+     const comboState = this.comboState || createComboState();
+ 
+     if (
+@@ -1073,7 +1156,7 @@ export default class GameState {
+     };
+     this.reviveCount = snapshot.reviveCount;
+     this.reviveUsedCount = snapshot.reviveUsedCount;
+-    this.bestScoreEligible = snapshot.bestScoreEligible;
++    this.bestScoreEligible = this.bestScoreEligible && snapshot.bestScoreEligible && !this.adminModeEnabled;
+     this.pendingRevive = null;
+     this.comboState = snapshot.comboState
+       ? {
+@@ -1250,6 +1333,8 @@ export default class GameState {
+   canDragPieces() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1263,6 +1348,8 @@ export default class GameState {
+   canUseTool() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1369,7 +1456,6 @@ export default class GameState {
+ 
+   cancelDrag() {
+     const wasDragging = this.dragState.isDragging || this.feedbackState.drag.active;
+-    clearFeedbackState(this.feedbackState);
+     this.clearDrag();
+     return wasDragging;
+   }
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js
+index f4aac5b..d218a67 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/InputManager.js	
+@@ -22,6 +22,7 @@ export default class InputManager {
+   }
+ 
+   handleTouchStart(event) {
++    if (this.gameState.viewportBlocked || this.gameState.lifecyclePaused) return;
+     this.reconcileInputSession();
+     if (this.activeTouchIdentifier !== null) return;
+     const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
+@@ -130,7 +131,8 @@ export default class InputManager {
+   }
+ 
+   canContinueInputSession() {
+-    return this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
++    return !this.gameState.viewportBlocked && !this.gameState.lifecyclePaused &&
++      this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
+       this.gameState.screen === 'playing' &&
+       !this.gameState.ui.isSettingsOpen && !this.gameState.ui.isAdminPanelOpen &&
+       !this.gameState.ui.isMembershipPanelOpen && !this.gameState.ui.isRevivePromptOpen &&
+@@ -541,6 +543,7 @@ export default class InputManager {
+     wx.onKeyboardInput((event) => {
+       if (this.gameState.ui.isMembershipPanelOpen) {
+         this.gameState.setMembershipInput(event.value || '');
++        this.requestImmediateRender();
+         return;
+       }
+     });
+@@ -548,6 +551,7 @@ export default class InputManager {
+     wx.onKeyboardConfirm((event) => {
+       if (this.gameState.ui.isMembershipPanelOpen) {
+         this.gameState.setMembershipInput(event.value || '');
++        this.requestImmediateRender();
+         return;
+       }
+     });
+@@ -556,6 +560,7 @@ export default class InputManager {
+       wx.onKeyboardComplete((event) => {
+         if (this.gameState.ui.isMembershipPanelOpen) {
+           this.gameState.setMembershipInput(event.value || '');
++          this.requestImmediateRender();
+           return;
+         }
+       });
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js
+index 313dcf9..f1a9940 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js	
+@@ -248,12 +248,14 @@ export default class Renderer {
+       toolGap -
+       rackGap -
+       8;
+-    const cellSize = Math.floor(
++    const availableCellSize = Math.floor(
+       Math.min(
+         (boardOuterWidth - BOARD_PADDING * 2) / BOARD_SIZE,
+         (boardAvailableHeight - BOARD_PADDING * 2) / BOARD_SIZE
+       )
+     );
++    const cellSize = Math.max(1, availableCellSize);
++    const viewportBlocked = screenWidth < 320 || screenHeight < 560 || availableCellSize <= 4;
+     const boardSizePx = cellSize * BOARD_SIZE + BOARD_PADDING * 2;
+     const boardPanelRect = {
+       x: Math.round((screenWidth - boardSizePx) / 2),
+@@ -295,6 +297,7 @@ export default class Renderer {
+     return {
+       screenWidth,
+       screenHeight,
++      viewportBlocked,
+       sideMargin,
+       cellSize,
+       bottomInset,
+@@ -321,7 +324,7 @@ export default class Renderer {
+       this.clearSurfaceCache();
+     }
+     state.setLayout(this.layout);
+-    const damage = this.getFrameDamage(state);
++    const damage = this.layout.viewportBlocked ? null : this.getFrameDamage(state);
+     this.ctx.save();
+     if (damage) {
+       // Clip on physical pixel boundaries; fractional DPR clips otherwise
+@@ -343,6 +346,22 @@ export default class Renderer {
+     this.clearCanvas();
+     this.drawBackground(state.screen !== 'playing', state.dragState.isDragging);
+ 
++    if (this.layout.viewportBlocked) {
++      this.ctx.textAlign = 'center';
++      this.ctx.textBaseline = 'middle';
++      this.ctx.fillStyle = TEXT_PRIMARY;
++      this.ctx.font = 'bold 20px sans-serif';
++      this.ctx.fillText('轻松俄罗斯方块', this.layout.screenWidth / 2, this.layout.screenHeight / 2 - 18);
++      this.ctx.fillStyle = TEXT_SECONDARY;
++      this.ctx.font = '16px sans-serif';
++      this.ctx.fillText('请转为竖屏或增大窗口', this.layout.screenWidth / 2, this.layout.screenHeight / 2 + 18);
++      globalThis.__syncKeyboardInputPosition?.(null);
++      this.lastScene = null;
++      this.ctx.restore();
++      this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
++      return;
++    }
++
+     if (state.screen === 'home' || state.screen === 'help') {
+       this.drawHome(state);
+     } else {
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js
+index ee192dd..c1ac98b 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/ScoreManager.js	
+@@ -43,15 +43,24 @@ export default class ScoreManager {
+   }
+ 
+   syncBestScore(state) {
+-    if (!state.bestScoreEligible) {
++    if (!state.bestScoreEligible || state.adminModeEnabled) {
+       return;
+     }
+ 
++    // A transient read failure after reset must recover before another own
++    // score is merged into the cached record.
++    state.retryBestScoreRefresh?.();
+     const difficulty = state.activeDifficulty || 'normal';
+     const generation = state.bestScoreGeneration || 0;
+     const result = saveBestScore(difficulty, state.score);
+     const apply = (saved) => {
+-      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
++      if (!saved) return;
++      if (generation !== (state.bestScoreGeneration || 0) ||
++        difficulty !== (state.activeDifficulty || 'normal')) {
++        state.refreshBestScores?.();
++        return;
++      }
++      state.retryBestScoreRefresh?.(saved);
+       // An external higher record changes the threshold; our own earlier writes
+       // must not turn a first-ever game into a new-record celebration.
+       if (saved.previous > state.bestScore) {
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js
+index c67454e..dafd2c3 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/SoundManager.js	
+@@ -43,6 +43,7 @@ export default class SoundManager {
+   }
+ 
+   setSettings(settings) {
++    const previousSoundEnabled = this.settings.soundEnabled;
+     const previousEnabled = this.settings.bgmEnabled;
+     const previousTrack = normalizeTrackId(this.settings.bgmTrack);
+     const nextTrack = normalizeTrackId(settings.bgmTrack);
+@@ -54,6 +55,8 @@ export default class SoundManager {
+     };
+     this.currentBgmTrack = nextTrack;
+ 
++    if (previousSoundEnabled && !this.settings.soundEnabled) this.stopAllEffects();
++
+     if (previousTrack !== nextTrack) {
+       this.switchBgmTrack(nextTrack);
+       return;
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js
+index cb49b6e..5b029d3 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js	
+@@ -6,7 +6,7 @@ import InputManager from './game/InputManager.js';
+ import SoundManager from './game/SoundManager.js';
+ import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
+ import { shouldScheduleFrame } from './RenderScheduler.js';
+-import { loadSettings, saveSettings, loadBestScores } from './utils/storage.js';
++import { loadSettings, saveSettings } from './utils/storage.js';
+ import { BEST_SCORES_KEY } from './game/coreConstants.js';
+ 
+ export default class Main {
+@@ -18,14 +18,16 @@ export default class Main {
+     this.aniId = 0;
+     this.lastTimestamp = 0;
+     this.appLifecycleBound = false;
+-    this.isPaused = false;
++    this.isPaused = !!globalThis.document?.hidden;
+     this.isRendering = false;
+     this.needsRender = true;
+     this.gameState = new GameState();
++    this.gameState.setLifecyclePaused(this.isPaused);
+     this.gameState.onBestScoreUpdated = () => this.requestImmediateRender();
+     this.settings = loadSettings();
+     this.gameState.setSettings(this.settings);
+     this.soundManager = new SoundManager();
++    if (this.isPaused) this.soundManager.handleAppHide();
+     this.soundManager.setSettings(this.settings);
+     this.renderer = new Renderer(ctx, metrics.screenInfo, metrics.safeAreaInfo);
+     this.inputManager = new InputManager(
+@@ -48,12 +50,22 @@ export default class Main {
+     wx.onStorageChange?.(event => {
+       if (event.key !== BEST_SCORES_KEY) return;
+       const state = this.gameState;
+-      const scores = loadBestScores();
+-      const difficulty = state.screen === 'home' || state.screen === 'help' ? this.settings.difficulty : state.activeDifficulty;
+-      const best = scores[difficulty];
+-      state.startingHighScore = best < state.bestScore ? best : Math.max(state.startingHighScore || 0, best);
+-      state.bestScores = scores;
+-      state.bestScore = best;
++      if (state.refreshBestScores({ updateRecordThreshold: false })) {
++        try {
++          // The fresh read may already include our own pending write. Only
++          // this event's changed difficulty supplies an external threshold.
++          const previous = JSON.parse(event.oldValue);
++          const next = JSON.parse(event.newValue);
++          const difficulty = state.activeDifficulty;
++          const oldBest = Number.isFinite(previous?.[difficulty]) ? previous[difficulty] : 0;
++          const newBest = Number.isFinite(next?.[difficulty]) ? next[difficulty] : 0;
++          if (newBest < oldBest) {
++            state.startingHighScore = Math.min(state.startingHighScore || 0, newBest);
++          } else if (newBest > oldBest) {
++            state.startingHighScore = Math.max(state.startingHighScore || 0, Math.min(newBest, state.bestScore));
++          }
++        } catch { /* Malformed notifications cannot replace the trusted threshold. */ }
++      }
+       this.requestImmediateRender();
+     });
+     this.start();
+@@ -158,6 +170,7 @@ export default class Main {
+   }
+ 
+   hasActiveAnimation() {
++    if (this.gameState.viewportBlocked) return false;
+     return hasActiveUiMotion(this.gameState.feedbackState) || (
+       this.gameState.canAdvanceTime() && !!(
+         this.gameState.dragState.isDragging ||
+@@ -209,6 +222,7 @@ export default class Main {
+     }
+ 
+     this.isPaused = true;
++    this.gameState.setLifecyclePaused(true);
+     this.inputManager.cancelInputSession();
+     this.needsRender = false;
+     this.stopLoop();
+@@ -233,6 +247,8 @@ export default class Main {
+   handleAppForeground() {
+     const wasPaused = this.isPaused;
+     this.isPaused = false;
++    this.gameState.setLifecyclePaused(false);
++    this.gameState.retryBestScoreRefresh();
+     this.refreshViewport();
+     if (wasPaused) this.soundManager.handleAppShow();
+     this.requestImmediateRender();
+@@ -255,7 +271,7 @@ export default class Main {
+ 
+     // UI motion (button press, modal transitions) advances even while a modal
+     // freezes gameplay time; Android scheduling relies on hasActiveAnimation.
+-    advanceUiMotion(this.gameState.feedbackState, deltaTime);
++    if (!this.gameState.viewportBlocked) advanceUiMotion(this.gameState.feedbackState, deltaTime);
+ 
+     if (animating) {
+       this.update(deltaTime);
+diff --git a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js
+index ab1bc83..ffadf88 100644
+--- a/we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js	
++++ b/we xin xiao cheng xu-android-apk/app/src/main/assets/js/utils/storage.js	
+@@ -34,7 +34,7 @@ function sanitizeBestScores(value) {
+   };
+ }
+ 
+-function readBestScores() {
++export function readBestScores() {
+   try {
+     const stored = wx.getStorageSync(BEST_SCORES_KEY);
+     // Both wx and the browser adapter return '' for a missing key.
+diff --git a/we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js b/we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js
+index cf79412..5f94da5 100644
+--- a/we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js	
++++ b/we xin xiao cheng xu-android-apk/docs/browser-wx-shim.js	
+@@ -109,11 +109,21 @@ function registerTouchHandlers() {
+   }, { passive: false });
+ 
+   let mouseDown = false;
++  const cancelMouseDrag = (event = {}) => {
++    if (!mouseDown) return;
++    mouseDown = false;
++    emitTouch('cancel', event);
++  };
++
++  // Losing focus cancels only pointer ownership; audio follows real visibility.
++  window.addEventListener('blur', cancelMouseDrag);
+ 
+   inputLayer.addEventListener('mousedown', (event) => {
+     if (event.button !== 0) {
+       return;
+     }
++    // Keep focus requested by a canvas control (for example the code field).
++    event.preventDefault();
+     mouseDown = true;
+     emitTouch('start', event);
+   });
+@@ -122,11 +132,15 @@ function registerTouchHandlers() {
+     if (!mouseDown) {
+       return;
+     }
++    if (event.buttons === 0) {
++      cancelMouseDrag(event);
++      return;
++    }
+     emitTouch('move', event);
+   });
+ 
+   window.addEventListener('mouseup', (event) => {
+-    if (!mouseDown) {
++    if (!mouseDown || (event.button != null && event.button !== 0)) {
+       return;
+     }
+     mouseDown = false;
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/game/GameState.js b/we xin xiao cheng xu-android-apk/docs/js/game/GameState.js
+index 4964ec7..68f0e62 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/game/GameState.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/game/GameState.js	
+@@ -33,6 +33,7 @@ import { createRack } from './Piece.js';
+ import {
+   loadBestScores,
+   loadBestScore,
++  readBestScores,
+   normalizeDifficulty,
+   resetBestScore as persistResetBestScore,
+   saveSettings as persistSettings
+@@ -208,6 +209,7 @@ export default class GameState {
+   }
+ 
+   initializeHomeState() {
++    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+     this.board.reset();
+     this.score = 0;
+     this.bestScores = loadBestScores();
+@@ -229,6 +231,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.ui = createUiState();
+@@ -236,10 +239,17 @@ export default class GameState {
+     this.reviveCount = this.adminModeEnabled ? Infinity : 0;
+     this.reviveUsedCount = 0;
+     this.pendingRevive = null;
++    this.syncComboPauseState();
+   }
+ 
+   setLayout(layout) {
+     this.layout = layout;
++    const blocked = !!layout?.viewportBlocked;
++    if (blocked !== !!this.viewportBlocked) {
++      this.viewportBlocked = blocked;
++      if (blocked) this.clearDrag();
++      this.syncComboPauseState();
++    }
+   }
+ 
+   setSettings(settings) {
+@@ -277,6 +287,7 @@ export default class GameState {
+   setScreen(screen) {
+     this.screen = screen;
+     this.isGameOver = screen === 'gameover';
++    this.syncComboPauseState();
+   }
+ 
+   cycleDifficulty() {
+@@ -352,6 +363,7 @@ export default class GameState {
+     this.undoSnapshot = null;
+     this.notice = null;
+     this.comboState = createComboState();
++    this.comboClock = { pausedAt: null, excludedMs: 0 };
+     this.lastRackHadSnake = false;
+     this.recentRackBaseIds = [];
+     this.bestScoreEligible = !this.adminModeEnabled;
+@@ -366,11 +378,33 @@ export default class GameState {
+   }
+ 
+   canAdvanceTime() {
+-    return this.screen === 'playing' &&
++    return !this.lifecyclePaused && !this.viewportBlocked && this.screen === 'playing' &&
+       !this.ui.isSettingsOpen && !this.ui.isPauseOpen &&
+       !this.ui.isAdminPanelOpen && !this.ui.isRevivePromptOpen;
+   }
+ 
++  setLifecyclePaused(paused) {
++    this.lifecyclePaused = !!paused;
++    this.syncComboPauseState();
++  }
++
++  syncComboPauseState() {
++    const clock = this.comboClock;
++    if (!clock) return;
++    const now = Date.now();
++    if (!this.canAdvanceTime()) {
++      if (clock.pausedAt === null) clock.pausedAt = now;
++    } else if (clock.pausedAt !== null) {
++      clock.excludedMs += Math.max(0, now - clock.pausedAt);
++      clock.pausedAt = null;
++    }
++  }
++
++  getComboNow() {
++    const clock = this.comboClock;
++    return (clock.pausedAt ?? Date.now()) - clock.excludedMs;
++  }
++
+   update(deltaTime) {
+     if (!this.canAdvanceTime()) return;
+ 
+@@ -421,6 +455,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = true;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.settingsTab = 'game';
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'settings');
+   }
+ 
+@@ -428,6 +463,7 @@ export default class GameState {
+     this.ui.isSettingsOpen = false;
+     this.ui.isResetConfirmOpen = false;
+     this.ui.isMembershipPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'settings');
+   }
+ 
+@@ -467,12 +503,14 @@ export default class GameState {
+     this.clearDrag();
+     this.ui.isPauseOpen = true;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'pause');
+   }
+ 
+   closePause() {
+     this.ui.isPauseOpen = false;
+     this.ui.isPauseConfirmOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'pause');
+   }
+ 
+@@ -497,26 +535,65 @@ export default class GameState {
+     this.ui.isResetConfirmOpen = false;
+   }
+ 
+-  confirmResetBestScore() {
+-    const difficulty = normalizeDifficulty(this.settings.difficulty);
+-    this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
+-    const reset = persistResetBestScore(difficulty);
+-    this.bestScores = {
+-      ...this.bestScores,
+-      [difficulty]: 0
+-    };
++  refreshBestScores({ updateRecordThreshold = true } = {}) {
++    const stored = readBestScores();
++    if (stored.status !== 'readable') return false;
++    const difficulty = this.screen === 'home' || this.screen === 'help'
++      ? normalizeDifficulty(this.settings.difficulty) : this.activeDifficulty;
++    const best = stored.scores[difficulty];
++    if (updateRecordThreshold && best !== this.bestScore) {
++      this.startingHighScore = best < this.bestScore
++        ? best : Math.max(this.startingHighScore || 0, best);
++    }
++    this.bestScores = stored.scores;
++    this.bestScore = best;
++    return true;
++  }
+ 
+-    if (
+-      this.screen === 'home' ||
+-      this.screen === 'help' ||
+-      this.activeDifficulty === difficulty
+-    ) {
+-      this.bestScore = 0;
++  retryBestScoreRefresh(ownSaved) {
++    if (!this.pendingBestScoreRefresh?.size) return;
++    const pending = this.pendingBestScoreRefresh.get(this.activeDifficulty);
++    const generation = this.bestScoreGeneration || 0;
++    let thresholdReconciled = pending?.generation === generation && pending.thresholdReconciled;
++    if (pending && !thresholdReconciled && Number.isFinite(ownSaved?.previous)) {
++      // This is the locked value before our write, unlike a fresh read that
++      // may already include this round's new score.
++      this.startingHighScore = ownSaved.previous;
++      pending.generation = generation;
++      pending.thresholdReconciled = thresholdReconciled = true;
+     }
++    if (this.refreshBestScores({ updateRecordThreshold: false })) {
++      if (pending && !thresholdReconciled) this.startingHighScore = this.bestScore;
++      this.pendingBestScoreRefresh.clear();
++    }
++  }
+ 
++  confirmResetBestScore() {
++    const difficulty = normalizeDifficulty(this.settings.difficulty);
++    if (difficulty === this.activeDifficulty) {
++      this.bestScoreGeneration = (this.bestScoreGeneration || 0) + 1;
++    }
++    const reset = persistResetBestScore(difficulty);
+     this.ui.isResetConfirmOpen = false;
+-    if (reset?.then) reset.finally(() => this.onBestScoreUpdated?.());
+-    return reset;
++    const reconcile = (result) => {
++      // Read the committed state even if the user has started another round.
++      // A failed read preserves the last trustworthy cache instead of showing zero.
++      if (!this.refreshBestScores({ updateRecordThreshold: false })) {
++        if (!this.pendingBestScoreRefresh) this.pendingBestScoreRefresh = new Map();
++        const thresholdReconciled = result === true && difficulty === this.activeDifficulty;
++        if (thresholdReconciled) this.startingHighScore = 0;
++        this.pendingBestScoreRefresh.set(difficulty, {
++          generation: this.bestScoreGeneration || 0,
++          thresholdReconciled
++        });
++      } else {
++        if (difficulty === this.activeDifficulty) this.startingHighScore = this.bestScore;
++        this.pendingBestScoreRefresh?.delete(difficulty);
++      }
++      this.onBestScoreUpdated?.();
++      return result;
++    };
++    return reset?.then ? reset.then(reconcile) : reconcile(reset);
+   }
+ 
+   openAdminPanel() {
+@@ -528,6 +605,7 @@ export default class GameState {
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'admin');
+     return true;
+   }
+@@ -536,6 +614,7 @@ export default class GameState {
+     this.adminInput = '';
+     this.adminError = '';
+     this.ui.isAdminPanelOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'admin');
+   }
+ 
+@@ -545,7 +624,9 @@ export default class GameState {
+   }
+ 
+   setMembershipInput(value) {
+-    this.membershipInput = String(value || '').slice(0, 32);
++    const nextInput = String(value || '').slice(0, 32);
++    if (nextInput === this.membershipInput) return;
++    this.membershipInput = nextInput;
+     this.membershipError = '';
+   }
+ 
+@@ -597,12 +678,14 @@ export default class GameState {
+       remainingCount: this.isAdminModeActive() ? Infinity : this.reviveCount
+     };
+     this.ui.isRevivePromptOpen = true;
++    this.syncComboPauseState();
+     triggerModalOpen(this.feedbackState, 'revive');
+   }
+ 
+   closeRevivePrompt() {
+     this.pendingRevive = null;
+     this.ui.isRevivePromptOpen = false;
++    this.syncComboPauseState();
+     triggerModalClose(this.feedbackState, 'revive');
+   }
+ 
+@@ -902,7 +985,7 @@ export default class GameState {
+       return;
+     }
+ 
+-    const now = Date.now();
++    const now = this.getComboNow();
+     const comboState = this.comboState || createComboState();
+ 
+     if (
+@@ -1073,7 +1156,7 @@ export default class GameState {
+     };
+     this.reviveCount = snapshot.reviveCount;
+     this.reviveUsedCount = snapshot.reviveUsedCount;
+-    this.bestScoreEligible = snapshot.bestScoreEligible;
++    this.bestScoreEligible = this.bestScoreEligible && snapshot.bestScoreEligible && !this.adminModeEnabled;
+     this.pendingRevive = null;
+     this.comboState = snapshot.comboState
+       ? {
+@@ -1250,6 +1333,8 @@ export default class GameState {
+   canDragPieces() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1263,6 +1348,8 @@ export default class GameState {
+   canUseTool() {
+     return (
+       this.screen === 'playing' &&
++      !this.lifecyclePaused &&
++      !this.viewportBlocked &&
+       !this.inputLocked &&
+       !this.pendingClear &&
+       !this.ui.isSettingsOpen &&
+@@ -1369,7 +1456,6 @@ export default class GameState {
+ 
+   cancelDrag() {
+     const wasDragging = this.dragState.isDragging || this.feedbackState.drag.active;
+-    clearFeedbackState(this.feedbackState);
+     this.clearDrag();
+     return wasDragging;
+   }
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js b/we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js
+index f4aac5b..d218a67 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/game/InputManager.js	
+@@ -22,6 +22,7 @@ export default class InputManager {
+   }
+ 
+   handleTouchStart(event) {
++    if (this.gameState.viewportBlocked || this.gameState.lifecyclePaused) return;
+     this.reconcileInputSession();
+     if (this.activeTouchIdentifier !== null) return;
+     const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
+@@ -130,7 +131,8 @@ export default class InputManager {
+   }
+ 
+   canContinueInputSession() {
+-    return this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
++    return !this.gameState.viewportBlocked && !this.gameState.lifecyclePaused &&
++      this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
+       this.gameState.screen === 'playing' &&
+       !this.gameState.ui.isSettingsOpen && !this.gameState.ui.isAdminPanelOpen &&
+       !this.gameState.ui.isMembershipPanelOpen && !this.gameState.ui.isRevivePromptOpen &&
+@@ -541,6 +543,7 @@ export default class InputManager {
+     wx.onKeyboardInput((event) => {
+       if (this.gameState.ui.isMembershipPanelOpen) {
+         this.gameState.setMembershipInput(event.value || '');
++        this.requestImmediateRender();
+         return;
+       }
+     });
+@@ -548,6 +551,7 @@ export default class InputManager {
+     wx.onKeyboardConfirm((event) => {
+       if (this.gameState.ui.isMembershipPanelOpen) {
+         this.gameState.setMembershipInput(event.value || '');
++        this.requestImmediateRender();
+         return;
+       }
+     });
+@@ -556,6 +560,7 @@ export default class InputManager {
+       wx.onKeyboardComplete((event) => {
+         if (this.gameState.ui.isMembershipPanelOpen) {
+           this.gameState.setMembershipInput(event.value || '');
++          this.requestImmediateRender();
+           return;
+         }
+       });
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js b/we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js
+index 313dcf9..f1a9940 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/game/Renderer.js	
+@@ -248,12 +248,14 @@ export default class Renderer {
+       toolGap -
+       rackGap -
+       8;
+-    const cellSize = Math.floor(
++    const availableCellSize = Math.floor(
+       Math.min(
+         (boardOuterWidth - BOARD_PADDING * 2) / BOARD_SIZE,
+         (boardAvailableHeight - BOARD_PADDING * 2) / BOARD_SIZE
+       )
+     );
++    const cellSize = Math.max(1, availableCellSize);
++    const viewportBlocked = screenWidth < 320 || screenHeight < 560 || availableCellSize <= 4;
+     const boardSizePx = cellSize * BOARD_SIZE + BOARD_PADDING * 2;
+     const boardPanelRect = {
+       x: Math.round((screenWidth - boardSizePx) / 2),
+@@ -295,6 +297,7 @@ export default class Renderer {
+     return {
+       screenWidth,
+       screenHeight,
++      viewportBlocked,
+       sideMargin,
+       cellSize,
+       bottomInset,
+@@ -321,7 +324,7 @@ export default class Renderer {
+       this.clearSurfaceCache();
+     }
+     state.setLayout(this.layout);
+-    const damage = this.getFrameDamage(state);
++    const damage = this.layout.viewportBlocked ? null : this.getFrameDamage(state);
+     this.ctx.save();
+     if (damage) {
+       // Clip on physical pixel boundaries; fractional DPR clips otherwise
+@@ -343,6 +346,22 @@ export default class Renderer {
+     this.clearCanvas();
+     this.drawBackground(state.screen !== 'playing', state.dragState.isDragging);
+ 
++    if (this.layout.viewportBlocked) {
++      this.ctx.textAlign = 'center';
++      this.ctx.textBaseline = 'middle';
++      this.ctx.fillStyle = TEXT_PRIMARY;
++      this.ctx.font = 'bold 20px sans-serif';
++      this.ctx.fillText('轻松俄罗斯方块', this.layout.screenWidth / 2, this.layout.screenHeight / 2 - 18);
++      this.ctx.fillStyle = TEXT_SECONDARY;
++      this.ctx.font = '16px sans-serif';
++      this.ctx.fillText('请转为竖屏或增大窗口', this.layout.screenWidth / 2, this.layout.screenHeight / 2 + 18);
++      globalThis.__syncKeyboardInputPosition?.(null);
++      this.lastScene = null;
++      this.ctx.restore();
++      this.perfStats.endFrame(globalThis.performance?.now?.() ?? Date.now());
++      return;
++    }
++
+     if (state.screen === 'home' || state.screen === 'help') {
+       this.drawHome(state);
+     } else {
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js b/we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js
+index ee192dd..c1ac98b 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/game/ScoreManager.js	
+@@ -43,15 +43,24 @@ export default class ScoreManager {
+   }
+ 
+   syncBestScore(state) {
+-    if (!state.bestScoreEligible) {
++    if (!state.bestScoreEligible || state.adminModeEnabled) {
+       return;
+     }
+ 
++    // A transient read failure after reset must recover before another own
++    // score is merged into the cached record.
++    state.retryBestScoreRefresh?.();
+     const difficulty = state.activeDifficulty || 'normal';
+     const generation = state.bestScoreGeneration || 0;
+     const result = saveBestScore(difficulty, state.score);
+     const apply = (saved) => {
+-      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
++      if (!saved) return;
++      if (generation !== (state.bestScoreGeneration || 0) ||
++        difficulty !== (state.activeDifficulty || 'normal')) {
++        state.refreshBestScores?.();
++        return;
++      }
++      state.retryBestScoreRefresh?.(saved);
+       // An external higher record changes the threshold; our own earlier writes
+       // must not turn a first-ever game into a new-record celebration.
+       if (saved.previous > state.bestScore) {
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js b/we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js
+index c67454e..dafd2c3 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/game/SoundManager.js	
+@@ -43,6 +43,7 @@ export default class SoundManager {
+   }
+ 
+   setSettings(settings) {
++    const previousSoundEnabled = this.settings.soundEnabled;
+     const previousEnabled = this.settings.bgmEnabled;
+     const previousTrack = normalizeTrackId(this.settings.bgmTrack);
+     const nextTrack = normalizeTrackId(settings.bgmTrack);
+@@ -54,6 +55,8 @@ export default class SoundManager {
+     };
+     this.currentBgmTrack = nextTrack;
+ 
++    if (previousSoundEnabled && !this.settings.soundEnabled) this.stopAllEffects();
++
+     if (previousTrack !== nextTrack) {
+       this.switchBgmTrack(nextTrack);
+       return;
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/main.js b/we xin xiao cheng xu-android-apk/docs/js/main.js
+index cb49b6e..5b029d3 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/main.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/main.js	
+@@ -6,7 +6,7 @@ import InputManager from './game/InputManager.js';
+ import SoundManager from './game/SoundManager.js';
+ import { advanceUiMotion, hasActiveFeedback, hasActiveUiMotion } from './game/FeedbackState.js';
+ import { shouldScheduleFrame } from './RenderScheduler.js';
+-import { loadSettings, saveSettings, loadBestScores } from './utils/storage.js';
++import { loadSettings, saveSettings } from './utils/storage.js';
+ import { BEST_SCORES_KEY } from './game/coreConstants.js';
+ 
+ export default class Main {
+@@ -18,14 +18,16 @@ export default class Main {
+     this.aniId = 0;
+     this.lastTimestamp = 0;
+     this.appLifecycleBound = false;
+-    this.isPaused = false;
++    this.isPaused = !!globalThis.document?.hidden;
+     this.isRendering = false;
+     this.needsRender = true;
+     this.gameState = new GameState();
++    this.gameState.setLifecyclePaused(this.isPaused);
+     this.gameState.onBestScoreUpdated = () => this.requestImmediateRender();
+     this.settings = loadSettings();
+     this.gameState.setSettings(this.settings);
+     this.soundManager = new SoundManager();
++    if (this.isPaused) this.soundManager.handleAppHide();
+     this.soundManager.setSettings(this.settings);
+     this.renderer = new Renderer(ctx, metrics.screenInfo, metrics.safeAreaInfo);
+     this.inputManager = new InputManager(
+@@ -48,12 +50,22 @@ export default class Main {
+     wx.onStorageChange?.(event => {
+       if (event.key !== BEST_SCORES_KEY) return;
+       const state = this.gameState;
+-      const scores = loadBestScores();
+-      const difficulty = state.screen === 'home' || state.screen === 'help' ? this.settings.difficulty : state.activeDifficulty;
+-      const best = scores[difficulty];
+-      state.startingHighScore = best < state.bestScore ? best : Math.max(state.startingHighScore || 0, best);
+-      state.bestScores = scores;
+-      state.bestScore = best;
++      if (state.refreshBestScores({ updateRecordThreshold: false })) {
++        try {
++          // The fresh read may already include our own pending write. Only
++          // this event's changed difficulty supplies an external threshold.
++          const previous = JSON.parse(event.oldValue);
++          const next = JSON.parse(event.newValue);
++          const difficulty = state.activeDifficulty;
++          const oldBest = Number.isFinite(previous?.[difficulty]) ? previous[difficulty] : 0;
++          const newBest = Number.isFinite(next?.[difficulty]) ? next[difficulty] : 0;
++          if (newBest < oldBest) {
++            state.startingHighScore = Math.min(state.startingHighScore || 0, newBest);
++          } else if (newBest > oldBest) {
++            state.startingHighScore = Math.max(state.startingHighScore || 0, Math.min(newBest, state.bestScore));
++          }
++        } catch { /* Malformed notifications cannot replace the trusted threshold. */ }
++      }
+       this.requestImmediateRender();
+     });
+     this.start();
+@@ -158,6 +170,7 @@ export default class Main {
+   }
+ 
+   hasActiveAnimation() {
++    if (this.gameState.viewportBlocked) return false;
+     return hasActiveUiMotion(this.gameState.feedbackState) || (
+       this.gameState.canAdvanceTime() && !!(
+         this.gameState.dragState.isDragging ||
+@@ -209,6 +222,7 @@ export default class Main {
+     }
+ 
+     this.isPaused = true;
++    this.gameState.setLifecyclePaused(true);
+     this.inputManager.cancelInputSession();
+     this.needsRender = false;
+     this.stopLoop();
+@@ -233,6 +247,8 @@ export default class Main {
+   handleAppForeground() {
+     const wasPaused = this.isPaused;
+     this.isPaused = false;
++    this.gameState.setLifecyclePaused(false);
++    this.gameState.retryBestScoreRefresh();
+     this.refreshViewport();
+     if (wasPaused) this.soundManager.handleAppShow();
+     this.requestImmediateRender();
+@@ -255,7 +271,7 @@ export default class Main {
+ 
+     // UI motion (button press, modal transitions) advances even while a modal
+     // freezes gameplay time; Android scheduling relies on hasActiveAnimation.
+-    advanceUiMotion(this.gameState.feedbackState, deltaTime);
++    if (!this.gameState.viewportBlocked) advanceUiMotion(this.gameState.feedbackState, deltaTime);
+ 
+     if (animating) {
+       this.update(deltaTime);
+diff --git a/we xin xiao cheng xu-android-apk/docs/js/utils/storage.js b/we xin xiao cheng xu-android-apk/docs/js/utils/storage.js
+index ab1bc83..ffadf88 100644
+--- a/we xin xiao cheng xu-android-apk/docs/js/utils/storage.js	
++++ b/we xin xiao cheng xu-android-apk/docs/js/utils/storage.js	
+@@ -34,7 +34,7 @@ function sanitizeBestScores(value) {
+   };
+ }
+ 
+-function readBestScores() {
++export function readBestScores() {
+   try {
+     const stored = wx.getStorageSync(BEST_SCORES_KEY);
+     // Both wx and the browser adapter return '' for a missing key.

@@ -22,6 +22,7 @@ export default class InputManager {
   }
 
   handleTouchStart(event) {
+    if (this.gameState.viewportBlocked || this.gameState.lifecyclePaused) return;
     this.reconcileInputSession();
     if (this.activeTouchIdentifier !== null) return;
     const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
@@ -130,7 +131,8 @@ export default class InputManager {
   }
 
   canContinueInputSession() {
-    return this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
+    return !this.gameState.viewportBlocked && !this.gameState.lifecyclePaused &&
+      this.gameState.dragState.isDragging && !this.gameState.inputLocked &&
       this.gameState.screen === 'playing' &&
       !this.gameState.ui.isSettingsOpen && !this.gameState.ui.isAdminPanelOpen &&
       !this.gameState.ui.isMembershipPanelOpen && !this.gameState.ui.isRevivePromptOpen &&
@@ -541,6 +543,7 @@ export default class InputManager {
     wx.onKeyboardInput((event) => {
       if (this.gameState.ui.isMembershipPanelOpen) {
         this.gameState.setMembershipInput(event.value || '');
+        this.requestImmediateRender();
         return;
       }
     });
@@ -548,6 +551,7 @@ export default class InputManager {
     wx.onKeyboardConfirm((event) => {
       if (this.gameState.ui.isMembershipPanelOpen) {
         this.gameState.setMembershipInput(event.value || '');
+        this.requestImmediateRender();
         return;
       }
     });
@@ -556,6 +560,7 @@ export default class InputManager {
       wx.onKeyboardComplete((event) => {
         if (this.gameState.ui.isMembershipPanelOpen) {
           this.gameState.setMembershipInput(event.value || '');
+          this.requestImmediateRender();
           return;
         }
       });

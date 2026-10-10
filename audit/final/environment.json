@@ -1,0 +1,19 @@
+{
+  "node": "v24.19.0",
+  "java": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment (build 17.0.20+8-1-24.04-Ubuntu)\nOpenJDK 64-Bit Server VM (build 17.0.20+8-1-24.04-Ubuntu, mixed mode, sharing)",
+  "tools": {
+    "adb": false,
+    "emulator": false,
+    "gradle": false,
+    "pwsh": false,
+    "powershell": false,
+    "wechatdevtools": false
+  },
+  "android_sdk_environment_configured": false,
+  "browser": "Chromium 141.0.7390.37",
+  "playwright": "1.62.1",
+  "browser_plugin_available": false,
+  "native_android_debug_build": "not_run_missing_android_sdk_and_adb",
+  "native_wechat_acceptance": "not_run_missing_developer_tools_and_device",
+  "cjk_fonts": "missing_in_browser_container"
+}

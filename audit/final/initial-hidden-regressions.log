@@ -1,0 +1,21 @@
+✔ web: initially hidden startup neither plays saved BGM nor schedules drawing (51.209384ms)
+✔ web: delayed storage events use their own values while an own write is pending (12.721288ms)
+✔ web: real keyboard callbacks redraw idle input and preserve validation feedback (30.038254ms)
+✔ web: losing a mouse release cancels only input and never changes audio visibility (20.635419ms)
+✔ web: another difficulty's storage event does not invent a first-game record threshold (3.861306ms)
+✔ android: initially hidden startup neither plays saved BGM nor schedules drawing (22.86875ms)
+✔ android: delayed storage events use their own values while an own write is pending (9.435554ms)
+✔ android: real keyboard callbacks redraw idle input and preserve validation feedback (34.096177ms)
+✔ android: losing a mouse release cancels only input and never changes audio visibility (25.664973ms)
+✔ android: another difficulty's storage event does not invent a first-game record threshold (7.483669ms)
+✔ wechat: cancelling the next drag preserves feedback from the previous placement (22.603358ms)
+✔ web: cancelling the next drag preserves feedback from the previous placement (4.091113ms)
+✔ android: cancelling the next drag preserves feedback from the previous placement (2.308615ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 420.611094

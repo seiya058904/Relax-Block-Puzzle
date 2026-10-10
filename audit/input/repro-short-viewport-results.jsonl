@@ -1,0 +1,12 @@
+{"version":"wechat","w":844,"h":390,"cell":8,"boardWidth":80,"rackHit":true,"drag":true,"error":null}
+{"version":"wechat","w":640,"h":360,"cell":5,"boardWidth":50,"rackHit":true,"drag":true,"error":null}
+{"version":"wechat","w":568,"h":320,"cell":1,"boardWidth":10,"rackHit":true,"drag":true,"error":null}
+{"version":"wechat","w":360,"h":300,"cell":-1,"boardWidth":-10,"rackHit":true,"drag":false,"error":"drag model requires boardRect, positive cellSize, and canPlace"}
+{"version":"web","w":844,"h":390,"cell":4,"boardWidth":40,"rackHit":true,"drag":true,"error":null}
+{"version":"web","w":640,"h":360,"cell":1,"boardWidth":10,"rackHit":true,"drag":true,"error":null}
+{"version":"web","w":568,"h":320,"cell":-3,"boardWidth":-30,"rackHit":true,"drag":false,"error":"drag model requires boardRect, positive cellSize, and canPlace"}
+{"version":"web","w":360,"h":300,"cell":-5,"boardWidth":-50,"rackHit":true,"drag":false,"error":"drag model requires boardRect, positive cellSize, and canPlace"}
+{"version":"android","w":844,"h":390,"cell":4,"boardWidth":40,"rackHit":true,"drag":true,"error":null}
+{"version":"android","w":640,"h":360,"cell":1,"boardWidth":10,"rackHit":true,"drag":true,"error":null}
+{"version":"android","w":568,"h":320,"cell":-3,"boardWidth":-30,"rackHit":true,"drag":false,"error":"drag model requires boardRect, positive cellSize, and canPlace"}
+{"version":"android","w":360,"h":300,"cell":-5,"boardWidth":-50,"rackHit":true,"drag":false,"error":"drag model requires boardRect, positive cellSize, and canPlace"}

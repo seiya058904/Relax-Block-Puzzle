@@ -1,0 +1,12 @@
+{"version":"web","bug":"keyboard update does not wake idle renderer","state":"TEST-AUDIT","renderDelta":0,"pendingFrames":0}
+{"version":"web","bug":"lost mouseup after window blur persists drag and next unrelated click places piece","cellsBefore":0,"cellsAfter":4,"score":40}
+{"version":"android","bug":"keyboard update does not wake idle renderer","state":"TEST-AUDIT","renderDelta":0,"pendingFrames":0}
+{"version":"android","bug":"lost mouseup after window blur persists drag and next unrelated click places piece","cellsBefore":0,"cellsAfter":4,"score":40}
+{"version":"wechat","bug":"reconcile of a cancelled drag erases unrelated modal animation","beforeActive":true,"afterActive":true}
+{"version":"web","bug":"reconcile of a cancelled drag erases unrelated modal animation","beforeActive":true,"afterActive":false}
+{"version":"android","bug":"reconcile of a cancelled drag erases unrelated modal animation","beforeActive":true,"afterActive":false}
+{"version":"web","bug":"native keyboard blur clears an invalid membership-code error on confirm","initialError":"福利码无效","afterConfirm":""}
+{"version":"android","bug":"native keyboard blur clears an invalid membership-code error on confirm","initialError":"福利码无效","afterConfirm":""}
+{"version":"wechat","bug":"quick next pickup then touchcancel truncates preceding score feedback","scoreBefore":10,"scoreAfter":10,"gainAfterCancel":true}
+{"version":"web","bug":"quick next pickup then touchcancel truncates preceding score feedback","scoreBefore":10,"scoreAfter":10,"gainAfterCancel":false}
+{"version":"android","bug":"quick next pickup then touchcancel truncates preceding score feedback","scoreBefore":10,"scoreAfter":10,"gainAfterCancel":false}

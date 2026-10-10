@@ -42,15 +42,24 @@ export default class ScoreManager {
   }
 
   syncBestScore(state) {
-    if (!state.bestScoreEligible) {
+    if (!state.bestScoreEligible || state.adminModeEnabled) {
       return;
     }
 
+    // A transient read failure after reset must recover before another own
+    // score is merged into the cached record.
+    state.retryBestScoreRefresh?.();
     const difficulty = state.activeDifficulty || 'normal';
     const generation = state.bestScoreGeneration || 0;
     const result = saveBestScore(difficulty, state.score);
     const apply = (saved) => {
-      if (!saved || generation !== (state.bestScoreGeneration || 0)) return;
+      if (!saved) return;
+      if (generation !== (state.bestScoreGeneration || 0) ||
+        difficulty !== (state.activeDifficulty || 'normal')) {
+        state.refreshBestScores?.();
+        return;
+      }
+      state.retryBestScoreRefresh?.(saved);
       // An external higher record changes the threshold; our own earlier writes
       // must not turn a first-ever game into a new-record celebration.
       if (saved.previous > state.bestScore) {

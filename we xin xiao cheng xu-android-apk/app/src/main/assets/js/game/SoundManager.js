@@ -43,6 +43,7 @@ export default class SoundManager {
   }
 
   setSettings(settings) {
+    const previousSoundEnabled = this.settings.soundEnabled;
     const previousEnabled = this.settings.bgmEnabled;
     const previousTrack = normalizeTrackId(this.settings.bgmTrack);
     const nextTrack = normalizeTrackId(settings.bgmTrack);
@@ -53,6 +54,8 @@ export default class SoundManager {
       bgmTrack: nextTrack
     };
     this.currentBgmTrack = nextTrack;
+
+    if (previousSoundEnabled && !this.settings.soundEnabled) this.stopAllEffects();
 
     if (previousTrack !== nextTrack) {
       this.switchBgmTrack(nextTrack);

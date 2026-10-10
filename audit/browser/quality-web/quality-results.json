@@ -1,0 +1,223 @@
+[
+  {
+    "label": "web-1280",
+    "metrics": {
+      "width": 1280,
+      "height": 900,
+      "cellSize": 50,
+      "board": {
+        "x": 390,
+        "y": 176.88,
+        "width": 500,
+        "height": 500
+      },
+      "rack": {
+        "x": 360,
+        "y": 742.88,
+        "width": 560,
+        "height": 128
+      },
+      "bottom": 16,
+      "mainPixels": 1800000,
+      "cachePixels": 753913,
+      "budget": 5000000,
+      "reducedMotion": false
+    },
+    "stress": null,
+    "events": [
+      "pickup",
+      "piecePicked",
+      "place",
+      "piecePlaced",
+      "scoreChanged"
+    ]
+  },
+  {
+    "label": "web-390",
+    "metrics": {
+      "width": 390,
+      "height": 844,
+      "cellSize": 35,
+      "board": {
+        "x": 20,
+        "y": 176.88,
+        "width": 350,
+        "height": 350
+      },
+      "rack": {
+        "x": 15.599999999999994,
+        "y": 592.88,
+        "width": 358.8,
+        "height": 122.38
+      },
+      "bottom": 16,
+      "mainPixels": 2057250,
+      "cachePixels": 1224385,
+      "budget": 5000000,
+      "reducedMotion": false
+    },
+    "stress": {
+      "elapsedMs": 30092.39999999944,
+      "frames": 1683,
+      "partialFrames": 1683,
+      "meanMs": 0.5513368983887494,
+      "p95Ms": 1.2999999998137355,
+      "maxMs": 11.299999999813735,
+      "cachePixels": 1224385,
+      "mainPixels": 2057250,
+      "cacheEntries": 2,
+      "focused": true,
+      "hidden": false
+    },
+    "events": [
+      "pickup",
+      "piecePicked",
+      "place",
+      "piecePlaced",
+      "scoreChanged"
+    ]
+  },
+  {
+    "label": "web-320",
+    "metrics": {
+      "width": 320,
+      "height": 568,
+      "cellSize": 22,
+      "board": {
+        "x": 50,
+        "y": 176.88,
+        "width": 220,
+        "height": 220
+      },
+      "rack": {
+        "x": 14,
+        "y": 456.88,
+        "width": 292,
+        "height": 82.36
+      },
+      "bottom": 16,
+      "mainPixels": 1136000,
+      "cachePixels": 578660,
+      "budget": 5000000,
+      "reducedMotion": false
+    },
+    "stress": null,
+    "events": [
+      "pickup",
+      "piecePicked",
+      "place",
+      "piecePlaced",
+      "scoreChanged"
+    ]
+  },
+  {
+    "label": "web-768",
+    "metrics": {
+      "width": 768,
+      "height": 1024,
+      "cellSize": 55,
+      "board": {
+        "x": 109,
+        "y": 176.88,
+        "width": 550,
+        "height": 550
+      },
+      "rack": {
+        "x": 104,
+        "y": 792.88,
+        "width": 560,
+        "height": 128
+      },
+      "bottom": 16,
+      "mainPixels": 3145728,
+      "cachePixels": 1249204,
+      "budget": 5000000,
+      "reducedMotion": false
+    },
+    "stress": null,
+    "events": [
+      "pickup",
+      "piecePicked",
+      "place",
+      "piecePlaced",
+      "scoreChanged"
+    ]
+  },
+  {
+    "label": "web-360-reduced",
+    "metrics": {
+      "width": 360,
+      "height": 640,
+      "cellSize": 23,
+      "board": {
+        "x": 65,
+        "y": 199.88,
+        "width": 230,
+        "height": 230
+      },
+      "rack": {
+        "x": 14.400000000000006,
+        "y": 489.88,
+        "width": 331.2,
+        "height": 104
+      },
+      "bottom": 34,
+      "mainPixels": 1440000,
+      "cachePixels": 659425,
+      "budget": 5000000,
+      "reducedMotion": true
+    },
+    "stress": null,
+    "events": [
+      "pickup",
+      "piecePicked",
+      "place",
+      "piecePlaced",
+      "scoreChanged"
+    ]
+  },
+  {
+    "label": "wechat-host-390",
+    "metrics": {
+      "width": 390,
+      "height": 844,
+      "cellSize": 35,
+      "board": {
+        "x": 20,
+        "y": 192.84,
+        "width": 350,
+        "height": 350
+      },
+      "rack": {
+        "x": 15.599999999999994,
+        "y": 608.84,
+        "width": 358.8,
+        "height": 122.38
+      },
+      "bottom": 16,
+      "mainPixels": 1316640,
+      "cachePixels": 749778,
+      "budget": 4000000,
+      "reducedMotion": false
+    },
+    "stress": {
+      "elapsedMs": 10034.5,
+      "frames": 601,
+      "partialFrames": 601,
+      "meanMs": 0.46023294506610035,
+      "p95Ms": 0.7000000001862645,
+      "maxMs": 6.1000000005587935,
+      "cachePixels": 749778,
+      "mainPixels": 1316640,
+      "cacheEntries": 2,
+      "focused": true,
+      "hidden": false
+    },
+    "events": [
+      "pickup",
+      "piecePicked",
+      "invalid",
+      "invalidPlacement"
+    ]
+  }
+]

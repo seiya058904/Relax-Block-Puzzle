@@ -114,7 +114,7 @@ export default class Main {
   }
 
   update(deltaTime) {
-    if (this.isPaused) return;
+    if (this.isPaused || this.gameState.viewportBlocked) return;
     this.inputManager.flushPendingInput();
     this.gameState.update(deltaTime);
     // UI motion (button press, modal transitions) advances independently of
@@ -153,6 +153,7 @@ export default class Main {
   }
 
   hasActiveAnimation() {
+    if (this.gameState.viewportBlocked) return false;
     return hasActiveUiMotion(this.gameState.feedbackState) || (this.gameState.canAdvanceTime() && !!(
       this.gameState.dragState.isDragging || this.gameState.pendingClear || this.gameState.placementPulse.length ||
       this.gameState.notice || hasActiveFeedback(this.gameState.feedbackState)
@@ -173,6 +174,7 @@ export default class Main {
   handleAppBackground() {
     if (this.isPaused) return;
     this.isPaused = true;
+    this.gameState.setLifecyclePaused(true);
     this.inputManager.cancelInputSession();
     this.gameState.consumeEvents();
     this.stopLoop();
@@ -192,6 +194,8 @@ export default class Main {
   handleAppForeground() {
     const wasPaused = this.isPaused;
     this.isPaused = false;
+    this.gameState.setLifecyclePaused(false);
+    this.gameState.retryBestScoreRefresh();
     if (wasPaused) this.soundManager.handleAppShow();
     this.handleViewportChange();
   }

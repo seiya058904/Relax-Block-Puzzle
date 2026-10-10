@@ -234,6 +234,8 @@ for (const version of versions) {
   test(`${version}: combo state exposes deterministic feedback data`, async () => {
     const game = await createGame(version);
     try {
+      // Combo time advances only in an active round; the home screen is paused.
+      await withFixedDateNow(1_000, () => game.state.startNewGame());
       await withFixedDateNow(1_000, () => game.state.handleLineClear(1));
       assert.equal(game.state.comboState.comboCount, 1);
       assert.equal(game.state.consumeEvents().at(-1).type, 'clear');

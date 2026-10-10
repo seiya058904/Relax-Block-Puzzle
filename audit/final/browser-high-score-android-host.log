@@ -1,0 +1,4 @@
+PASS web-locks 1280x900: serial pages and forced concurrent lock queue, max record, storage event/third page/reload, untouched other difficulties, explicit reset, feedback and canvas boot
+PASS web-locks 390x844: serial pages and forced concurrent lock queue, max record, storage event/third page/reload, untouched other difficulties, explicit reset, feedback and canvas boot
+PASS indexeddb 1280x900: serial pages and forced concurrent lock queue, max record, storage event/third page/reload, untouched other difficulties, explicit reset, feedback and canvas boot
+PASS indexeddb 390x844: serial pages and forced concurrent lock queue, max record, storage event/third page/reload, untouched other difficulties, explicit reset, feedback and canvas boot

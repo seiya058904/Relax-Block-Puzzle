@@ -109,11 +109,21 @@ function registerTouchHandlers() {
   }, { passive: false });
 
   let mouseDown = false;
+  const cancelMouseDrag = (event = {}) => {
+    if (!mouseDown) return;
+    mouseDown = false;
+    emitTouch('cancel', event);
+  };
+
+  // Losing focus cancels only pointer ownership; audio follows real visibility.
+  window.addEventListener('blur', cancelMouseDrag);
 
   inputLayer.addEventListener('mousedown', (event) => {
     if (event.button !== 0) {
       return;
     }
+    // Keep focus requested by a canvas control (for example the code field).
+    event.preventDefault();
     mouseDown = true;
     emitTouch('start', event);
   });
@@ -122,11 +132,15 @@ function registerTouchHandlers() {
     if (!mouseDown) {
       return;
     }
+    if (event.buttons === 0) {
+      cancelMouseDrag(event);
+      return;
+    }
     emitTouch('move', event);
   });
 
   window.addEventListener('mouseup', (event) => {
-    if (!mouseDown) {
+    if (!mouseDown || (event.button != null && event.button !== 0)) {
       return;
     }
     mouseDown = false;

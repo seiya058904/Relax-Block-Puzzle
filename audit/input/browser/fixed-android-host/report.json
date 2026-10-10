@@ -1,0 +1,4223 @@
+{
+  "mode": "fixed",
+  "root": "/workspace/scratch/7bb2fb03b768/source/relax-block-puzzle/we xin xiao cheng xu-android-apk/app/src/main/assets",
+  "url": "http://127.0.0.1:37141/",
+  "reason": "Browser plugin not available; existing Playwright and existing Chromium used without installing dependencies",
+  "checks": [
+    {
+      "name": "input: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "home",
+        "raf": 0
+      }
+    },
+    {
+      "name": "input: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "mouse field focus",
+      "pass": true,
+      "evidence": {
+        "mouseFocus": "wxKeyboard"
+      }
+    },
+    {
+      "name": "native keyboard receives focus",
+      "pass": true,
+      "evidence": "wxKeyboard"
+    },
+    {
+      "name": "native keyboard updates idle Canvas",
+      "pass": true,
+      "evidence": {
+        "state": "INVALID-AUDIT",
+        "rendered": "INVALID-AUDIT",
+        "renderCount": 35,
+        "raf": 0
+      }
+    },
+    {
+      "name": "native input survives short viewport and recovery",
+      "pass": true,
+      "evidence": {
+        "blockedKeyboard": {
+          "state": "INVALID-AUDIT",
+          "blocked": true,
+          "focused": "wxKeyboard",
+          "frameText": [
+            "轻松俄罗斯方块",
+            "请转为竖屏或增大窗口"
+          ]
+        },
+        "recoveredKeyboard": {
+          "state": "INVALID-AUDITZ",
+          "rendered": "INVALID-AUDITZ",
+          "blocked": false,
+          "open": true
+        }
+      }
+    },
+    {
+      "name": "invalid native keyboard code retains error",
+      "pass": true,
+      "evidence": {
+        "error": "福利码无效",
+        "rendered": "福利码无效",
+        "open": true,
+        "focused": ""
+      }
+    },
+    {
+      "name": "lost release cancellation leaves no stale drag",
+      "pass": true,
+      "evidence": {
+        "beforeBlur": {
+          "score": 0,
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "drag": true
+        },
+        "stale": {
+          "drag": false,
+          "paused": false,
+          "score": 0,
+          "hidden": false
+        },
+        "afterClick": {
+          "score": 0,
+          "drag": false,
+          "filled": 0
+        }
+      }
+    },
+    {
+      "name": "next ordinary click cannot place stale piece",
+      "pass": true,
+      "evidence": {
+        "score": 0,
+        "drag": false,
+        "filled": 0
+      }
+    },
+    {
+      "name": "window blur preserves actual visibility lifecycle",
+      "pass": true,
+      "evidence": {
+        "drag": false,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      }
+    },
+    {
+      "name": "input flow console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-1280x900: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-1280x900: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-1280x900: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 50,
+        "board": {
+          "x": 390,
+          "y": 176.88,
+          "width": 500,
+          "height": 500
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-1280x900: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-390x844: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 487,
+          "height": 1055
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-390x844: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-390x844: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 35,
+        "board": {
+          "x": 20,
+          "y": 176.88,
+          "width": 350,
+          "height": 350
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-390x844: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-320x568: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 400,
+          "height": 710
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-320x568: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-320x568: normal viewport remains playable",
+      "pass": true,
+      "evidence": {
+        "cellSize": 22,
+        "board": {
+          "x": 50,
+          "y": 176.88,
+          "width": 220,
+          "height": 220
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-320x568: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-568x320: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 710,
+          "height": 400
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-568x320: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-568x320: blocks rack and tools",
+      "pass": true,
+      "evidence": {
+        "cellSize": 1,
+        "board": {
+          "x": 279,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-568x320: explains how to restore view",
+      "pass": true,
+      "evidence": [
+        "轻松俄罗斯方块",
+        "请转为竖屏或增大窗口"
+      ]
+    },
+    {
+      "name": "viewport-568x320: stops idle frames",
+      "pass": true,
+      "evidence": {
+        "cellSize": 1,
+        "board": {
+          "x": 279,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-568x320: fallback interactions preserve round",
+      "pass": true,
+      "evidence": {
+        "before": {
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 0,
+          "rack": [
+            {
+              "id": "single_0_1",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "color": "#2DE2E6",
+              "used": false,
+              "bounds": {
+                "width": 1,
+                "height": 1
+              },
+              "category": "rescue",
+              "baseId": "single",
+              "isSnake": false
+            },
+            {
+              "id": "l3_1_2",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "t5_0_3",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                },
+                {
+                  "x": 1,
+                  "y": 2
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 3,
+                "height": 3
+              },
+              "category": "hard",
+              "baseId": "t5",
+              "isSnake": false
+            }
+          ]
+        },
+        "still": {
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 0,
+          "rack": [
+            {
+              "id": "single_0_1",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "color": "#2DE2E6",
+              "used": false,
+              "bounds": {
+                "width": 1,
+                "height": 1
+              },
+              "category": "rescue",
+              "baseId": "single",
+              "isSnake": false
+            },
+            {
+              "id": "l3_1_2",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "t5_0_3",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                },
+                {
+                  "x": 1,
+                  "y": 2
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 3,
+                "height": 3
+              },
+              "category": "hard",
+              "baseId": "t5",
+              "isSnake": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewport-568x320: restores original playable round",
+      "pass": true,
+      "evidence": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "single_0_1",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "t5_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 2
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 3
+            },
+            "category": "hard",
+            "baseId": "t5",
+            "isSnake": false
+          }
+        ],
+        "hitAreas": 3,
+        "cellSize": 35
+      }
+    },
+    {
+      "name": "viewport-568x320: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "viewport-640x360: page identity and Canvas",
+      "pass": true,
+      "evidence": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 800,
+          "height": 450
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      }
+    },
+    {
+      "name": "viewport-640x360: no boot overlay",
+      "pass": true,
+      "evidence": {
+        "display": "none",
+        "text": ""
+      }
+    },
+    {
+      "name": "viewport-640x360: blocks rack and tools",
+      "pass": true,
+      "evidence": {
+        "cellSize": 1,
+        "board": {
+          "x": 315,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-640x360: explains how to restore view",
+      "pass": true,
+      "evidence": [
+        "轻松俄罗斯方块",
+        "请转为竖屏或增大窗口"
+      ]
+    },
+    {
+      "name": "viewport-640x360: stops idle frames",
+      "pass": true,
+      "evidence": {
+        "cellSize": 1,
+        "board": {
+          "x": 315,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      }
+    },
+    {
+      "name": "viewport-640x360: fallback interactions preserve round",
+      "pass": true,
+      "evidence": {
+        "before": {
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 0,
+          "rack": [
+            {
+              "id": "l3_2_1",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 1
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "color": "#9B5DE5",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "l3_1_2",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "color": "#FF9F1C",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "line3_0_3",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 3,
+                "height": 1
+              },
+              "category": "rescue",
+              "baseId": "line3",
+              "isSnake": false
+            }
+          ]
+        },
+        "still": {
+          "board": [
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 0,
+          "rack": [
+            {
+              "id": "l3_2_1",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 1
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "color": "#9B5DE5",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "l3_1_2",
+              "cells": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0,
+                  "y": 1
+                }
+              ],
+              "color": "#FF9F1C",
+              "used": false,
+              "bounds": {
+                "width": 2,
+                "height": 2
+              },
+              "category": "simple",
+              "baseId": "l3",
+              "isSnake": false
+            },
+            {
+              "id": "line3_0_3",
+              "cells": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0
+                }
+              ],
+              "color": "#47E56B",
+              "used": false,
+              "bounds": {
+                "width": 3,
+                "height": 1
+              },
+              "category": "rescue",
+              "baseId": "line3",
+              "isSnake": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewport-640x360: restores original playable round",
+      "pass": true,
+      "evidence": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_2_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#9B5DE5",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#FF9F1C",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "line3_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "line3",
+            "isSnake": false
+          }
+        ],
+        "hitAreas": 3,
+        "cellSize": 35
+      }
+    },
+    {
+      "name": "viewport-640x360: console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "fallback reached during live clear wait",
+      "pass": true,
+      "evidence": {
+        "pending": {
+          "rows": [
+            0
+          ],
+          "cols": [],
+          "lineCount": 1,
+          "scoreBefore": 0,
+          "placementScoreResult": {
+            "placementScore": 10,
+            "lineClearScore": 0,
+            "bonusScore": 0,
+            "totalAdded": 10,
+            "clearedLines": 0
+          },
+          "remainingTime": 146.69999999999993
+        },
+        "board": [
+          [
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            }
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 10,
+        "raf": 0
+      }
+    },
+    {
+      "name": "fallback freezes pending clear without losing progress",
+      "pass": true,
+      "evidence": {
+        "frozenBefore": {
+          "pending": {
+            "rows": [
+              0
+            ],
+            "cols": [],
+            "lineCount": 1,
+            "scoreBefore": 0,
+            "placementScoreResult": {
+              "placementScore": 10,
+              "lineClearScore": 0,
+              "bonusScore": 0,
+              "totalAdded": 10,
+              "clearedLines": 0
+            },
+            "remainingTime": 146.69999999999993
+          },
+          "board": [
+            [
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              }
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 10,
+          "raf": 0
+        },
+        "frozenAfter": {
+          "pending": {
+            "rows": [
+              0
+            ],
+            "cols": [],
+            "lineCount": 1,
+            "scoreBefore": 0,
+            "placementScoreResult": {
+              "placementScore": 10,
+              "lineClearScore": 0,
+              "bonusScore": 0,
+              "totalAdded": 10,
+              "clearedLines": 0
+            },
+            "remainingTime": 146.69999999999993
+          },
+          "board": [
+            [
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              },
+              {
+                "color": "#7EC8EB"
+              }
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          ],
+          "score": 10,
+          "raf": 0
+        }
+      }
+    },
+    {
+      "name": "restored viewport finishes original clear exactly once",
+      "pass": true,
+      "evidence": {
+        "score": 160,
+        "row": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "inputLocked": false,
+        "hitAreas": 2
+      }
+    },
+    {
+      "name": "fallback animation flow console health",
+      "pass": true,
+      "evidence": {
+        "errors": [],
+        "warnings": []
+      }
+    }
+  ],
+  "cases": [
+    {
+      "label": "input",
+      "typed": {
+        "state": "INVALID-AUDIT",
+        "rendered": "INVALID-AUDIT",
+        "renderCount": 35,
+        "raf": 0
+      },
+      "invalid": {
+        "error": "福利码无效",
+        "rendered": "福利码无效",
+        "open": true,
+        "focused": ""
+      },
+      "stale": {
+        "drag": false,
+        "paused": false,
+        "score": 0,
+        "hidden": false
+      },
+      "afterClick": {
+        "score": 0,
+        "drag": false,
+        "filled": 0
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-1280x900",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 1600,
+          "height": 1125
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 50,
+        "board": {
+          "x": 390,
+          "y": 176.88,
+          "width": 500,
+          "height": 500
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-390x844",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 487,
+          "height": 1055
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 35,
+        "board": {
+          "x": 20,
+          "y": 176.88,
+          "width": 350,
+          "height": 350
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-320x568",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 400,
+          "height": 710
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 22,
+        "board": {
+          "x": 50,
+          "y": 176.88,
+          "width": 220,
+          "height": 220
+        },
+        "rack": 3,
+        "tools": [
+          "refresh",
+          "clear",
+          "undo"
+        ],
+        "rendererBlocked": false,
+        "frameText": [
+          "0",
+          "普通最高分：0",
+          "刷新 ×2",
+          "清除 ×1",
+          "撤回 ×1",
+          "设置",
+          "暂停"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-568x320",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 710,
+          "height": 400
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 1,
+        "board": {
+          "x": 279,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "before": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "single_0_1",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "t5_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 2
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 3
+            },
+            "category": "hard",
+            "baseId": "t5",
+            "isSnake": false
+          }
+        ]
+      },
+      "still": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "single_0_1",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "t5_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 2
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 3
+            },
+            "category": "hard",
+            "baseId": "t5",
+            "isSnake": false
+          }
+        ]
+      },
+      "restored": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "single_0_1",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#2DE2E6",
+            "used": false,
+            "bounds": {
+              "width": 1,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "single",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "t5_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 2
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 3
+            },
+            "category": "hard",
+            "baseId": "t5",
+            "isSnake": false
+          }
+        ],
+        "hitAreas": 3,
+        "cellSize": 35
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "viewport-640x360",
+      "basic": {
+        "title": "轻松俄罗斯方块",
+        "canvas": {
+          "width": 800,
+          "height": 450
+        },
+        "bootError": {
+          "display": "none",
+          "text": ""
+        },
+        "screen": "playing",
+        "raf": 0
+      },
+      "layout": {
+        "cellSize": 1,
+        "board": {
+          "x": 315,
+          "y": 176.88,
+          "width": 10,
+          "height": 10
+        },
+        "rack": 0,
+        "tools": [],
+        "stateBlocked": true,
+        "rendererBlocked": true,
+        "frameText": [
+          "轻松俄罗斯方块",
+          "请转为竖屏或增大窗口"
+        ],
+        "raf": 0,
+        "screen": "playing"
+      },
+      "before": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_2_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#9B5DE5",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#FF9F1C",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "line3_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "line3",
+            "isSnake": false
+          }
+        ]
+      },
+      "still": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_2_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#9B5DE5",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#FF9F1C",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "line3_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "line3",
+            "isSnake": false
+          }
+        ]
+      },
+      "restored": {
+        "board": [
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 0,
+        "rack": [
+          {
+            "id": "l3_2_1",
+            "cells": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "color": "#9B5DE5",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "l3_1_2",
+            "cells": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "color": "#FF9F1C",
+            "used": false,
+            "bounds": {
+              "width": 2,
+              "height": 2
+            },
+            "category": "simple",
+            "baseId": "l3",
+            "isSnake": false
+          },
+          {
+            "id": "line3_0_3",
+            "cells": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 0
+              }
+            ],
+            "color": "#47E56B",
+            "used": false,
+            "bounds": {
+              "width": 3,
+              "height": 1
+            },
+            "category": "rescue",
+            "baseId": "line3",
+            "isSnake": false
+          }
+        ],
+        "hitAreas": 3,
+        "cellSize": 35
+      },
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "label": "fallback-live-clear",
+      "frozenBefore": {
+        "pending": {
+          "rows": [
+            0
+          ],
+          "cols": [],
+          "lineCount": 1,
+          "scoreBefore": 0,
+          "placementScoreResult": {
+            "placementScore": 10,
+            "lineClearScore": 0,
+            "bonusScore": 0,
+            "totalAdded": 10,
+            "clearedLines": 0
+          },
+          "remainingTime": 146.69999999999993
+        },
+        "board": [
+          [
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            }
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 10,
+        "raf": 0
+      },
+      "frozenAfter": {
+        "pending": {
+          "rows": [
+            0
+          ],
+          "cols": [],
+          "lineCount": 1,
+          "scoreBefore": 0,
+          "placementScoreResult": {
+            "placementScore": 10,
+            "lineClearScore": 0,
+            "bonusScore": 0,
+            "totalAdded": 10,
+            "clearedLines": 0
+          },
+          "remainingTime": 146.69999999999993
+        },
+        "board": [
+          [
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            },
+            {
+              "color": "#7EC8EB"
+            }
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ],
+        "score": 10,
+        "raf": 0
+      },
+      "resumed": {
+        "score": 160,
+        "row": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "inputLocked": false,
+        "hitAreas": 2
+      },
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "passed": 43,
+  "failed": 0
+}
