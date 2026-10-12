@@ -53,6 +53,12 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.13`
+
+- Includes the subsequent verified three-platform lifecycle, delayed authentication, high-score coordination and storage-failure fixes without changing gameplay or save keys. / 包含后续已验证的三端生命周期、异步登录、最高分协调与存储失败修复，保留玩法和存档键。
+- Android versionName 1.0.13 / versionCode 13. Attach an installable Debug preview with the existing certificate and a separately labelled unsigned Release build; neither is a production-signed package. / 使用 1.0.13 / 13，附件明确区分原证书可安装 Debug 预览包和未签名 Release 构建，均不称为生产签名包。
+- Web and Android emulator acceptance are recorded in the release notes. Physical phones and WeChat native interactions remain outside that evidence. / Web 与 Android 模拟器验收见发行说明；物理手机及微信原生交互仍未验证。
+
 `v1.0.12`
 
 - Freeze the existing three-platform tactile, material, animation and feedback upgrade from candidate `057b8f8`; preserve all gameplay rules and save formats. / 将候选 `057b8f8` 的三端手感、材质、动画和反馈升级正式封板，保留全部玩法规则与存档格式。
