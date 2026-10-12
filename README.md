@@ -44,7 +44,7 @@ The same core puzzle runs in three environments, with platform-specific controls
     </td>
     <td width="50%" valign="top">
       <h3>📱 Android — Debug Preview</h3>
-      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.12</sub></p>
+      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.13</sub></p>
       <p>Play the locally packaged game in a Kotlin/WebView shell. The available installable APK is a <strong>debug-signed preview</strong>, not a production-signed release.</p>
       <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.13">View Android v1.0.13 →</a></strong></p>
     </td>
@@ -110,7 +110,7 @@ The gameplay is shared, but the application is **not three identical copies of t
 **Shared rules originate in [`shared/js/`](shared/js/).** The [platform manifest](config/platform-manifest.json) defines generated modules and their destinations. Platform-specific input, rendering, audio, and storage adapters remain independent.
 
 > [!NOTE]
-> Browser and Android emulator checks do not substitute for testing real phone touch, vibration, sound, safe areas, or the native WeChat runtime. The [v1.0.13 validation baseline](docs/TEST_BASELINE.md) explains which environments were actually tested.
+> Browser and Android emulator checks do not substitute for testing real phone touch, vibration, sound, safe areas, or the native WeChat runtime. The [validation baseline and acceptance boundaries](docs/TEST_BASELINE.md) explain which environments were actually tested.
 
 <a id="for-developers"></a>
 ## ⚙️ For Developers
