@@ -21,6 +21,8 @@ adb shell dumpsys activity activities > "$evidence/activities.txt"
 grep -F 'com.blockpuzzle.android/.MainActivity' "$evidence/activities.txt"
 adb forward tcp:9222 "localabstract:webview_devtools_remote_$pid"
 node scripts/android-emulator-smoke.mjs set | tee "$evidence/webview-initial.json"
+adb shell input keyevent KEYCODE_BACK
+sleep 5
 adb shell am force-stop com.blockpuzzle.android
 adb forward --remove tcp:9222
 adb shell am start -W -n 'com.blockpuzzle.android/.MainActivity' | tee "$evidence/relaunch.txt"
