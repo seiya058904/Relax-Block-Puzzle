@@ -6,6 +6,9 @@ on:
       - 'we xin xiao cheng xu-android-apk/app/**'
       - 'we xin xiao cheng xu-android-apk/gradle/**'
       - 'we xin xiao cheng xu-android-apk/gradlew'
+      - 'we xin xiao cheng xu-android-apk/build.gradle.kts'
+      - 'we xin xiao cheng xu-android-apk/settings.gradle.kts'
+      - 'we xin xiao cheng xu-android-apk/gradle.properties'
       - 'scripts/android-emulator-smoke.*'
       - '.github/workflows/android-emulator-smoke.yml'
 
