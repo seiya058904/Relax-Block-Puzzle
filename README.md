@@ -44,9 +44,9 @@ The same core puzzle runs in three environments, with platform-specific controls
     </td>
     <td width="50%" valign="top">
       <h3>📱 Android — Debug Preview</h3>
-      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.12</sub></p>
+      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.13</sub></p>
       <p>Play the locally packaged game in a Kotlin/WebView shell. The available installable APK is a <strong>debug-signed preview</strong>, not a production-signed release.</p>
-      <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.12">View Android v1.0.12 →</a></strong></p>
+      <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.13">View Android v1.0.13 →</a></strong></p>
     </td>
   </tr>
   <tr>
@@ -60,7 +60,7 @@ The same core puzzle runs in three environments, with platform-specific controls
 </table>
 
 > [!WARNING]
-> **Android download distinction:** The `v1.0.12` **Release APK is unsigned and cannot be installed as downloaded**. For testing, choose the separately named **Debug preview APK** on the [release page](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.12). Each attachment includes its own SHA-256 checksum file. Debug signing does not make it a production release.
+> **Android download distinction:** The `v1.0.13` **Release APK is unsigned and cannot be installed as downloaded**. For testing, choose the separately named **Debug preview APK** on the [release page](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.13). Each attachment includes its own SHA-256 checksum file. Debug signing does not make it a production release.
 
 <a id="how-to-play"></a>
 ## 🕹️ How to Play
@@ -110,7 +110,7 @@ The gameplay is shared, but the application is **not three identical copies of t
 **Shared rules originate in [`shared/js/`](shared/js/).** The [platform manifest](config/platform-manifest.json) defines generated modules and their destinations. Platform-specific input, rendering, audio, and storage adapters remain independent.
 
 > [!NOTE]
-> Browser and Android emulator checks do not substitute for testing real phone touch, vibration, sound, safe areas, or the native WeChat runtime. The [v1.0.12 validation baseline](docs/TEST_BASELINE.md) explains which environments were actually tested.
+> Browser and Android emulator checks do not substitute for testing real phone touch, vibration, sound, safe areas, or the native WeChat runtime. The [validation baseline and acceptance boundaries](docs/TEST_BASELINE.md) explain which environments were actually tested.
 
 <a id="for-developers"></a>
 ## ⚙️ For Developers
@@ -143,7 +143,7 @@ cd "we xin xiao cheng xu-android-apk"
 .\gradlew.bat assembleDebug --no-daemon
 ```
 
-The Debug APK is generated under `app/build/outputs/apk/debug/`. Android uses `versionName 1.0.12` / `versionCode 12` for the referenced release. The signed production-release workflow is separate and is not represented by the Debug build.
+The Debug APK is generated under `app/build/outputs/apk/debug/`. Android uses `versionName 1.0.13` / `versionCode 13` for the referenced release. The signed production-release workflow is separate and is not represented by the Debug build.
 
 ### WeChat preview
 

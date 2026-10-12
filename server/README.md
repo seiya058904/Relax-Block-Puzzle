@@ -161,7 +161,7 @@ npm start
 默认端口：
 
 ```text
-3000
+80
 ```
 
 也可以通过环境变量 `PORT` 指定端口。
@@ -171,13 +171,13 @@ npm start
 ### 健康检查
 
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost/api/health
 ```
 
 ### 登录接口
 
 ```bash
-curl -X POST http://localhost:3000/api/login ^
+curl -X POST http://localhost/api/login ^
   -H "Content-Type: application/json" ^
   -d "{\"code\":\"test-code\"}"
 ```
@@ -185,7 +185,7 @@ curl -X POST http://localhost:3000/api/login ^
 ### 管理员验证接口
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/verify ^
+curl -X POST http://localhost/api/admin/verify ^
   -H "Content-Type: application/json" ^
   -d "{\"code\":\"test-code\",\"adminCode\":\"test-admin-code\"}"
 ```
