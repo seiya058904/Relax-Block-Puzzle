@@ -53,6 +53,13 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.14`
+
+- Includes the merged dual-theme and safe-area polish for Web, Android WebView, and WeChat while preserving gameplay rules and save compatibility.
+- Android versionName 1.0.14 / versionCode 14.
+- The Debug preview is installable with the existing Android Debug certificate; the separate Release APK is unsigned and cannot be installed until signed. Neither package is production-signed.
+- Each APK is distributed with its own SHA-256 checksum file.
+
 `v1.0.13`
 
 - Includes the subsequent verified three-platform lifecycle, delayed authentication, high-score coordination and storage-failure fixes without changing gameplay or save keys. / 包含后续已验证的三端生命周期、异步登录、最高分协调与存储失败修复，保留玩法和存档键。
