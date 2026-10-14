@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { runThemeChecks } from './theme-flows.mjs';
 import { runQualityFlows } from './quality-flows.mjs';
 
 // Requires a running QA emulator/device and an installed fresh debug APK.
@@ -15,7 +16,7 @@ const device = process.env.QA_ANDROID_SERIAL;
 assert.ok(device, 'QA_ANDROID_SERIAL must identify an isolated QA device');
 const output = resolve(process.env.QA_SCREENSHOTS || 'tmp/android-evidence');
 const app = 'com.blockpuzzle.android';
-const adb = (...args) => execFileSync(adbPath, ['-s', device, ...args], { encoding: 'utf8', windowsHide: true }).trim();
+const adb = (...args) => execFileSync(adbPath, ['-s', device, ...args], { encoding: 'utf8', windowsHide: true, timeout: 15000 }).trim();
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 const mainSource = await readFile('we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js', 'utf8');
 const constructorLine = mainSource.split('\n').findIndex((line) => line.includes('this.bindAppLifecycle();'));
@@ -53,9 +54,15 @@ async function connect() {
 }
 async function disconnect() {
   if (browser) { await browser.close(); browser = null; }
-  if (port) { adb('forward', '--remove', `tcp:${port}`); port = null; }
+  if (port) {
+    try { adb('forward', '--remove', `tcp:${port}`); }
+    catch { console.warn('ADB device unavailable during forwarding cleanup'); }
+    port = null;
+  }
 }
+const reports = [];
 try {
+  for (const themeId of ['soft', 'classic']) {
   const page = await connect();
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -65,9 +72,17 @@ try {
   const localRenderer = await readFile('we xin xiao cheng xu-android-apk/app/src/main/assets/js/game/Renderer.js', 'utf8');
   assert.equal(rendererSource, localRenderer, 'installed WebView executes the exact local renderer');
   console.log(`Connected exact installed renderer on ${device}`);
-  const report = await runQualityFlows(page, { output, label: 'android-webview', touch: true, stressMs: 30000,
-    progress: (message) => console.log(`Android: ${message}`) });
-  await writeFile(resolve(output, 'android-results.json'), JSON.stringify({ ...report, errors, nativeLifecycleCycles: 0 }, null, 2));
+  console.log(`Android ${themeId}: starting real theme switching checks`);
+  const captureScreenshot = path => writeFile(path, execFileSync(adbPath,
+    ['-s', device, 'exec-out', 'screencap', '-p'], { windowsHide: true, timeout: 15000, maxBuffer: 16 * 1024 * 1024 }));
+  const themeChecks = await runThemeChecks(page, { themeId, touch: true,
+    progress: message => console.log(`Android ${themeId}: ${message}`),
+    captureComparison: target => captureScreenshot(resolve(output, `android-${themeId}-same-round-${target}.png`)) });
+  const report = await runQualityFlows(page, { output, label: `android-webview-${themeId}`, touch: true, stressMs: 30000,
+    progress: (message) => console.log(`Android: ${message}`),
+    // Native compositor pixels: CDP screenshots can be black on software-rendered WebViews.
+    captureScreenshot });
+  await writeFile(resolve(output, `android-partial-${themeId}.json`), JSON.stringify({ ...report, errors, nativeLifecycleCycles: 0 }, null, 2));
   assert.deepEqual(errors, [], 'no actual WebView runtime/console errors');
 
   await page.evaluate(() => { qaMain.gameState.startNewGame(); qaMain.requestImmediateRender(); });
@@ -107,9 +122,12 @@ try {
     await page.waitForFunction(() => !qaMain.isPaused && !qaMain.aniId);
   }
   const stored = await page.evaluate(() => ({
-    best: localStorage.getItem('block_puzzle_best_scores_v1'), settings: qaMain.settings
+    best: localStorage.getItem('block_puzzle_best_scores_v1'), settings: qaMain.settings,
+    persistedSettings: wx.getStorageSync('block_puzzle_settings_v1')
   }));
-  await writeFile(resolve(output, 'android-native.png'), execFileSync(adbPath, ['-s', device, 'exec-out', 'screencap', '-p'], { windowsHide: true }));
+  assert.deepEqual(stored.persistedSettings, stored.settings, 'restart compares committed settings, not a state-only fixture');
+  await writeFile(resolve(output, `before-restart-${themeId}.json`), JSON.stringify(stored, null, 2));
+  await writeFile(resolve(output, `android-native-${themeId}.png`), execFileSync(adbPath, ['-s', device, 'exec-out', 'screencap', '-p'], { windowsHide: true, timeout: 15000, maxBuffer: 16 * 1024 * 1024 }));
   await disconnect();
   adb('shell', 'am', 'force-stop', app);
   adb('shell', 'am', 'start', '-n', `${app}/.MainActivity`);
@@ -117,12 +135,17 @@ try {
   assert.equal(await restarted.evaluate(() => localStorage.getItem('block_puzzle_best_scores_v1')), stored.best);
   assert.deepEqual(await restarted.evaluate(() => qaMain.settings), stored.settings);
   assert.equal(await restarted.locator('#bootError').isVisible(), false);
+  assert.equal(await restarted.evaluate(() => qaMain.renderer.theme.id), themeId, 'theme survives actual process restart');
+  report.themeId = themeId; report.themeChecks = themeChecks;
   report.nativeLifecycleCycles = 6;
   report.nativeBackgroundWaitMs = nativeBackgroundWaitMs;
   report.processRestartPersistence = true;
   report.rendererSha256 = createHash('sha256').update(rendererSource).digest('hex');
-  await writeFile(resolve(output, 'android-results.json'), JSON.stringify(report, null, 2));
+  reports.push(report);
+  await writeFile(resolve(output, 'android-results.json'), JSON.stringify(reports, null, 2));
   console.log(`PASS installed Android WebView: touch quality flows, exact renderer hash, 6 native hide/show cycles, force-stop/relaunch settings and best scores; stress ${Math.round(report.stress.elapsedMs)}ms/${report.stress.frames} frames, Canvas render p95 ${report.stress.p95Ms.toFixed(2)}ms`);
+  await disconnect();
+  }
 } finally {
   await disconnect();
 }

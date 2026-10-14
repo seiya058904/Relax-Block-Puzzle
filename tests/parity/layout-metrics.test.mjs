@@ -89,7 +89,7 @@ function assertAlmostEqual(actual, expected, message, tolerance = 0.02) {
   );
 }
 
-test('Android home layout keeps modules in a vertical chain with and without admin mode', async () => {
+test('Android home layout keeps a safe hierarchy with a shared secondary row with and without admin mode', async () => {
   const { calculateAndroidHomeLayout } = await import(versions.find((item) => item.name === 'android').layoutUrl);
 
   for (const viewport of viewports) {
@@ -108,7 +108,8 @@ test('Android home layout keeps modules in a vertical chain with and without adm
         'highScoreCard',
         'startButton',
         'helpButton',
-        'settingsButton'
+        'settingsButton',
+        'themeButton'
       ];
 
       assertFiniteRect(layout.panel, 'panel');
@@ -124,7 +125,9 @@ test('Android home layout keeps modules in a vertical chain with and without adm
         const previous = layout[keys[index - 1]];
         const current = layout[keys[index]];
         assert.ok(
-          current.y >= rectBottom(previous) + layout.minimumGap,
+          keys[index] === 'settingsButton'
+            ? current.y === previous.y && current.x >= rectRight(previous) + 8
+            : current.y >= rectBottom(previous) + layout.minimumGap,
           `${keys[index]} should be after ${keys[index - 1]} on ${viewport.width}x${viewport.height}`
         );
         assert.equal(overlaps(previous, current), false, `${keys[index]} should not overlap ${keys[index - 1]}`);
@@ -133,7 +136,7 @@ test('Android home layout keeps modules in a vertical chain with and without adm
   }
 });
 
-test('wechat: home layout exposes a safe vertical information hierarchy', async () => {
+test('wechat: home layout exposes a safe information hierarchy and theme control', async () => {
   const version = versions.find((item) => item.name === 'wechat');
   const { calculateWechatHomeLayout } = await import(version.layoutUrl);
 
@@ -153,7 +156,8 @@ test('wechat: home layout exposes a safe vertical information hierarchy', async 
         'highScoreCard',
         'startButton',
         'helpButton',
-        'settingsButton'
+        'settingsButton',
+        'themeButton'
       ];
 
       assertFiniteRect(layout.panel, 'wechat panel');
@@ -169,7 +173,9 @@ test('wechat: home layout exposes a safe vertical information hierarchy', async 
         const previous = layout[keys[index - 1]];
         const current = layout[keys[index]];
         assert.ok(
-          current.y >= rectBottom(previous) + layout.minimumGap,
+          keys[index] === 'settingsButton'
+            ? current.y === previous.y && current.x >= rectRight(previous) + 8
+            : current.y >= rectBottom(previous) + layout.minimumGap,
           `${keys[index]} should follow ${keys[index - 1]} on ${viewport.width}x${viewport.height}`
         );
         assert.equal(overlaps(previous, current), false, `${keys[index]} should not overlap ${keys[index - 1]}`);

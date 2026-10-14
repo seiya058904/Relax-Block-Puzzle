@@ -1,4 +1,5 @@
 // GENERATED FILE - edit shared/js source and run npm run sync.
+import { normalizeTheme } from '../game/VisualTheme.js';
 import { BEST_SCORES_KEY, LEGACY_BEST_SCORE_KEY } from '../game/coreConstants.js';
 
 export const SETTINGS_KEY = 'block_puzzle_settings_v1';
@@ -150,4 +151,15 @@ export function saveSettings(settings) {
   } catch (error) {
     // Ignore storage failures so the local game keeps running.
   }
+}
+
+// Independent preference: old settings/score keys and their migration are untouched.
+export const THEME_KEY = 'block_puzzle_theme_v1';
+export function loadThemePreference() {
+  try { return normalizeTheme(wx.getStorageSync(THEME_KEY)); }
+  catch { return 'soft'; }
+}
+export function saveThemePreference(id) {
+  try { wx.setStorageSync(THEME_KEY, normalizeTheme(id)); }
+  catch { /* Appearance remains usable when local storage is unavailable. */ }
 }

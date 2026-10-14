@@ -22,50 +22,7 @@ export const COLORS = [
   '#FF4D6D'
 ];
 
-export const BACKGROUND_TOP = '#246F99';
-export const BACKGROUND_MID = '#164D76';
-export const BACKGROUND_BOTTOM = '#091B36';
-export const BOARD_PANEL = '#0E2640';
-export const BOARD_PANEL_BORDER = 'rgba(150, 218, 255, 0.4)';
-export const BOARD_PANEL_GLOW = 'rgba(110, 200, 255, 0.12)';
-export const BOARD_CELL = '#102A40';
-export const BOARD_CELL_ALT = '#122D43';
-export const BOARD_GRID = 'rgba(150, 205, 240, 0.11)';
-export const PREVIEW_VALID = 'rgba(174, 236, 255, 0.6)';
-export const PREVIEW_INVALID = 'rgba(255, 119, 145, 0.5)';
-export const OVERLAY = 'rgba(4, 10, 24, 0.72)';
-export const PANEL = '#133157';
-export const PANEL_BORDER = 'rgba(132, 218, 255, 0.64)';
-export const TEXT_PRIMARY = '#F5FBFF';
-export const TEXT_SECONDARY = '#B9D2FF';
-export const TEXT_MUTED = 'rgba(185, 210, 255, 0.62)';
-export const BUTTON_FILL = '#245B92';
-export const BUTTON_GLOW = 'rgba(80, 182, 255, 0.24)';
-
-export const UI_TOKENS = Object.freeze({
-  radius: Object.freeze({ small: 10, medium: 14, large: 22 }),
-  surface: Object.freeze({
-    modal: '#132E56',
-    elevated: 'rgba(11, 28, 52, 0.72)',
-    sunken: 'rgba(8, 20, 40, 0.55)',
-    input: 'rgba(11, 28, 52, 0.92)'
-  }),
-  border: Object.freeze({
-    subtle: 'rgba(130, 205, 255, 0.18)',
-    strong: 'rgba(140, 215, 255, 0.42)'
-  }),
-  accent: Object.freeze({
-    primary: '#3FA9F5',
-    positive: '#47E56B',
-    warning: '#FFD60A',
-    danger: '#E85D4A'
-  }),
-  motion: Object.freeze({
-    pressMs: 90,
-    modalOpenMs: 180,
-    modalCloseMs: 140
-  })
-});
+export { BACKGROUND_TOP, BACKGROUND_MID, BACKGROUND_BOTTOM, BOARD_PANEL, BOARD_PANEL_BORDER, BOARD_PANEL_GLOW, BOARD_CELL, BOARD_CELL_ALT, BOARD_GRID, PREVIEW_VALID, PREVIEW_INVALID, OVERLAY, PANEL, PANEL_BORDER, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BUTTON_FILL, BUTTON_GLOW, UI_TOKENS } from './VisualTheme.js';
 
 export const CLEAR_ANIMATION_MS = 180;
 export const PLACEMENT_PULSE_MS = 140;

@@ -72,6 +72,12 @@ The same core puzzle runs in three environments, with platform-specific controls
 3. **Clear the board.** Fill a complete row or column to remove it and make space for future shapes. Multiple completed lines can clear together.
 4. **Plan the next set.** After using all three pieces, receive another set and continue for as long as you can make a legal move.
 
+### 🎨 Two Looks, One Game
+
+Choose **Classic Glow / 经典流光 (A)** for a deep-blue board and luminous pieces, or **Paper Geometry / 纸上几何 (B)** for a warm paper palette and muted colors. Paper Geometry is the default when no preference has been saved.
+
+Switch looks from the home screen or in-game Settings. The choice is saved locally on each platform and changes appearance without resetting the current board, pieces, score, tools, or audio settings.
+
 ### ✨ Small Rules, More Possibilities
 
 <table>

@@ -169,7 +169,9 @@ for (const platform of platforms) {
         renderer.drawBoard(state);
       }
       assert.equal(gradients, created, 'resting materials must not create gradients again');
-      assert.equal(surfaces.length, 2, 'background and board coexist without eviction thrash');
+      assert.equal(surfaces.length, 1, 'flat paper background allocates no surface; board reuses one cache');
+      assert.equal(renderer.surfaceCache.has('background'), false);
+      assert.equal(renderer.surfaceCache.has('board'), true);
       const allocated = surfaces.reduce((total, surface) => total + surface.width * surface.height, 0);
       assert.ok(allocated <= renderer.quality.surfaceCachePixelMax);
       renderer.setViewport({ screenWidth: 360, screenHeight: 640 }, { menuButton: null, safeArea: null });

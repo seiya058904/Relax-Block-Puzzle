@@ -65,77 +65,160 @@ export function fitTextSize({
   };
 }
 
-export function calculateAndroidHomeLayout({
-  viewportWidth,
-  viewportHeight,
-  safeInsets = {},
-  adminVisible = false
-}) {
+const HOME_MIN_TARGET_SIZE = 44;
+
+function calculateHomeLayout({ viewportWidth, viewportHeight, safeInsets = {}, adminVisible = false }) {
   const width = Math.max(320, finite(viewportWidth, 360));
   const height = Math.max(560, finite(viewportHeight, 640));
-  const sideMargin = clamp(width * 0.04, 14, 24);
-  const topInset = Math.max(44, finite(safeInsets.top, 44));
+  const top = Math.max(44, finite(safeInsets.top, 44)) + 8;
   const bottomInset = Math.max(12, finite(safeInsets.bottom, 18));
-  const panelWidth = Math.min(420, width - (sideMargin + 8) * 2);
+  const available = height - top - bottomInset - 8;
+  const safeAvailable = Math.max(0, height - top - bottomInset);
+  const wide = width >= 960;
+  const panelWidth = wide ? Math.min(1000, width - 96) : Math.min(420, width - 40);
   const panelX = (width - panelWidth) / 2;
-  const panelHeight = Math.min(adminVisible ? 510 : 470, height - topInset - bottomInset - 24);
-  const panelY = Math.max(topInset + 8, (height - panelHeight - bottomInset) * 0.42);
-  const availableHeight = Math.max(360, panelHeight - 40);
-  const compactScale = clamp(availableHeight / 490, 0.82, 1);
-  const minimumGap = Math.round(clamp(8 * compactScale, 6, 10));
-  const innerX = panelX + clamp(30 * compactScale, 24, 34);
-  const innerWidth = panelWidth - (innerX - panelX) * 2;
-  const buttonWidth = panelWidth - clamp(72 * compactScale, 56, 72);
-  const buttonX = panelX + (panelWidth - buttonWidth) / 2;
-  const titleHeight = clamp(62 * compactScale, 50, 66);
-  const subtitleHeight = clamp(22 * compactScale, 18, 24);
-  const adminHeight = adminVisible ? 28 : 0;
-  const difficultyHeight = clamp(42 * compactScale, 38, 42);
-  const scoreHeight = clamp(56 * compactScale, 46, 58);
-  const startHeight = clamp(58 * compactScale, 50, 58);
-  const secondaryHeight = clamp(48 * compactScale, 44, 48);
+  const innerWidth = wide ? 352 : panelWidth;
+  const innerX = wide ? panelX + panelWidth - innerWidth : panelX;
+  const elementHeights = {
+    title: 56,
+    subtitle: 22,
+    admin: adminVisible ? 28 : 0,
+    difficulty: 48,
+    highScore: 54,
+    start: 54,
+    secondary: 44,
+    theme: 44
+  };
+  const getParts = () => [
+    ...(elementHeights.title > 0 ? ['title'] : []),
+    ...(elementHeights.subtitle > 0 ? ['subtitle'] : []),
+    ...(elementHeights.admin > 0 ? ['admin'] : []),
+    'difficulty',
+    ...(elementHeights.highScore > 0 ? ['highScore'] : []),
+    'start',
+    'secondary',
+    'theme'
+  ];
+  const getItemHeight = () => getParts().reduce((sum, key) => sum + elementHeights[key], 0);
+  const getGapCount = () => Math.max(0, getParts().length - 1);
+  const fitGap = () => {
+    const count = getGapCount();
+    return count === 0 ? 0 : Math.max(0, Math.min(6, Math.floor((safeAvailable - getItemHeight()) / count)));
+  };
+  let minimumGap = 6;
+  let mainHeight = getItemHeight() + getGapCount() * minimumGap;
+  const artHeight = wide ? 350 : clamp(available - mainHeight - 20, 36, 190);
+  const requestedPanelHeight = wide ? Math.max(430, mainHeight) : mainHeight + artHeight + 16;
+  let panelHeight = requestedPanelHeight;
+  let compactMode = 'full';
+  let artGap = wide ? 0 : 16;
+  let visibleArtHeight = artHeight;
 
-  let cursorY = Math.ceil(panelY + clamp(24 * compactScale, 18, 26));
-  const title = rect(panelX + 32, cursorY - 6, panelWidth - 64, titleHeight);
-  cursorY = Math.ceil(bottom(title) + minimumGap);
-  const subtitle = rect(panelX + 24, cursorY, panelWidth - 48, subtitleHeight);
-  cursorY = Math.ceil(bottom(subtitle) + minimumGap);
+  if (requestedPanelHeight > available) {
+    compactMode = 'folded-art';
+    visibleArtHeight = 0;
+    artGap = 0;
 
-  const adminButton = adminVisible
-    ? rect(panelX + panelWidth / 2 - 54, cursorY, 108, adminHeight)
-    : null;
-  if (adminButton) {
-    cursorY = Math.ceil(bottom(adminButton) + minimumGap);
+    if (mainHeight > available) {
+      compactMode = 'tight-stack';
+      if (mainHeight > safeAvailable) {
+        // Drop nonessential copy first; preserve every home action at 44px or larger.
+        elementHeights.subtitle = 0;
+        elementHeights.difficulty = 44;
+        elementHeights.highScore = Math.min(elementHeights.highScore, 44);
+        elementHeights.start = 44;
+      }
+      if (getItemHeight() > safeAvailable && elementHeights.admin > 0) elementHeights.admin = 0;
+      if (getItemHeight() > safeAvailable && elementHeights.highScore > 0) elementHeights.highScore = 0;
+      if (getItemHeight() > safeAvailable && elementHeights.title > 0) elementHeights.title = 0;
+
+      minimumGap = fitGap();
+      mainHeight = getItemHeight() + getGapCount() * minimumGap;
+      if (mainHeight > safeAvailable) {
+        // At the physical minimum, arrange all five actions in two rows.
+        compactMode = 'grid';
+        const rowGap = Math.max(0, Math.min(4, safeAvailable - HOME_MIN_TARGET_SIZE * 2));
+        const gridHeight = HOME_MIN_TARGET_SIZE * 2 + rowGap;
+        panelHeight = gridHeight;
+        const panelY = top + Math.max(0, (available - panelHeight) / 2);
+        const firstRowY = panelY;
+        const secondRowY = firstRowY + HOME_MIN_TARGET_SIZE + rowGap;
+        const columnGap = 8;
+        const columnWidth = (innerWidth - columnGap) / 2;
+        const thirdGap = 6;
+        const thirdWidth = (innerWidth - thirdGap * 2) / 3;
+        const difficultyButton = rect(innerX, firstRowY, columnWidth, HOME_MIN_TARGET_SIZE);
+        const startButton = rect(innerX + columnWidth + columnGap, firstRowY, columnWidth, HOME_MIN_TARGET_SIZE);
+        const helpButton = rect(innerX, secondRowY, thirdWidth, HOME_MIN_TARGET_SIZE);
+        const settingsButton = rect(innerX + thirdWidth + thirdGap, secondRowY, thirdWidth, HOME_MIN_TARGET_SIZE);
+        const themeButton = rect(innerX + (thirdWidth + thirdGap) * 2, secondRowY, thirdWidth, HOME_MIN_TARGET_SIZE);
+        return {
+          panel: rect(panelX, panelY, panelWidth, gridHeight),
+          art: rect(panelX, panelY, wide ? Math.max(0, panelWidth - innerWidth - 80) : panelWidth, 0),
+          wide,
+          title: rect(innerX, panelY, innerWidth, 0),
+          subtitle: rect(innerX, panelY, innerWidth, 0),
+          adminButton: null,
+          difficultyButton,
+          highScoreCard: rect(innerX, panelY, innerWidth, 0),
+          startButton,
+          helpButton,
+          settingsButton,
+          themeButton,
+          minimumGap: rowGap,
+          artGap: 0,
+          compactMode,
+          titleFontSize: 32,
+          subtitleFontSize: 13
+        };
+      }
+    }
+
+    if (compactMode === 'folded-art') {
+      const spare = Math.max(0, available - mainHeight);
+      const requestedGap = clamp(spare - artHeight, 6, 16);
+      artGap = spare >= 6 ? requestedGap : spare;
+      visibleArtHeight = Math.min(artHeight, Math.max(0, spare - artGap));
+      panelHeight = mainHeight + visibleArtHeight + artGap;
+    } else if (wide) {
+      panelHeight = Math.max(mainHeight, Math.min(430, safeAvailable));
+      visibleArtHeight = Math.min(350, Math.max(0, panelHeight - 48));
+    } else {
+      panelHeight = mainHeight;
+    }
   }
 
-  const difficultyButton = rect(innerX, cursorY, innerWidth, difficultyHeight);
-  cursorY = Math.ceil(bottom(difficultyButton) + minimumGap);
-  const highScoreCard = rect(innerX, cursorY, innerWidth, scoreHeight);
-  cursorY = Math.ceil(bottom(highScoreCard) + minimumGap + 2);
-  const startButton = rect(buttonX, cursorY, buttonWidth, startHeight);
-  cursorY = Math.ceil(bottom(startButton) + minimumGap);
-  const helpButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
-  cursorY = Math.ceil(bottom(helpButton) + minimumGap);
-  const settingsButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
-
-  const panel = rect(panelX, panelY, panelWidth, Math.max(panelHeight, bottom(settingsButton) - panelY + 22));
-
+  const panelY = top + Math.max(0, (available - panelHeight) / 2);
+  const art = wide ? rect(panelX, panelY + 24, panelWidth - innerWidth - 80, visibleArtHeight)
+    : rect(panelX, panelY, panelWidth, visibleArtHeight);
+  let cursor = wide ? panelY + (panelHeight - mainHeight) / 2 : bottom(art) + artGap;
+  const next = (h) => {
+    const item = rect(innerX, cursor, innerWidth, h);
+    if (h > 0) cursor += h + minimumGap;
+    return item;
+  };
+  const title = next(elementHeights.title);
+  const subtitle = next(elementHeights.subtitle);
+  const adminButton = elementHeights.admin > 0 ? next(elementHeights.admin) : null;
+  const difficultyButton = next(elementHeights.difficulty);
+  const highScoreCard = next(elementHeights.highScore);
+  const startButton = next(elementHeights.start);
+  const secondaryRow = next(elementHeights.secondary);
+  const helpButton = rect(secondaryRow.x, secondaryRow.y, (innerWidth - 8) / 2, 44);
+  const settingsButton = rect(helpButton.x + helpButton.width + 8, secondaryRow.y, helpButton.width, 44);
+  const themeButton = next(elementHeights.theme);
   return {
-    panel,
-    title,
-    subtitle,
-    adminButton,
-    difficultyButton,
-    highScoreCard,
-    startButton,
-    helpButton,
-    settingsButton,
-    minimumGap,
-    titleFontSize: Math.round(clamp(35 * compactScale, 30, 35)),
-    subtitleFontSize: Math.round(clamp(16 * compactScale, 14, 16))
+    panel: rect(panelX, panelY, panelWidth, Math.max(panelHeight, bottom(themeButton) - panelY)),
+    art, wide, title, subtitle, adminButton, difficultyButton, highScoreCard,
+    startButton, helpButton, settingsButton, themeButton, minimumGap, artGap, compactMode,
+    titleFontSize: 32, subtitleFontSize: 13
   };
 }
 
+
+export function calculateAndroidHomeLayout(args) {
+  return calculateHomeLayout(args);
+}
 export function calculateHudLayout({
   platform = 'android',
   viewportWidth,

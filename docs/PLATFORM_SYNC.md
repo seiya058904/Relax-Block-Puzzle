@@ -41,3 +41,9 @@ npm test
 - `npm run sync` 必须可重复执行；第二次执行应显示无差异。
 - JS 同步工具不复制音频；微信轻量音频与 Android/Web 完整音频保持独立。交接包省略的 Android 重复镜像用 `node scripts/restore-android-audio.mjs` 恢复，再运行 `npm run verify:assets`。
 - `npm run verify` 失败时先修复共享源或重新运行同步，再进行平台构建。
+
+## 2026-10-14 表现层补充
+
+`game/VisualTheme.js` 是第 12 个共享生成模块，拥有流光/纸感两套不可变视觉 tokens、主题身份回退和方块绘制色映射，不修改 coreConstants、分数或生成权重。独立主题偏好由共享 utils/storage.js 的 block_puzzle_theme_v1 键管理，旧设置及成绩存档键不变。修改源后仍使用 `npm run sync`；Renderer、LayoutMetrics、输入和平台生命周期继续保持平台独立。首页难度分段直接选中目标档位，结算页可直接返回主页；管理员资格和既有音频事件不变。
+
+Renderer 按实例持有主题；切换时销毁旧 surface、渐变及局部重绘状态，棋盘缓存 key 包含主题。平台 InputManager 通过首页/设置入口调用切换和自身重绘回调，不改变 GameState 或重新应用音频设置。

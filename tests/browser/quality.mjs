@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { createRequire } from 'node:module';
+import { runThemeChecks } from './theme-flows.mjs';
 import { runQualityFlows } from './quality-flows.mjs';
 
 const { chromium } = createRequire(import.meta.url)(process.env.QA_PLAYWRIGHT_PACKAGE || 'playwright');
@@ -51,8 +52,9 @@ try {
     { width: 360, height: 640, dpr: 2.5, touch: true, reducedMotion: 'reduce', safeArea: true },
     { width: 390, height: 844, dpr: 3, touch: true, wechat: true, stressMs: 10000 }
   ];
-  for (const item of cases) {
-    const label = `${item.wechat ? 'wechat-host' : 'web'}-${item.width}${item.reducedMotion ? '-reduced' : ''}`;
+  for (const item of cases.filter(item => !process.env.QA_WIDTH || item.width === Number(process.env.QA_WIDTH))) {
+    for (const themeId of process.env.QA_THEME ? [process.env.QA_THEME] : ['soft', 'classic']) {
+    const label = `${item.wechat ? 'wechat-host' : 'web'}-${item.width}${item.reducedMotion ? '-reduced' : ''}-${themeId}`;
     const context = await browser.newContext({ viewport: { width: item.width, height: item.height },
       deviceScaleFactor: item.dpr, hasTouch: !!item.touch, reducedMotion: item.reducedMotion || 'no-preference' });
     const page = await context.newPage();
@@ -61,6 +63,11 @@ try {
     page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(`http://127.0.0.1:${server.address().port}/${item.wechat ? 'wechat.html' : ''}`);
     await page.waitForFunction(() => window.qaMain);
+    const themeChecks = await runThemeChecks(page, { themeId, touch: item.touch,
+      captureComparison: target => page.screenshot({ path: resolve(output, `${label}-same-round-${target}.png`) }) });
+    await page.reload();
+    await page.waitForFunction(() => window.qaMain?.renderer.homeActionRects.theme);
+    assert.equal(await page.evaluate(() => qaMain.renderer.theme.id), themeId, 'theme survives a full page reload');
     if (item.safeArea) await page.evaluate(() => {
       const read = wx.getSystemInfoSync;
       wx.getSystemInfoSync = () => ({ ...read(), safeArea: { top: 59, left: 0, right: innerWidth, bottom: innerHeight - 34 } });
@@ -97,9 +104,10 @@ try {
     }
     if (item.reducedMotion) assert.equal(report.metrics.reducedMotion, true);
     assert.deepEqual(errors, [], `${label}: no runtime or console errors`);
-    reports.push(report);
+    reports.push({ ...report, themeId, themeChecks, reloadPersistence: true });
     console.log(`PASS ${label}: actual ${item.touch ? 'touch' : 'mouse'} drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw${report.stress ? `; stress ${Math.round(report.stress.elapsedMs)}ms/${report.stress.frames} frames, render p95 ${report.stress.p95Ms.toFixed(2)}ms` : ''}`);
     await context.close();
+    }
   }
   await writeFile(resolve(output, 'quality-results.json'), JSON.stringify(reports, null, 2));
 } finally {

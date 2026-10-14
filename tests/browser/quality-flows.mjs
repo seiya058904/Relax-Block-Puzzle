@@ -1,3 +1,4 @@
+import { runSurfaceChecks } from './premium-flows.mjs';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -5,7 +6,7 @@ import { resolve } from 'node:path';
 // Reused against the original Web Main, actual Android WebView, and a browser
 // host for the WeChat adapter. Fixtures set legal starting boards/racks only;
 // all actions use real pointer/touch input and the application's scoring path.
-export async function runQualityFlows(page, { output, label, touch = false, stressMs = 0, progress = () => {} } = {}) {
+export async function runQualityFlows(page, { output, label, touch = false, stressMs = 0, progress = () => {}, captureScreenshot } = {}) {
   await mkdir(output, { recursive: true });
   await page.waitForFunction(() => window.qaMain?.renderer && window.qaMain.renderer.homeActionRects.start);
   assert.ok(await page.title());
@@ -37,7 +38,10 @@ export async function runQualityFlows(page, { output, label, touch = false, stre
     await pointer('touchEnd', rect.x, rect.y);
   }
   const idle = () => page.waitForFunction(() => !qaMain.hasActiveAnimation() && !qaMain.aniId, null, { timeout: 8000 });
-  const screenshot = (name) => page.screenshot({ path: resolve(output, `${label}-${name}.png`) });
+  const screenshot = (name) => {
+    const path = resolve(output, `${label}-${name}.png`);
+    return captureScreenshot ? captureScreenshot(path) : page.screenshot({ path });
+  };
   await page.evaluate(() => {
     const main = qaMain;
     window.qaEvents = [];
@@ -60,12 +64,14 @@ export async function runQualityFlows(page, { output, label, touch = false, stre
   await idle();
   await screenshot('home');
   const difficulties = [];
-  for (let i = 0; i < 3; i++) {
-    await click('main.renderer.homeActionRects.difficulty');
+  for (const i of [2, 0, 1]) {
+    await click(`({ ...main.renderer.homeActionRects.difficulty, x: main.renderer.homeActionRects.difficulty.x + main.renderer.homeActionRects.difficulty.width * ${i} / 3, width: main.renderer.homeActionRects.difficulty.width / 3 })`);
     difficulties.push(await page.evaluate(() => qaMain.gameState.settings.difficulty));
     await idle();
   }
   assert.deepEqual(difficulties, ['master', 'easy', 'normal']);
+  await click('main.renderer.homeActionRects.difficulty');
+  assert.equal(await page.evaluate(() => qaMain.gameState.settings.difficulty), 'normal', 'tapping the selected segment keeps its difficulty');
   await click('main.renderer.homeActionRects.start');
   await idle();
   await screenshot('playing');
@@ -210,7 +216,7 @@ export async function runQualityFlows(page, { output, label, touch = false, stre
   assert.equal(await page.evaluate(() => qaEvents.filter((event) => event.type === 'itemUsed' && event.payload.item === 'clear').length), 1);
   await page.evaluate(() => {
     // Explicit local welfare entitlement fixture, not an authentication test.
-    qaMain.gameState.setSettings({ localMembershipEnabled: true });
+    qaMain.applySettings({ localMembershipEnabled: true });
     qaMain.gameState.applyAuthState({ isMember: true });
     qaMain.gameState.openRevivePrompt(); qaMain.requestImmediateRender();
   });
@@ -292,5 +298,6 @@ export async function runQualityFlows(page, { output, label, touch = false, stre
   await page.evaluate(() => { qaMain.handleAppForeground(); });
   await idle();
   if (session) await session.detach();
+  await runSurfaceChecks(page, { output, label, touch, captureScreenshot });
   return { label, metrics, stress, events: await page.evaluate(() => qaEvents.map((event) => event.type)) };
 }

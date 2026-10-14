@@ -104,7 +104,7 @@ function registerTouchHandlers() {
   }, { passive: false });
 
   canvas.addEventListener('touchcancel', (event) => {
-    event.preventDefault();
+    if (event.cancelable) event.preventDefault();
     emitTouch('cancel', event);
   }, { passive: false });
 
