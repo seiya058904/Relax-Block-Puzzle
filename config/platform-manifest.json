@@ -11,7 +11,8 @@
     "game/SafeHitArea.js",
     "game/RenderPerfStats.js",
     "game/Presentation.js",
-    "config/quality.js"
+    "config/quality.js",
+    "game/VisualTheme.js"
   ],
   "platformSpecific": {
     "wechat": [
@@ -64,7 +65,8 @@
     "game/SafeHitArea.js",
     "game/RenderPerfStats.js",
     "game/Presentation.js",
-    "config/quality.js"
+    "config/quality.js",
+    "game/VisualTheme.js"
   ],
   "targets": {
     "wechat": "we xin xiao cheng xu/js",

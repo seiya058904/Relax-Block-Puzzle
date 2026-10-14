@@ -220,8 +220,19 @@ export default class InputManager {
     triggerUiPress(this.gameState.feedbackState, `home:${action}`);
     this.soundManager.playClick();
 
+    if (action === 'theme') {
+      // Theme controls exist only on home/settings; never turn a drag into a placement.
+      if (this.gameState.dragState.isDragging) return;
+      this.renderer.setTheme(this.renderer.theme.id === 'soft' ? 'classic' : 'soft');
+      this.requestInputFrame();
+      return;
+    }
+
     if (action === 'difficulty') {
-      const nextDifficulty = this.gameState.cycleDifficulty();
+      const rect = this.renderer.homeActionRects?.difficulty;
+      const nextDifficulty = rect
+        ? ['easy', 'normal', 'master'][Math.max(0, Math.min(2, Math.floor((point.x - rect.x) / (rect.width / 3))))]
+        : this.gameState.cycleDifficulty();
       this.applySettings({
         ...this.gameState.settings,
         difficulty: nextDifficulty
@@ -272,6 +283,13 @@ export default class InputManager {
   }
 
   handleGameOverTouch(point) {
+    if (this.isPointInRect(point, this.renderer.gameOverHomeRect)) {
+      triggerUiPress(this.gameState.feedbackState, 'gameover:home');
+      this.soundManager.playClick();
+      this.gameState.confirmReturnHome();
+      this.requestInputFrame();
+      return;
+    }
     if (this.isPointInRect(point, this.renderer.restartButtonRect)) {
       triggerUiPress(this.gameState.feedbackState, 'gameover:restart');
       this.soundManager.playClick();
@@ -407,6 +425,14 @@ export default class InputManager {
   handleSettingsTouch(point) {
     const action = this.renderer.getSettingsAction(point.x, point.y);
     if (!action) {
+      return;
+    }
+
+    if (action === 'theme') {
+      // Theme controls exist only on home/settings; never turn a drag into a placement.
+      if (this.gameState.dragState.isDragging) return;
+      this.renderer.setTheme(this.renderer.theme.id === 'soft' ? 'classic' : 'soft');
+      this.requestInputFrame();
       return;
     }
 

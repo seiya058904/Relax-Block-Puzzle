@@ -65,75 +65,39 @@ export function fitTextSize({
   };
 }
 
-export function calculateAndroidHomeLayout({
-  viewportWidth,
-  viewportHeight,
-  safeInsets = {},
-  adminVisible = false
-}) {
+export function calculateAndroidHomeLayout({ viewportWidth, viewportHeight, safeInsets = {}, adminVisible = false }) {
   const width = Math.max(320, finite(viewportWidth, 360));
   const height = Math.max(560, finite(viewportHeight, 640));
-  const sideMargin = clamp(width * 0.04, 14, 24);
-  const topInset = Math.max(44, finite(safeInsets.top, 44));
+  const top = Math.max(44, finite(safeInsets.top, 44)) + 8;
   const bottomInset = Math.max(12, finite(safeInsets.bottom, 18));
-  const panelWidth = Math.min(420, width - (sideMargin + 8) * 2);
+  const available = height - top - bottomInset - 8;
+  const wide = width >= 960;
+  const panelWidth = wide ? Math.min(1000, width - 96) : Math.min(420, width - 40);
   const panelX = (width - panelWidth) / 2;
-  const panelHeight = Math.min(adminVisible ? 510 : 470, height - topInset - bottomInset - 24);
-  const panelY = Math.max(topInset + 8, (height - panelHeight - bottomInset) * 0.42);
-  const availableHeight = Math.max(360, panelHeight - 40);
-  const compactScale = clamp(availableHeight / 490, 0.82, 1);
-  const minimumGap = Math.round(clamp(8 * compactScale, 6, 10));
-  const innerX = panelX + clamp(30 * compactScale, 24, 34);
-  const innerWidth = panelWidth - (innerX - panelX) * 2;
-  const buttonWidth = panelWidth - clamp(72 * compactScale, 56, 72);
-  const buttonX = panelX + (panelWidth - buttonWidth) / 2;
-  const titleHeight = clamp(62 * compactScale, 50, 66);
-  const subtitleHeight = clamp(22 * compactScale, 18, 24);
-  const adminHeight = adminVisible ? 28 : 0;
-  const difficultyHeight = clamp(42 * compactScale, 38, 42);
-  const scoreHeight = clamp(56 * compactScale, 46, 58);
-  const startHeight = clamp(58 * compactScale, 50, 58);
-  const secondaryHeight = clamp(48 * compactScale, 44, 48);
-
-  let cursorY = Math.ceil(panelY + clamp(24 * compactScale, 18, 26));
-  const title = rect(panelX + 32, cursorY - 6, panelWidth - 64, titleHeight);
-  cursorY = Math.ceil(bottom(title) + minimumGap);
-  const subtitle = rect(panelX + 24, cursorY, panelWidth - 48, subtitleHeight);
-  cursorY = Math.ceil(bottom(subtitle) + minimumGap);
-
-  const adminButton = adminVisible
-    ? rect(panelX + panelWidth / 2 - 54, cursorY, 108, adminHeight)
-    : null;
-  if (adminButton) {
-    cursorY = Math.ceil(bottom(adminButton) + minimumGap);
-  }
-
-  const difficultyButton = rect(innerX, cursorY, innerWidth, difficultyHeight);
-  cursorY = Math.ceil(bottom(difficultyButton) + minimumGap);
-  const highScoreCard = rect(innerX, cursorY, innerWidth, scoreHeight);
-  cursorY = Math.ceil(bottom(highScoreCard) + minimumGap + 2);
-  const startButton = rect(buttonX, cursorY, buttonWidth, startHeight);
-  cursorY = Math.ceil(bottom(startButton) + minimumGap);
-  const helpButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
-  cursorY = Math.ceil(bottom(helpButton) + minimumGap);
-  const settingsButton = rect(buttonX, cursorY, buttonWidth, secondaryHeight);
-
-  const panel = rect(panelX, panelY, panelWidth, Math.max(panelHeight, bottom(settingsButton) - panelY + 22));
-
-  return {
-    panel,
-    title,
-    subtitle,
-    adminButton,
-    difficultyButton,
-    highScoreCard,
-    startButton,
-    helpButton,
-    settingsButton,
-    minimumGap,
-    titleFontSize: Math.round(clamp(35 * compactScale, 30, 35)),
-    subtitleFontSize: Math.round(clamp(16 * compactScale, 14, 16))
-  };
+  const innerWidth = wide ? 352 : panelWidth;
+  const innerX = wide ? panelX + panelWidth - innerWidth : panelX;
+  const minimumGap = 6;
+  const mainHeight = 358 + (adminVisible ? 34 : 0);
+  const artHeight = wide ? 350 : clamp(available - mainHeight - 20, 36, 190);
+  const panelHeight = wide ? Math.max(430, mainHeight) : mainHeight + artHeight + 16;
+  const panelY = top + Math.max(0, (available - panelHeight) / 2);
+  const art = wide ? rect(panelX, panelY + 24, panelWidth - innerWidth - 80, 350)
+    : rect(panelX, panelY, panelWidth, artHeight);
+  let cursor = wide ? panelY + (panelHeight - mainHeight) / 2 : bottom(art) + 16;
+  const next = (h) => { const item = rect(innerX, cursor, innerWidth, h); cursor += h + minimumGap; return item; };
+  const title = next(56);
+  const subtitle = next(22);
+  const adminButton = adminVisible ? next(28) : null;
+  const difficultyButton = next(48);
+  const highScoreCard = next(54);
+  const startButton = next(54);
+  const secondaryRow = next(44);
+  const helpButton = rect(secondaryRow.x, secondaryRow.y, (innerWidth - 8) / 2, 44);
+  const settingsButton = rect(helpButton.x + helpButton.width + 8, secondaryRow.y, helpButton.width, 44);
+  const themeButton = next(44);
+  return { panel: rect(panelX, panelY, panelWidth, Math.max(panelHeight, bottom(themeButton) - panelY)),
+    art, wide, title, subtitle, adminButton, difficultyButton, highScoreCard,
+    startButton, helpButton, settingsButton, themeButton, minimumGap, titleFontSize: 32, subtitleFontSize: 13 };
 }
 
 export function calculateHudLayout({
