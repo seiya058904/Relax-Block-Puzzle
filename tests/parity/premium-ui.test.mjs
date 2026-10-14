@@ -10,6 +10,10 @@ function luminance(hex) {
   return c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722;
 }
 function contrast(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function overlaps(a, b) {
+  return a.x < b.x + b.width && a.x + a.width > b.x
+    && a.y < b.y + b.height && a.y + a.height > b.y;
+}
 for (const theme of Object.values(THEMES)) {
   test(`${theme.id}: functional text and action labels retain 4.5:1 contrast`, () => {
     for (const text of [theme.TEXT_PRIMARY, theme.TEXT_SECONDARY, theme.TEXT_MUTED]) {
@@ -23,19 +27,49 @@ for (const theme of Object.values(THEMES)) {
   });
 }
 for (const version of ['web', 'android', 'wechat']) {
-  test(`${version}: home art and all controls fit narrow, safe and desktop viewports`, async () => {
+  test(`${version}: home controls respect small-screen safe areas and compact fallback`, async () => {
     const module = await import(pathToFileURL(getVersionPath(version, 'game/LayoutMetrics.js')));
     const calculate = module.calculateAndroidHomeLayout || module.calculateWechatHomeLayout;
-    for (const [width, height] of [[320,568],[360,640],[390,844],[768,1024],[1280,900]]) {
+    const cases = [
+      ...[[320,568],[360,640],[390,844],[768,1024],[1280,900]]
+        .map(([width,height]) => ({width,height,top:60,bottom:34})),
+      ...[90,110,120,165,400]
+        .map(top => ({width:320,height:568,top,bottom:34}))
+    ];
+    for (const {width,height,top,bottom} of cases) {
       for (const adminVisible of [false,true]) {
-        const l = calculate({viewportWidth:width,viewportHeight:height,safeInsets:{top:60,bottom:34},adminVisible});
-        for (const key of ['art','title','subtitle','difficultyButton','highScoreCard','startButton','helpButton','settingsButton','themeButton']) {
+        const l = calculate({viewportWidth:width,viewportHeight:height,safeInsets:{top,bottom},adminVisible});
+        const rectKeys = ['panel','art','title','subtitle','adminButton','difficultyButton','highScoreCard',
+          'startButton','helpButton','settingsButton','themeButton'];
+        for (const key of rectKeys) {
           const r = l[key];
-          assert.ok(r.x >= 0 && r.x+r.width <= width && r.y >= 60 && r.y+r.height <= height-34, `${key} ${width}x${height}`);
+          if (r == null) continue;
+          for (const dimension of ['x','y','width','height']) {
+            assert.ok(Number.isFinite(r[dimension]), `${key}.${dimension} must be finite for ${width}x${height}, top=${top}`);
+          }
+          assert.ok(r.width >= 0 && r.height >= 0, `${key} must not have negative dimensions for top=${top}`);
+          assert.ok(r.x >= 0 && r.x + r.width <= width, `${key} must remain horizontally on screen for top=${top}`);
+          assert.ok(r.y >= top && r.y + r.height <= height - bottom,
+            `${key} must remain inside the safe area for ${width}x${height}, top=${top}, admin=${adminVisible}`);
         }
-        for (const key of ['difficultyButton','startButton','helpButton','settingsButton','themeButton']) assert.ok(l[key].height >= 44);
-        if (l.wide) assert.ok(l.art.x+l.art.width < l.title.x);
-        else assert.ok(l.art.y+l.art.height < l.title.y);
+
+        const actions = ['difficultyButton','startButton','helpButton','settingsButton','themeButton']
+          .map(key => l[key]);
+        for (const [index, action] of actions.entries()) {
+          assert.ok(action.width >= 44 && action.height >= 44, `${version} ${top} admin=${adminVisible}: ${['difficulty','start','help','settings','theme'][index]} hit area is too small`);
+        }
+        assert.ok(l.difficultyButton.width / 3 >= 44,
+          `${version} ${top} admin=${adminVisible}: each difficulty choice must retain a 44px target`);
+        for (let i = 0; i < actions.length; i++) {
+          for (let j = i + 1; j < actions.length; j++) {
+            assert.equal(overlaps(actions[i], actions[j]), false,
+              `${version} ${top} admin=${adminVisible}: functional home controls must not overlap`);
+          }
+        }
+        if (l.wide && l.art.height > 0 && l.title.height > 0) assert.ok(l.art.x + l.art.width < l.title.x);
+        if (!l.wide && l.art.height > 0 && l.title.height > 0) assert.ok(l.art.y + l.art.height <= l.title.y);
+        if (top === 120 && adminVisible) assert.equal(l.themeButton.y + l.themeButton.height, 526);
+        if (top === 400) assert.equal(l.compactMode, 'grid');
       }
     }
   });

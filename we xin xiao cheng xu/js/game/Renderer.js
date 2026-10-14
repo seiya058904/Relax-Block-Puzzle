@@ -597,48 +597,54 @@ export default class Renderer {
       safeInsets: { top: layout.headerRect.y, bottom: layout.bottomInset }, adminVisible: state.isAdminModeActive() });
     const center = h.title.x + h.title.width / 2;
     this.homeTitleRect = h.title;
-    // The same geometric pieces introduce the material before the first move.
-    const unit = Math.min(h.art.width / 7, h.art.height / (this.theme.id === 'soft' ? 4.4 : 4));
-    const ox = h.art.x + (h.art.width - unit * 6) / 2;
-    const oy = h.art.y + (h.art.height - unit * 4) / 2;
-    const mosaic = [
-      [0, 0, '#47E56B'], [1, 0, '#47E56B'], [0, 1, '#47E56B'],
-      [3, 0, '#FFD60A'], [4, 0, '#FFD60A'], [5, 0, '#FFD60A'], [4, 1, '#FFD60A'],
-      [1, 2, '#2DE2E6'], [1, 3, '#2DE2E6'], [2, 3, '#2DE2E6'],
-      [3, 2, '#FF4D6D'], [4, 2, '#FF4D6D'], [5, 2, '#FF4D6D'], [5, 3, '#FF4D6D']
-    ];
-    if (this.theme.id === 'soft') {
-      // Four softly turned paper pieces form B's mark; A retains its crisp grid.
-      const groups = [
-        { color: '#47E56B', x: 1, y: 1, angle: -0.045 },
-        { color: '#FFD60A', x: 4.5, y: 1, angle: 0.035 },
-        { color: '#2DE2E6', x: 2, y: 3, angle: -0.035 },
-        { color: '#FF4D6D', x: 4.5, y: 3, angle: 0.045 }
-      ];
-      groups.forEach(group => {
-        const cx = ox + group.x * unit, cy = oy + group.y * unit;
-        ctx.save(); ctx.translate(cx, cy); ctx.rotate(group.angle); ctx.translate(-cx, -cy);
-        mosaic.filter(cell => cell[2] === group.color).forEach(([x, y, color]) =>
-          this.drawBlockCell(ox + x * unit, oy + y * unit, unit, color, { hero: true }));
-        ctx.restore();
-      });
-    } else mosaic.forEach(([x, y, color]) => this.drawBlockCell(ox + x * unit, oy + y * unit, unit, color));
     ctx.textAlign = 'center';
-    ctx.fillStyle = this.theme.TEXT_PRIMARY;
-    if (this.theme.id === 'classic') {
-      ctx.font = '12px sans-serif'; ctx.fillStyle = this.theme.TEXT_SECONDARY;
-      ctx.fillText('经 典 · 流 光', center, h.title.y + 14);
-      ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = this.theme.TEXT_PRIMARY;
-      ctx.fillText('轻松俄罗斯方块', center, h.title.y + 47, h.title.width);
-    } else {
-      ctx.font = '36px serif';
-      ctx.fillText('轻 松', center, h.title.y + 30);
-      ctx.font = '17px sans-serif';
-      ctx.fillText('俄罗斯方块', center, h.title.y + 53);
+    if (h.art.width > 0 && h.art.height > 0) {
+      // The same geometric pieces introduce the material before the first move.
+      const unit = Math.min(h.art.width / 7, h.art.height / (this.theme.id === 'soft' ? 4.4 : 4));
+      const ox = h.art.x + (h.art.width - unit * 6) / 2;
+      const oy = h.art.y + (h.art.height - unit * 4) / 2;
+      const mosaic = [
+        [0, 0, '#47E56B'], [1, 0, '#47E56B'], [0, 1, '#47E56B'],
+        [3, 0, '#FFD60A'], [4, 0, '#FFD60A'], [5, 0, '#FFD60A'], [4, 1, '#FFD60A'],
+        [1, 2, '#2DE2E6'], [1, 3, '#2DE2E6'], [2, 3, '#2DE2E6'],
+        [3, 2, '#FF4D6D'], [4, 2, '#FF4D6D'], [5, 2, '#FF4D6D'], [5, 3, '#FF4D6D']
+      ];
+      if (this.theme.id === 'soft') {
+        // Four softly turned paper pieces form B's mark; A retains its crisp grid.
+        const groups = [
+          { color: '#47E56B', x: 1, y: 1, angle: -0.045 },
+          { color: '#FFD60A', x: 4.5, y: 1, angle: 0.035 },
+          { color: '#2DE2E6', x: 2, y: 3, angle: -0.035 },
+          { color: '#FF4D6D', x: 4.5, y: 3, angle: 0.045 }
+        ];
+        groups.forEach(group => {
+          const cx = ox + group.x * unit, cy = oy + group.y * unit;
+          ctx.save(); ctx.translate(cx, cy); ctx.rotate(group.angle); ctx.translate(-cx, -cy);
+          mosaic.filter(cell => cell[2] === group.color).forEach(([x, y, color]) =>
+            this.drawBlockCell(ox + x * unit, oy + y * unit, unit, color, { hero: true }));
+          ctx.restore();
+        });
+      } else mosaic.forEach(([x, y, color]) => this.drawBlockCell(ox + x * unit, oy + y * unit, unit, color));
     }
-    ctx.fillStyle = this.theme.TEXT_SECONDARY;
-    ctx.font = '13px sans-serif';
-    ctx.fillText('拖动方块，填满整行或整列即可消除', center, h.subtitle.y + 15, h.subtitle.width);
+    if (h.title.height > 0) {
+      ctx.fillStyle = this.theme.TEXT_PRIMARY;
+      if (this.theme.id === 'classic') {
+        ctx.font = '12px sans-serif'; ctx.fillStyle = this.theme.TEXT_SECONDARY;
+        ctx.fillText('经 典 · 流 光', center, h.title.y + 14);
+        ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = this.theme.TEXT_PRIMARY;
+        ctx.fillText('轻松俄罗斯方块', center, h.title.y + 47, h.title.width);
+      } else {
+        ctx.font = '36px serif';
+        ctx.fillText('轻 松', center, h.title.y + 30);
+        ctx.font = '17px sans-serif';
+        ctx.fillText('俄罗斯方块', center, h.title.y + 53);
+      }
+    }
+    if (h.subtitle.height > 0) {
+      ctx.fillStyle = this.theme.TEXT_SECONDARY;
+      ctx.font = '13px sans-serif';
+      ctx.fillText('拖动方块，填满整行或整列即可消除', center, h.subtitle.y + 15, h.subtitle.width);
+    }
     if (h.adminButton) this.drawSecondaryChip(h.adminButton, '管理员模式');
     this.homeActionRects.difficulty = h.difficultyButton;
     const choices = ['简单', '普通', '大师'];
@@ -657,20 +663,25 @@ export default class Renderer {
       ctx.fillText(choices[i], x + d.width / 6, d.y + 29);
     }
     const score = h.highScoreCard;
-    if (this.theme.id === 'classic') {
-      roundedRect(ctx, score.x, score.y, score.width, score.height, 10);
-      ctx.fillStyle = this.theme.UI_TOKENS.surface.sunken; ctx.fill();
+    if (score.height > 0) {
+      if (this.theme.id === 'classic') {
+        roundedRect(ctx, score.x, score.y, score.width, score.height, 10);
+        ctx.fillStyle = this.theme.UI_TOKENS.surface.sunken; ctx.fill();
+      }
+      ctx.textAlign = 'left'; ctx.fillStyle = this.theme.TEXT_SECONDARY; ctx.font = '13px sans-serif';
+      ctx.fillText(`${getDifficultyLabel(state.settings.difficulty)} · 最高分`, score.x + 8, score.y + 32);
+      ctx.textAlign = 'right'; ctx.fillStyle = this.theme.TEXT_PRIMARY; ctx.font = `24px ${this.theme.titleFont}`;
+      ctx.fillText(String(state.bestScores[state.settings.difficulty] || 0), score.x + score.width - 8, score.y + 34, score.width * 0.52);
     }
-    ctx.textAlign = 'left'; ctx.fillStyle = this.theme.TEXT_SECONDARY; ctx.font = '13px sans-serif';
-    ctx.fillText(`${getDifficultyLabel(state.settings.difficulty)} · 最高分`, score.x + 8, score.y + 32);
-    ctx.textAlign = 'right'; ctx.fillStyle = this.theme.TEXT_PRIMARY; ctx.font = `24px ${this.theme.titleFont}`;
-    ctx.fillText(String(state.bestScores[state.settings.difficulty] || 0), score.x + score.width - 8, score.y + 34, score.width * 0.52);
     for (const action of ['start', 'help', 'settings']) this.homeActionRects[action] = h[`${action}Button`];
     this.drawActionButton(h.startButton, '开始游戏', 'primary', { pressKey: 'home:start' });
     this.drawActionButton(h.helpButton, '怎么玩', 'quiet', { pressKey: 'home:help' });
     this.drawActionButton(h.settingsButton, '设置', 'quiet', { pressKey: 'home:settings' });
     this.homeActionRects.theme = h.themeButton;
-    this.drawActionButton(h.themeButton, `当前：${this.theme.name} · 点击切换`, 'secondary', { pressKey: 'home:theme' });
+    const themeLabel = h.compactMode === 'grid'
+      ? `${this.theme.id === 'classic' ? 'A' : 'B'}换主题`
+      : `当前：${this.theme.name} · 点击切换`;
+    this.drawActionButton(h.themeButton, themeLabel, 'secondary', { pressKey: 'home:theme' });
   }
 
   drawPlayingScene(state) {
