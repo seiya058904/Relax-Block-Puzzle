@@ -42,3 +42,12 @@ test('MainActivity keeps WebView timer ownership across Activity instances', asy
   assert.equal(processOwner.onStop(), false, 'duplicate stop must not double-pause');
   assert.equal(processOwner.onResume(), 'resumeTimers');
 });
+
+test('Android theme bridge commits validated themes to native preferences synchronously', async () => {
+  const source = await fs.readFile(sourcePath, 'utf8');
+
+  assert.match(source, /addJavascriptInterface\(AndroidThemeStorageBridge\(this\), "AndroidThemeStorage"\)/);
+  assert.match(source, /fun getTheme\(\): String = preferences\.getString\(THEME_PREFERENCE_KEY, ""\)/);
+  assert.match(source, /if \(theme != "soft" && theme != "classic"\) return false/);
+  assert.match(source, /preferences\.edit\(\)\.putString\(THEME_PREFERENCE_KEY, theme\)\.commit\(\)/);
+});

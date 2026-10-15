@@ -189,6 +189,10 @@ try {
   assert.equal(await restarted.evaluate(() => localStorage.getItem('block_puzzle_best_scores_v1')), stored.best);
   assert.deepEqual(await restarted.evaluate(() => qaMain.settings), stored.settings);
   assert.equal(await restarted.locator('#bootError').isVisible(), false);
+  assert.equal(await restarted.evaluate(() => wx.getStorageSync('block_puzzle_theme_v1')), themeId,
+    'native theme preference survives actual process restart');
+  assert.equal(await restarted.evaluate(() => localStorage.getItem('block_puzzle_theme_v1')), JSON.stringify(themeId),
+    'native theme preference restores the WebView storage mirror');
   assert.equal(await restarted.evaluate(() => qaMain.renderer.theme.id), themeId, 'theme survives actual process restart');
   report.themeId = themeId; report.themeChecks = themeChecks;
   report.nativeLifecycleCycles = 6;

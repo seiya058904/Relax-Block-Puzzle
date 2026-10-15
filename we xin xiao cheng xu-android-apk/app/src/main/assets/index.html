@@ -64,7 +64,10 @@
     <script>
       // Restore the local appearance before the first Canvas frame; bad data is harmless.
       try {
-        const theme = JSON.parse(localStorage.getItem('block_puzzle_theme_v1'));
+        const nativeTheme = window.AndroidThemeStorage?.getTheme();
+        const theme = nativeTheme === 'soft' || nativeTheme === 'classic'
+          ? nativeTheme
+          : JSON.parse(localStorage.getItem('block_puzzle_theme_v1'));
         document.documentElement.style.setProperty('--game-background', theme === 'classic' ? '#091B36' : '#F6F3EB');
       } catch (_) { /* Storage may be unavailable. */ }
     </script>
