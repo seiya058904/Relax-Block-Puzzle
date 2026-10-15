@@ -53,6 +53,11 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`v1.0.15`
+
+- Every launch defaults to Classic Glow (流光) across Web, Android and WeChat; Paper Geometry (纸感) is the second theme. Previous theme choices do not override the startup default.
+- Android versionName 1.0.15 / versionCode 15. See the Release notes for package checks and validation limits.
+
 `v1.0.14`
 
 - Includes the merged dual-theme and safe-area polish for Web, Android WebView, and WeChat while preserving gameplay rules and save compatibility.

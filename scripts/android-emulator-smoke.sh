@@ -9,7 +9,7 @@ apk="$android/app/build/outputs/apk/debug/app-debug.apk"
 test -s "$apk"
 badging="$("$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$apk")"
 printf '%s\n' "$badging" > "$evidence/apk-badging.txt"
-printf '%s\n' "$badging" | grep -F "name='com.blockpuzzle.android'" | grep -F "versionCode='14'" | grep -F "versionName='1.0.14'"
+printf '%s\n' "$badging" | grep -F "name='com.blockpuzzle.android'" | grep -F "versionCode='15'" | grep -F "versionName='1.0.15'"
 "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --print-certs "$apk" > "$evidence/apk-signature.txt"
 adb shell getprop sys.boot_completed | tr -d '\r' | grep -x 1
 adb install -r "$apk" | tee "$evidence/install.txt"
