@@ -16,7 +16,9 @@ const device = process.env.QA_ANDROID_SERIAL;
 assert.ok(device, 'QA_ANDROID_SERIAL must identify an isolated QA device');
 const output = resolve(process.env.QA_SCREENSHOTS || 'tmp/android-evidence');
 const app = 'com.blockpuzzle.android';
-const adb = (...args) => execFileSync(adbPath, ['-s', device, ...args], { encoding: 'utf8', windowsHide: true, timeout: 15000 }).trim();
+const adb = (...args) => execFileSync(adbPath, ['-s', device, ...args], {
+  encoding: 'utf8', windowsHide: true, timeout: 15000, maxBuffer: 4 * 1024 * 1024
+}).trim();
 const pause = (ms) => new Promise((done) => setTimeout(done, ms));
 const mainSource = await readFile('we xin xiao cheng xu-android-apk/app/src/main/assets/js/main.js', 'utf8');
 const constructorLine = mainSource.split('\n').findIndex((line) => line.includes('this.bindAppLifecycle();'));
@@ -95,6 +97,7 @@ try {
   assert.equal(await page.evaluate(() => qaMain.gameState.dragState.isDragging), true);
   const boardBefore = await page.evaluate(() => qaMain.gameState.board.getSnapshot());
   const nativeBackgroundWaitMs = [];
+  const nativeForegroundWaitMs = [];
   async function waitForBackground() {
     // ADB returns before the Activity transition completes. Poll from Node:
     // WebView timers and RAF can stop while the app is in the background.
@@ -105,13 +108,64 @@ try {
     }
     nativeBackgroundWaitMs.push(Date.now() - started);
   }
+  async function waitForForeground() {
+    // Observe the WebView from Node timers. A page RAF waiter can miss the
+    // native resume transition when the renderer's frame clock is suspended.
+    const started = Date.now();
+    let lastState;
+    while (Date.now() - started < 5000) {
+      let timer;
+      const observed = await Promise.race([
+        page.evaluate(() => ({
+          paused: qaMain.isPaused,
+          frame: qaMain.aniId,
+          hidden: document.hidden,
+          lifecyclePaused: qaMain.gameState.lifecyclePaused
+        })).then((state) => ({ state })).catch((error) => ({ evaluationError: error.message })),
+        new Promise((resolve) => { timer = setTimeout(() => resolve({ evaluationTimedOut: true }), 1000); })
+      ]);
+      clearTimeout(timer);
+      if (observed.evaluationTimedOut || observed.evaluationError) {
+        lastState = observed.evaluationError
+          ? { pageEvaluationError: observed.evaluationError }
+          : { pageEvaluationTimedOut: true };
+        break;
+      }
+      lastState = observed.state;
+      if (!lastState.paused && lastState.lifecyclePaused === false && lastState.frame === 0 && !lastState.hidden) {
+        nativeForegroundWaitMs.push(Date.now() - started);
+        return;
+      }
+      await pause(50);
+    }
+
+    const readAdb = (args) => {
+      try { return adb(...args); }
+      catch (error) { return `unavailable: ${error.message}`; }
+    };
+    const activity = readAdb(['shell', 'dumpsys', 'activity', 'activities'])
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => /topResumedActivity=|mResumedActivity|ResumedActivity:/.test(line))
+      .slice(0, 4);
+    const logcat = readAdb(['logcat', '-d', '-t', '200', '-v', 'time'])
+      .split(/\r?\n/)
+      .filter((line) => /ActivityTaskManager|ActivityManager|com\.blockpuzzle\.android|chromium|FATAL EXCEPTION/.test(line))
+      .slice(-30);
+    throw new Error(`native foreground did not settle within 5 seconds: ${JSON.stringify({
+      webView: lastState,
+      pid: readAdb(['shell', 'pidof', app]),
+      activity,
+      logcat
+    })}`);
+  }
   adb('shell', 'input', 'keyevent', '3');
   await waitForBackground();
   assert.deepEqual(await page.evaluate(() => ({ paused: qaMain.isPaused, dragging: qaMain.gameState.dragState.isDragging,
     touch: qaMain.inputManager.activeTouchIdentifier, frame: qaMain.aniId })),
   { paused: true, dragging: false, touch: null, frame: 0 });
   adb('shell', 'am', 'start', '-n', `${app}/.MainActivity`);
-  await page.waitForFunction(() => !qaMain.isPaused && !qaMain.aniId);
+  await waitForForeground();
   assert.deepEqual(await page.evaluate(() => qaMain.gameState.board.getSnapshot()), boardBefore);
   await touchSession.detach();
   for (let i = 0; i < 5; i++) {
@@ -119,7 +173,7 @@ try {
     await waitForBackground();
     assert.equal(await page.evaluate(() => qaMain.isPaused && !qaMain.aniId), true);
     adb('shell', 'am', 'start', '-n', `${app}/.MainActivity`);
-    await page.waitForFunction(() => !qaMain.isPaused && !qaMain.aniId);
+    await waitForForeground();
   }
   const stored = await page.evaluate(() => ({
     best: localStorage.getItem('block_puzzle_best_scores_v1'), settings: qaMain.settings,
@@ -139,6 +193,7 @@ try {
   report.themeId = themeId; report.themeChecks = themeChecks;
   report.nativeLifecycleCycles = 6;
   report.nativeBackgroundWaitMs = nativeBackgroundWaitMs;
+  report.nativeForegroundWaitMs = nativeForegroundWaitMs;
   report.processRestartPersistence = true;
   report.rendererSha256 = createHash('sha256').update(rendererSource).digest('hex');
   reports.push(report);
