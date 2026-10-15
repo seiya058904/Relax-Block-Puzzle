@@ -1,8 +1,10 @@
 package com.blockpuzzle.android
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     webView.settings.javaScriptEnabled = true
     webView.settings.domStorageEnabled = true
+    webView.addJavascriptInterface(AndroidThemeStorageBridge(this), "AndroidThemeStorage")
     webView.settings.allowFileAccess = false
     webView.settings.allowContentAccess = false
     webView.settings.mediaPlaybackRequiresUserGesture = false
@@ -92,5 +95,24 @@ class MainActivity : AppCompatActivity() {
       return
     }
     super.onBackPressed()
+  }
+}
+
+private const val THEME_PREFERENCES_FILE = "theme_preferences"
+private const val THEME_PREFERENCE_KEY = "block_puzzle_theme_v1"
+
+class AndroidThemeStorageBridge(context: Context) {
+  private val preferences = context.applicationContext.getSharedPreferences(
+    THEME_PREFERENCES_FILE,
+    Context.MODE_PRIVATE
+  )
+
+  @JavascriptInterface
+  fun getTheme(): String = preferences.getString(THEME_PREFERENCE_KEY, "") ?: ""
+
+  @JavascriptInterface
+  fun setTheme(theme: String): Boolean {
+    if (theme != "soft" && theme != "classic") return false
+    return preferences.edit().putString(THEME_PREFERENCE_KEY, theme).commit()
   }
 }

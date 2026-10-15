@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { runInThisContext } from 'node:vm';
 import path from 'node:path';
 
 import { versions } from '../fixtures/core-vectors.mjs';
@@ -104,6 +106,42 @@ test('Android shim returns malformed JSON safely and storage logic falls back to
     storageModule.saveSettings({ ...defaultSettings, soundEnabled: false });
     assert.equal(JSON.parse(environment.localStorage.snapshot().block_puzzle_settings_v1).soundEnabled, false);
   } finally {
+    environment.restore();
+  }
+});
+
+test('Android theme bridge commits preferences and migrates the existing WebView value', async () => {
+  const environment = installBrowserEnvironment({ block_puzzle_theme_v1: '"classic"' });
+  const previousBridge = Object.getOwnPropertyDescriptor(globalThis, 'AndroidThemeStorage');
+  const savedThemes = [];
+  let nativeTheme = '';
+  Object.defineProperty(globalThis, 'AndroidThemeStorage', {
+    configurable: true,
+    value: {
+      getTheme() { return nativeTheme; },
+      setTheme(theme) { nativeTheme = theme; savedThemes.push(theme); return true; }
+    }
+  });
+  try {
+    const shimPath = path.resolve(
+      'we xin xiao cheng xu-android-apk', 'app', 'src', 'main', 'assets', 'browser-wx-shim.js'
+    );
+    runInThisContext(`(() => {\n${await readFile(shimPath, 'utf8')}\n})();`, { filename: shimPath });
+
+    assert.equal(globalThis.wx.getStorageSync('block_puzzle_theme_v1'), 'classic');
+    assert.equal(nativeTheme, 'classic', 'legacy WebView value migrates to the native store');
+
+    globalThis.wx.setStorageSync('block_puzzle_theme_v1', 'soft');
+    assert.equal(nativeTheme, 'soft');
+    assert.equal(environment.localStorage.getItem('block_puzzle_theme_v1'), '"soft"');
+
+    environment.localStorage.setItem('block_puzzle_theme_v1', '"classic"');
+    assert.equal(globalThis.wx.getStorageSync('block_puzzle_theme_v1'), 'soft', 'native preference remains authoritative');
+    assert.equal(environment.localStorage.getItem('block_puzzle_theme_v1'), '"soft"', 'native preference restores the WebView mirror');
+    assert.deepEqual(savedThemes, ['classic', 'soft']);
+  } finally {
+    if (previousBridge) Object.defineProperty(globalThis, 'AndroidThemeStorage', previousBridge);
+    else delete globalThis.AndroidThemeStorage;
     environment.restore();
   }
 });

@@ -58,6 +58,11 @@ function safeParseStorage(value) {
   }
 }
 
+const ANDROID_THEME_STORAGE_KEY = 'block_puzzle_theme_v1';
+function isThemePreference(value) {
+  return value === 'soft' || value === 'classic';
+}
+
 function buildTouchEvent(event, type) {
   const mapTouches = (touches) => Array.from(touches || [], (touch) => ({
     identifier: touch.identifier,
@@ -481,9 +486,39 @@ globalThis.wx = {
     window.addEventListener('storage', handler);
   },
   getStorageSync(key) {
+    if (key === ANDROID_THEME_STORAGE_KEY && globalThis.AndroidThemeStorage) {
+      try {
+        const nativeTheme = globalThis.AndroidThemeStorage.getTheme();
+        if (isThemePreference(nativeTheme)) {
+          try {
+            if (safeParseStorage(localStorage.getItem(key)) !== nativeTheme) {
+              localStorage.setItem(key, JSON.stringify(nativeTheme));
+            }
+          } catch (error) {
+            // Native storage remains authoritative if the WebView mirror fails.
+          }
+          return nativeTheme;
+        }
+
+        // Migrate the existing WebView preference once; SharedPreferences is
+        // the durable source on Android after migration.
+        const legacyTheme = safeParseStorage(localStorage.getItem(key));
+        if (isThemePreference(legacyTheme)) {
+          globalThis.AndroidThemeStorage.setTheme(legacyTheme);
+        }
+        return legacyTheme;
+      } catch (error) {
+        // Keep the WebView value available if the native bridge is unavailable.
+      }
+    }
     return safeParseStorage(localStorage.getItem(key));
   },
   setStorageSync(key, value) {
+    if (key === ANDROID_THEME_STORAGE_KEY && isThemePreference(value) && globalThis.AndroidThemeStorage) {
+      if (globalThis.AndroidThemeStorage.setTheme(value) !== true) {
+        throw new Error('Android theme preference could not be committed');
+      }
+    }
     localStorage.setItem(key, JSON.stringify(value));
   },
   vibrateShort({ type = 'light' } = {}) {
