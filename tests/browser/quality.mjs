@@ -67,7 +67,7 @@ try {
       captureComparison: target => page.screenshot({ path: resolve(output, `${label}-same-round-${target}.png`) }) });
     await page.reload();
     await page.waitForFunction(() => window.qaMain?.renderer.homeActionRects.theme);
-    assert.equal(await page.evaluate(() => qaMain.renderer.theme.id), themeId, 'theme survives a full page reload');
+    assert.equal(await page.evaluate(() => qaMain.renderer.theme.id), 'classic', 'every full page reload starts in Flow');
     if (item.safeArea) await page.evaluate(() => {
       const read = wx.getSystemInfoSync;
       wx.getSystemInfoSync = () => ({ ...read(), safeArea: { top: 59, left: 0, right: innerWidth, bottom: innerHeight - 34 } });
@@ -104,7 +104,7 @@ try {
     }
     if (item.reducedMotion) assert.equal(report.metrics.reducedMotion, true);
     assert.deepEqual(errors, [], `${label}: no runtime or console errors`);
-    reports.push({ ...report, themeId, themeChecks, reloadPersistence: true });
+    reports.push({ ...report, themeId, themeChecks, reloadDefaultsToFlow: true });
     console.log(`PASS ${label}: actual ${item.touch ? 'touch' : 'mouse'} drag, invalid/valid, undo, 1/2/3-line clears, combo, tools, pause, revive, gameover, cache and redraw${report.stress ? `; stress ${Math.round(report.stress.elapsedMs)}ms/${report.stress.frames} frames, render p95 ${report.stress.p95Ms.toFixed(2)}ms` : ''}`);
     await context.close();
     }

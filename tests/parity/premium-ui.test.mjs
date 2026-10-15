@@ -93,30 +93,31 @@ for (const version of ['web', 'android', 'wechat']) {
   });
 }
 
-test('theme preference accepts old and malformed storage without writing existing keys', async () => {
+test('every launch defaults to Flow regardless of saved theme without changing other keys', async () => {
   const { THEME_KEY, loadThemePreference, saveThemePreference, loadSettings } = await import('../../shared/js/utils/storage.js');
   for (const value of [undefined, '', 'unknown', null, 42, {}, 'classic', 'soft']) {
     const storage = createMemoryStorage({ block_puzzle_settings_v1: { soundEnabled: false, difficulty: 'master' },
       block_puzzle_best_scores_v1: { easy: 3, normal: 12345, master: 789 }, [THEME_KEY]: value });
     const restore = installWxStorage(storage);
     try {
-      assert.equal(loadThemePreference(), value === 'classic' ? 'classic' : 'soft');
+      assert.equal(loadThemePreference(), 'classic');
       assert.equal(loadSettings().soundEnabled, false);
       const before = storage.snapshot();
       for (const id of ['classic', 'soft']) {
-        saveThemePreference(id); assert.equal(loadThemePreference(), id);
+        saveThemePreference(id); assert.equal(storage.snapshot()[THEME_KEY], id);
+        assert.equal(loadThemePreference(), 'classic');
         const after = storage.snapshot(); delete after[THEME_KEY];
         const other = {...before}; delete other[THEME_KEY]; assert.deepEqual(after, other);
       }
     } finally { restore(); }
   }
   const restore = installWxStorage({getStorageSync(){throw Error('unavailable');},setStorageSync(){throw Error('full');}});
-  try { assert.equal(loadThemePreference(), 'soft'); assert.doesNotThrow(() => saveThemePreference('classic')); }
+  try { assert.equal(loadThemePreference(), 'classic'); assert.doesNotThrow(() => saveThemePreference('classic')); }
   finally { restore(); }
 });
 
 for (const version of ['web', 'android', 'wechat']) {
-  test(`${version}: theme switch persists, disposes old pixels and preserves all business fields`, async () => {
+  test(`${version}: theme switches Flow then paper, resets on launch and preserves all business fields`, async () => {
     const storage = createMemoryStorage(); const restore = installWxStorage(storage);
     Object.assign(wx, {onTouchStart(){},onTouchEnd(){},onTouchMove(){},onTouchCancel(){}});
     try {
@@ -124,6 +125,8 @@ for (const version of ['web', 'android', 'wechat']) {
       const {default:Renderer} = await import(pathToFileURL(getVersionPath(version,'game/Renderer.js')));
       const state = new GameState(); state.startNewGame(); state.score = 1234; state.openSettings();
       const renderer = new Renderer({}, {screenWidth:390,screenHeight:844}, {menuButton:null,safeArea:null});
+      assert.equal(renderer.theme.id, 'classic');
+      assert.deepEqual(Object.keys(THEMES), ['classic', 'soft']);
       renderer.getSettingsAction = () => 'theme';
       let renders = 0;
       const input = new InputManager(state, renderer, {playClick(){}}, () => assert.fail('theme must not reapply audio/game settings'), () => renders++);
@@ -133,14 +136,14 @@ for (const version of ['web', 'android', 'wechat']) {
       renderer.surfaceCache.set('board',{canvas:oldSurface,pixels:40000}); renderer.surfacePixels=40000;
       renderer.lastScene={screen:'playing'}; renderer.homeActionRects={stale:{x:1}};
       input.handleSettingsTouch({x:10,y:10});
-      assert.equal(renderer.theme.id,'classic'); assert.equal(oldSurface.width,0);
+      assert.equal(renderer.theme.id,'soft'); assert.equal(oldSurface.width,0);
       assert.equal(renderer.surfacePixels,0); assert.equal(renderer.lastScene,null);
       assert.deepEqual(renderer.homeActionRects,{}); assert.ok(renders>0);
       const after={...state}; delete after.feedbackState; assert.equal(JSON.stringify(after),snapshot);
       const restored = new Renderer({}, {screenWidth:390,screenHeight:844},{menuButton:null,safeArea:null});
       assert.equal(restored.theme.id,'classic');
-      input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'soft');
-      state.dragState.isDragging=true; input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'soft');
+      input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'classic');
+      state.dragState.isDragging=true; input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'classic');
       assert.notEqual(getPieceInk('#2DE2E6','soft'),getPieceInk('#2DE2E6','classic'));
     } finally {restore();}
   });

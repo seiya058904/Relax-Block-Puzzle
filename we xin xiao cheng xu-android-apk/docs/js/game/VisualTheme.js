@@ -66,6 +66,6 @@ const classic = Object.freeze({
   dangerFill: '#9A3F49'
 });
 
-export const THEMES = Object.freeze({ soft, classic });
-export function normalizeTheme(id) { return id === 'classic' ? 'classic' : 'soft'; }
+export const THEMES = Object.freeze({ classic, soft });
+export function normalizeTheme(id) { return id === 'soft' ? 'soft' : 'classic'; }
 export function getTheme(id) { return THEMES[normalizeTheme(id)]; }
