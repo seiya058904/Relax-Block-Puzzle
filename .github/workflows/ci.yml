@@ -29,3 +29,5 @@ jobs:
         run: npm run verify
       - name: Verify audio assets and budgets
         run: npm run verify:assets
+      - name: Simulate piece generation and enforce distribution thresholds
+        run: npm run simulate:generation -- --samples 10000

@@ -1,4 +1,7 @@
-export const versions = ['wechat', 'android'];
+// Every platform copy is exercised by the version-parameterised parity tests.
+// The published browser build (docs/js) must not be skipped: it is deployed
+// separately from the Android asset copy even though the two share a source.
+export const versions = ['wechat', 'android', 'web'];
 
 export const toolCountsByDifficulty = {
   easy: { refreshCount: 3, clearCount: 1, undoCount: 1 },

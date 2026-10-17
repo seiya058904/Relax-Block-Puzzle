@@ -315,9 +315,57 @@ function runDifficulty(difficulty) {
   };
 }
 
-console.log(JSON.stringify({
+const report = {
   generator: path.relative(rootDir, generatorPiecePath) || generatorPiecePath,
   easy: runDifficulty('easy'),
   normal: runDifficulty('normal'),
   master: runDifficulty('master')
-}, null, 2));
+};
+
+// A report alone cannot fail CI. These thresholds turn the simulation into a
+// real regression gate: a generator that stops producing playable racks, hands
+// out unplaceable racks, or leaks hard shapes into easy must fail this command
+// instead of printing healthy-looking numbers and exiting 0.
+const THRESHOLDS = {
+  // The generator's bounded failure fallback should stay exceptional; the
+  // previous behaviour measured 0 / 0 / 0.0005 for easy / normal / master.
+  maxFailedRate: 0.01,
+  // A rack where none of the three pieces can be placed on the sampled board.
+  maxForcedZeroRate: 0.02,
+  // Share of racks whose full three-piece order is playable.
+  minFullSequenceRate: { easy: 0.85, normal: 0.70, master: 0.55 }
+};
+
+const violations = [];
+for (const difficulty of ['easy', 'normal', 'master']) {
+  const metrics = report[difficulty];
+  const fullSequenceRate = metrics.quality.fullSequenceRate;
+
+  if (!(metrics.failedRate <= THRESHOLDS.maxFailedRate)) {
+    violations.push(`${difficulty}: failedRate ${metrics.failedRate} > ${THRESHOLDS.maxFailedRate}`);
+  }
+  if (!(metrics.quality.forcedZeroRate <= THRESHOLDS.maxForcedZeroRate)) {
+    violations.push(`${difficulty}: forcedZeroRate ${metrics.quality.forcedZeroRate} > ${THRESHOLDS.maxForcedZeroRate}`);
+  }
+  if (!(fullSequenceRate >= THRESHOLDS.minFullSequenceRate[difficulty])) {
+    violations.push(`${difficulty}: fullSequenceRate ${fullSequenceRate} < ${THRESHOLDS.minFullSequenceRate[difficulty]}`);
+  }
+}
+
+if (report.easy.categoryRatios.hard !== 0) {
+  violations.push(`easy: hard shapes must never be generated (${report.easy.categoryRatios.hard})`);
+}
+if (report.easy.maxSnakeStreak !== 0) {
+  violations.push(`easy: snake streak ${report.easy.maxSnakeStreak} must stay 0`);
+}
+if (report.normal.maxSnakeStreak > 1) {
+  violations.push(`normal: snake streak ${report.normal.maxSnakeStreak} > 1`);
+}
+
+if (violations.length > 0) {
+  console.error('generation simulation thresholds failed:');
+  for (const violation of violations) console.error(`- ${violation}`);
+  process.exitCode = 1;
+}
+
+console.log(JSON.stringify(report, null, 2));

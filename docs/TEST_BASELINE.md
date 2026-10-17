@@ -61,7 +61,7 @@ Web 390×844 连续拖动压力目标为 30 秒；微信 host 为 10 秒。报�
 
 覆盖同一触摸流程、30 秒连续拖动、6 次 ADB Home/Activity 恢复、后台取消触摸/停帧且棋盘不变，以及 force-stop/重启后设置与最高分保留。Home 后由 Node 限时 5 秒轮询真实暂停/停帧状态，保留取消输入和棋盘断言；不在停止计时器的 WebView 内等待 RAF，也不把固定 180 ms 当作系统过渡完成。报告记录每次实际等待。它没有使用 Android 返回键，也不证明系统回收后的整局棋盘存档；当前回归仅断言已有设置和最高分键。
 
-APK 资源验证分两层：`verify:apk-assets` 只检查禁止的 `assets/js/js/` 嵌套边界；发布前另将 ZIP 内 **35 个游戏 assets 文件**的路径集合和 SHA-256 与当前 `app/src/main/assets/` 比对，确认无缺失或旧资源。debug 包应只有这 35 个文件；release 包另外包含 AGP 生成的 `assets/dexopt/baseline.prof` 与 `baseline.profm`，分别与本次 `compileReleaseArtProfile` 的二进制中间产物比对，不允许其他多余资源。仅边界检查通过不能称为资源内容一致。
+APK 资源验证分两层：`verify:apk-assets` 只检查禁止的 `assets/js/js/` 嵌套边界；发布前另将 ZIP 内 **36 个游戏 assets 文件**的路径集合和 SHA-256 与当前 `app/src/main/assets/` 比对，确认无缺失或旧资源。debug 包应只有这 36 个文件；release 包另外包含 AGP 生成的 `assets/dexopt/baseline.prof` 与 `baseline.profm`，分别与本次 `compileReleaseArtProfile` 的二进制中间产物比对，不允许其他多余资源。仅边界检查通过不能称为资源内容一致。
 
 仅 debug 包启用 WebView 调试；release 编译、是否签名、是否安装运行分别记录。未安装的 release 构建不能声称通过 release 运行时验收。
 
@@ -75,7 +75,7 @@ npm run verify
 npm run verify:assets
 ```
 
-`npm run test:parity` 仅运行 parity 子集，不能替代完整 241 项。当前 `npm run verify` 检查 11 个共享文件在三个目标中的生成一致性；`verify:assets` 检查音频映射、缺失/未使用文件与体积预算，微信 light 与 Web/Android full 分级保留。
+`npm run test:parity` 仅运行 parity 子集，不能替代完整套件。当前 `npm run verify` 检查 12 个共享文件在三个目标中的生成一致性；`verify:assets` 检查音频映射、缺失/未使用文件与体积预算，微信 light 与 Web/Android full 分级保留。
 
 复用现有 Playwright 或 CI 的隔离工具目录，不安装游戏依赖：
 
@@ -134,12 +134,12 @@ Android 物理手机尚未连接，本轮只有第 4 节的已安装模拟器 AP
 | 检查 | 本轮结果与边界 |
 | --- | --- |
 | `npm test` | **241/241 通过**，0 失败、跳过、取消或 TODO；实际耗时 10.05 秒 |
-| `npm run verify` | 11 个共享文件在三个目标中一致 |
+| `npm run verify` | 12 个共享文件在三个目标中一致 |
 | `npm run verify:assets` | 三端音频映射/缺失/未使用/体积检查通过；微信 light 11 文件 / 2,931,409 bytes，Web 与 Android full 各 11 文件 / 26,936,009 bytes；后两端的 11 个音频 SHA-256 另行逐一比对一致 |
 | Web Chromium | 第 3 节的五组视口全部通过；两组跨页最高分/localStorage 回归通过 |
 | 微信 Chromium host | 第 3 节的一组真实平台代码流程通过；仅代表 shim host，不能记为原生微信通过 |
 | Android 构建 | `assembleDebug assembleRelease --no-daemon` 成功，85 项任务；release 的 `lintVital` 随构建通过，不等于运行了全面 lint 或类型检查 |
-| APK 资源 | debug 和 unsigned release 各有 35 个游戏 assets 与当前源码路径/字节哈希一致；release 另外两项编译 profile 与本次 AGP 中间产物一致；两个 APK 的禁止嵌套边界检查通过；debug 签名验证通过 |
+| APK 资源 | debug 和 unsigned release 各有 36 个游戏 assets 与当前源码路径/字节哈希一致；release 另外两项编译 profile 与本次 AGP 中间产物一致；两个 APK 的禁止嵌套边界检查通过；debug 签名验证通过 |
 | 已安装 v1.0.12 debug APK | 原始 WebView 载入的 Renderer 与源码一致；触摸流程、6 次 Home/Activity 后台恢复和 force-stop/重启后的设置/最高分持久性通过；JS/console error 为 0，无 AndroidRuntime 崩溃；原生日志有 WebView `Failed to write a new fake index` 缓存诊断，不写成全部错误日志为空 |
 | 微信原生自动交互 | **未验证**：本轮 CLI 连接成功，执行接口仍 8 秒超时；人工确认仅沿用上一轮编译/首页，边界列于第 6 节 |
 
