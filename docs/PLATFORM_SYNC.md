@@ -48,8 +48,8 @@ npm test
 
 Renderer 按实例持有主题；切换时销毁旧 surface、渐变及局部重绘状态，棋盘缓存 key 包含主题。平台 InputManager 通过首页/设置入口调用切换和自身重绘回调，不改变 GameState 或重新应用音频设置。
 
-## 2026-10-17 修复：生成失败兜底与主题偏好恢复
+## 2026-10-17 修复：生成失败兜底与平台契约守卫
 
-- `shared/js/game/Piece.js`：`createRack` 在难度门槛拒绝全部候选、但棋盘仍存在可落点时，改用 `createRescueFallbackRack` 返回真正可放的方块；`SINGLE_CELL_PROBE` 导出给三端 `GameState.generateRackForPlay` 作为“真实可放性”校验。只有棋盘确实没有空格（无任何可放落点）时才返回失败。三端副本通过 `npm run sync` 生成，不手工编辑。
-- `shared/js/utils/storage.js`：`loadThemePreference` 恢复读取 `block_puzzle_theme_v1`；首次启动或值损坏时仍默认流光（classic）。
-- 一致性守卫：`tests/fixtures/core-vectors.mjs` 的 `versions` 纳入 `web`（部署构建不再被 parity 跳过）；新增 `tests/parity/platform-defaults.test.mjs`（默认授权/工具次数/存档键）、`tests/parity/platform-copy-integrity.test.mjs`（`docs/js` 与 Android assets 逐文件字节一致）、`tests/parity/generation-failure-recovery.test.mjs`（生成失败不得误判结束、满盘仍结束）。
+- `shared/js/game/Piece.js`：`createRack` 在难度门槛拒绝全部候选、但棋盘仍存在可落点时，改用确定性保底候选组（单格 + line2 + l3）返回；该候选组仍满足当前难度的候选组硬约束（基础形状上限、easy 的 rescue/去重约束等），且必然包含可放的单格。只有棋盘确实没有空格时才返回失败。三端副本通过 `npm run sync` 生成，不手工编辑。
+- `shared/js/utils/storage.js`：**不改变** v1.0.15 的启动主题规则（每次启动都从流光开始）；仅在注释中写明保存键不是启动恢复来源。
+- 一致性守卫：`tests/fixtures/core-vectors.mjs` 的 `versions` 纳入 `web`（部署构建不再被 parity 跳过）；新增 `tests/parity/platform-defaults.test.mjs`（按规格固定各端默认授权策略，以及工具次数、拖拽参数、存档键、计分常量）与 `tests/parity/generation-failure-recovery.test.mjs`（seed=59 晚局真实落子触发补架后不得误判结束、保底候选组符合难度约束、满盘仍结束）。

@@ -74,9 +74,9 @@ The same core puzzle runs in three environments, with platform-specific controls
 
 ### 🎨 Two Looks, One Game
 
-Choose **Classic Glow / 经典流光 (A)** for a deep-blue board and luminous pieces, or **Paper Geometry / 纸上几何 (B)** for a warm paper palette and muted colors. Classic Glow is the default on a first launch, before any preference has been saved.
+Choose **Classic Glow / 经典流光 (A)** for a deep-blue board and luminous pieces, or **Paper Geometry / 纸上几何 (B)** for a warm paper palette and muted colors. Classic Glow is the startup theme on every launch, on all three platforms.
 
-Switch looks from the home screen or in-game Settings. The choice is saved locally on each platform and restored on the next launch; it changes appearance without resetting the current board, pieces, score, tools, or audio settings.
+Switch looks from the home screen or in-game Settings. The change applies immediately and is recorded locally on each platform, but — by the v1.0.15 release rule — every launch still starts in Classic Glow, so a previous choice is not restored when the app reopens. Switching never resets the current board, pieces, score, tools, or audio settings.
 
 ### ✨ Small Rules, More Possibilities
 

@@ -193,3 +193,17 @@ APK 身份（均为本轮构建；`versionCode=12`、`versionName=1.0.12`；保�
 压力拖动记录：Web 390×844 纸感 30,046 ms / 4,809 帧、流光 30,042 ms / 4,807 帧；微信 shim 两主题各约 10,048 ms / 1,608–1,609 帧；Android 两主题 30,023 ms / 1,802 帧、30,050 ms / 1,804 帧。Canvas JS render p95 是脚本测得的调用耗时，不代表 GPU 耗时、整机帧率或触摸延迟。
 
 本次没有连接物理 Android 手机；微信开发者工具/原生微信交互、真实音效听感和物理设备表现仍未验证。截图与报告未纳入 Git。
+
+## 10. 当前 main 校验基线（2026-10-17）
+
+范围：`main` 上“生成失败兜底 + 平台契约守卫”修复后的当前值。第 1–9 节保留各自时点的历史验收事实，未改写；本节只记录当前实现。
+
+| 检查 | 当前结果 |
+| --- | --- |
+| `npm test` | **403/403 通过**；0 失败、跳过、取消或 TODO（包含新增的生成失败恢复与平台契约用例）。Node 24.15.0、npm 11.12.1。 |
+| `npm run test:parity` | **381/381 通过**；`versions` 现包含 `wechat` / `android` / `web` 三份副本。 |
+| `npm run verify` | **12 个共享文件**在三个目标中一致；`npm run sync` 无差异。 |
+| `npm run verify:assets` | 三端音频映射/预算通过；微信 11 个 / 2,931,409 bytes，Web 与 Android 各 11 个 / 26,936,009 bytes；无缺失、未使用或重复。 |
+| `npm run simulate:generation -- --samples 10000` | 通过新增阈值断言：`failedRate` 0/0/0，`forcedZeroRate` 0，`fullSequenceRate` easy 1 / normal 0.8978 / master 0.7991；easy 不含 hard 方块。该命令现在会以非零退出码报告分布回归，同时仍由 `tests/parity/piece-generation-simulation.test.mjs` 在常规 CI 中以 `--samples 100` 运行。 |
+| Android assets 数量 | 当前 `app/src/main/assets/` 为 **36 个文件**（22 个 JS 模块 + 11 个音频 + index.html / game.js / browser-wx-shim.js）。`verify:apk-assets` 与 Gradle 构建本轮未运行（环境无 Android SDK/AVD），APK ZIP 资源比对仍需在构建环境补做。 |
+| 真实浏览器（隔离副本） | Chromium 1280×900 与 390×844 走通开局/真实拖拽/消行/游戏结束/重开/刷新重进，0 console 错误；未覆盖真实微信与 Android 原生交互。 |

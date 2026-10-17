@@ -156,13 +156,11 @@ export function saveSettings(settings) {
 // Independent preference: old settings/score keys and their migration are untouched.
 export const THEME_KEY = 'block_puzzle_theme_v1';
 export function loadThemePreference() {
-  // First launch (no saved value) starts in Flow; a saved choice is restored.
-  // normalizeTheme already maps missing/malformed values back to 'classic'.
-  try {
-    return normalizeTheme(wx.getStorageSync(THEME_KEY));
-  } catch {
-    return 'classic';
-  }
+  // v1.0.15 release note: every launch starts in Flow (classic) on all three
+  // platforms, regardless of the previous session's choice. saveThemePreference
+  // still records the last explicit choice, but it is not a startup restore
+  // source. Changing this is a product decision, not a bug fix.
+  return 'classic';
 }
 export function saveThemePreference(id) {
   try { wx.setStorageSync(THEME_KEY, normalizeTheme(id)); }

@@ -55,9 +55,9 @@ Source code and project files are stored in this repository. APK files should be
 
 `Unreleased (main)`
 
-- Theme preference is saved per platform and restored on the next launch; a first launch still starts in Classic Glow (流光). Applies to Web, Android and WeChat.
-- A rack-generation miss no longer ends a round while the board still accepts a placement; the rescue fallback hands back a playable rack.
-- Test guards extended: parity fixtures now cover the Web copy, `docs/js` and the Android asset copy must stay byte-identical, and the generation simulation enforces distribution thresholds in CI.
+- Theme behaviour is unchanged by design (v1.0.15 rule): every launch starts in Classic Glow (流光) on all three platforms. The `block_puzzle_theme_v1` key records the last explicit choice but is not a startup restore source; README wording was corrected to match.
+- A rack-generation miss no longer ends a round while the board still accepts a placement; a deterministic rescue rack that satisfies the current difficulty's constraints is returned instead.
+- Test guards extended: parity fixtures now cover the Web copy, and platform contracts (default auth policy, tool counts, drag tuning, storage keys) plus generation distribution thresholds are asserted in the existing suites.
 
 `v1.0.15`
 
