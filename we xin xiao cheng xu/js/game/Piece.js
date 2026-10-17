@@ -21,6 +21,36 @@ const RELAXED_ATTEMPTS = 3;
 // hasAnyValidMove safety line.
 const VIABILITY_PLACEMENT_BUDGET = 10000;
 
+// Probe used to answer "does this board still accept any placement at all?".
+// A single cell fits exactly when the board still has an empty cell, so this
+// probe keeps "the board is exhausted" separate from "the difficulty gates
+// rejected every sampled rack". Callers must not treat the two as the same.
+export const SINGLE_CELL_PROBE = Object.freeze({
+  cells: Object.freeze([Object.freeze({ x: 0, y: 0 })]),
+  bounds: Object.freeze({ width: 1, height: 1 })
+});
+
+function hasAnyPlacement(board, cells) {
+  if (!board || typeof board.canPlace !== 'function') {
+    return false;
+  }
+
+  const size = board.size || countBoardSize(board);
+  const bounds = getBounds(cells);
+  const maxRow = size - bounds.height;
+  const maxCol = size - bounds.width;
+
+  for (let row = 0; row <= maxRow; row += 1) {
+    for (let col = 0; col <= maxCol; col += 1) {
+      if (board.canPlace(cells, row, col)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function normalizeCells(cells) {
   let minX = cells[0].x;
   let minY = cells[0].y;
@@ -858,6 +888,47 @@ function passesViabilityGate(difficulty, viability) {
   return true;
 }
 
+// Last-resort rescue. Difficulty gates may reject every sampled rack while the
+// board still accepts placements (for example when only isolated single cells
+// remain). Ending the round in that state would be wrong, so build a rack from
+// rescue shapes that are actually placeable. Style rules are honoured when
+// possible; when they cannot be met, a placeable rack still wins over a false
+// "no moves" result. Returns null only when the board truly has no room left.
+function createRescueFallbackRack(board, difficulty, options = {}) {
+  const placeableRescueVariants = ALL_POOLS.rescue.filter(
+    (variant) => hasAnyPlacement(board, variant.cells)
+  );
+  if (placeableRescueVariants.length === 0) {
+    return null;
+  }
+
+  const rules = DIFFICULTY_RULES[difficulty];
+  const maxSameBase = rules && rules.maxSameBase ? rules.maxSameBase : RACK_SIZE;
+  let lastPieces = null;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const pieces = [];
+    const baseCounts = {};
+
+    while (pieces.length < RACK_SIZE) {
+      const preferred = placeableRescueVariants.filter(
+        (variant) => (baseCounts[variant.baseId] || 0) < maxSameBase
+      );
+      const pool = preferred.length > 0 ? preferred : placeableRescueVariants;
+      const variant = pool[Math.floor(Math.random() * pool.length)];
+      baseCounts[variant.baseId] = (baseCounts[variant.baseId] || 0) + 1;
+      pieces.push(createPieceFromShape(variant));
+    }
+
+    lastPieces = pieces;
+    if (isRackValidForDifficulty(pieces, difficulty, options)) {
+      return pieces;
+    }
+  }
+
+  return lastPieces;
+}
+
 export function createRack(board, difficulty = 'normal', options = {}) {
   const normalizedDifficulty = normalizeDifficulty(difficulty);
   const maxAttempts = options.maxAttempts || 20;
@@ -890,6 +961,17 @@ export function createRack(board, difficulty = 'normal', options = {}) {
         meta: createRackMeta(pieces)
       };
     }
+  }
+
+  // A generator miss is not "no legal move": only report failure when the board
+  // cannot accept any placement at all.
+  const fallbackPieces = createRescueFallbackRack(board, normalizedDifficulty, options);
+  if (fallbackPieces) {
+    return {
+      success: true,
+      pieces: fallbackPieces,
+      meta: createRackMeta(fallbackPieces)
+    };
   }
 
   return {
