@@ -39,6 +39,11 @@ dist/
 # Archival audio backup (not shipped, not versioned)
 assets/audio-backup/
 
+# Local product/design notes (not versioned; current theme/startup rules are
+# documented in README and docs/PLATFORM_SYNC.md after the v1.0.15 decision)
+/DESIGN.md
+/PRODUCT.md
+
 # OS / IDE
 .DS_Store
 Thumbs.db
