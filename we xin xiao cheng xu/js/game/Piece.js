@@ -21,36 +21,6 @@ const RELAXED_ATTEMPTS = 3;
 // hasAnyValidMove safety line.
 const VIABILITY_PLACEMENT_BUDGET = 10000;
 
-// Probe used to answer "does this board still accept any placement at all?".
-// A single cell fits exactly when the board still has an empty cell, so this
-// probe keeps "the board is exhausted" separate from "the difficulty gates
-// rejected every sampled rack". Callers must not treat the two as the same.
-export const SINGLE_CELL_PROBE = Object.freeze({
-  cells: Object.freeze([Object.freeze({ x: 0, y: 0 })]),
-  bounds: Object.freeze({ width: 1, height: 1 })
-});
-
-function hasAnyPlacement(board, cells) {
-  if (!board || typeof board.canPlace !== 'function') {
-    return false;
-  }
-
-  const size = board.size || countBoardSize(board);
-  const bounds = getBounds(cells);
-  const maxRow = size - bounds.height;
-  const maxCol = size - bounds.width;
-
-  for (let row = 0; row <= maxRow; row += 1) {
-    for (let col = 0; col <= maxCol; col += 1) {
-      if (board.canPlace(cells, row, col)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
 function normalizeCells(cells) {
   let minX = cells[0].x;
   let minY = cells[0].y;
@@ -888,45 +858,46 @@ function passesViabilityGate(difficulty, viability) {
   return true;
 }
 
-// Last-resort rescue. Difficulty gates may reject every sampled rack while the
-// board still accepts placements (for example when only isolated single cells
-// remain). Ending the round in that state would be wrong, so build a rack from
-// rescue shapes that are actually placeable. Style rules are honoured when
-// possible; when they cannot be met, a placeable rack still wins over a false
-// "no moves" result. Returns null only when the board truly has no room left.
-function createRescueFallbackRack(board, difficulty, options = {}) {
-  const placeableRescueVariants = ALL_POOLS.rescue.filter(
-    (variant) => hasAnyPlacement(board, variant.cells)
-  );
-  if (placeableRescueVariants.length === 0) {
+// Deterministic rescue rack for the "no candidate rack could be generated"
+// boundary. Difficulty gates can reject every sampled rack while the board
+// still accepts a placement (for example when only isolated single cells
+// remain); ending the round there would take a legal move away from the
+// player. The recipe below is one rescue cell plus two small shapes, which
+// stays inside every difficulty's rack constraints (distinct base ids,
+// rescue >= 1, no medium/hard overflow) and always contains the placeable
+// rescue cell whenever the board has an empty cell. A full board has no
+// placement at all, so the fallback returns null and the round can end.
+const FALLBACK_RECIPE = Object.freeze([
+  Object.freeze(['rescue', 'single']),
+  Object.freeze(['rescue', 'line2']),
+  Object.freeze(['simple', 'l3'])
+]);
+
+function createFallbackRack(board, difficulty, options = {}) {
+  // Legacy board stubs without canPlace keep the old failure semantics; the
+  // real Board always exposes both methods.
+  if (!board || typeof board.canPlace !== 'function' || typeof board.hasAnyValidMove !== 'function') {
     return null;
   }
 
-  const rules = DIFFICULTY_RULES[difficulty];
-  const maxSameBase = rules && rules.maxSameBase ? rules.maxSameBase : RACK_SIZE;
-  let lastPieces = null;
-
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const pieces = [];
-    const baseCounts = {};
-
-    while (pieces.length < RACK_SIZE) {
-      const preferred = placeableRescueVariants.filter(
-        (variant) => (baseCounts[variant.baseId] || 0) < maxSameBase
-      );
-      const pool = preferred.length > 0 ? preferred : placeableRescueVariants;
-      const variant = pool[Math.floor(Math.random() * pool.length)];
-      baseCounts[variant.baseId] = (baseCounts[variant.baseId] || 0) + 1;
-      pieces.push(createPieceFromShape(variant));
+  const pieces = [];
+  for (const [category, baseId] of FALLBACK_RECIPE) {
+    const variant = SHAPE_LIBRARY[category].find((item) => item.baseId === baseId);
+    if (!variant) {
+      return null;
     }
-
-    lastPieces = pieces;
-    if (isRackValidForDifficulty(pieces, difficulty, options)) {
-      return pieces;
-    }
+    pieces.push(createPieceFromShape(variant));
   }
 
-  return lastPieces;
+  if (!isRackValidForDifficulty(pieces, difficulty, options)) {
+    return null;
+  }
+
+  if (!board.hasAnyValidMove(pieces)) {
+    return null;
+  }
+
+  return pieces;
 }
 
 export function createRack(board, difficulty = 'normal', options = {}) {
@@ -965,7 +936,7 @@ export function createRack(board, difficulty = 'normal', options = {}) {
 
   // A generator miss is not "no legal move": only report failure when the board
   // cannot accept any placement at all.
-  const fallbackPieces = createRescueFallbackRack(board, normalizedDifficulty, options);
+  const fallbackPieces = createFallbackRack(board, normalizedDifficulty, options);
   if (fallbackPieces) {
     return {
       success: true,

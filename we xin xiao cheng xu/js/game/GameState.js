@@ -29,7 +29,7 @@ import {
   PLACEMENT_PULSE_MS,
   REVIVE_CLEAR_COUNT
 } from './constants.js';
-import { createRack, SINGLE_CELL_PROBE } from './Piece.js';
+import { createRack } from './Piece.js';
 import {
   loadBestScores,
   loadBestScore,
@@ -1227,36 +1227,19 @@ export default class GameState {
       recentBaseIds: this.recentRackBaseIds
     });
     if (result.success) {
-      this.applyGeneratedRack(result);
+      this.rackPieces = result.pieces;
+      triggerActionFeedback(this.feedbackState, 'refill', { rack: true });
+      this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
+      this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
       return true;
     }
 
     if (allowGameOverOnFailure) {
-      // A generator miss must never end a round the board can still take a
-      // placement in: retry the rescue path before treating the board as full.
-      if (this.board.hasAnyValidMove([SINGLE_CELL_PROBE])) {
-        const rescue = createRack(this.board, this.activeDifficulty, {
-          previousHadSnake: this.lastRackHadSnake,
-          recentBaseIds: this.recentRackBaseIds
-        });
-        if (rescue.success) {
-          this.applyGeneratedRack(rescue);
-          return true;
-        }
-      }
-
       this.rackPieces = [];
       this.handleNoMoves();
     }
 
     return false;
-  }
-
-  applyGeneratedRack(result) {
-    this.rackPieces = result.pieces;
-    triggerActionFeedback(this.feedbackState, 'refill', { rack: true });
-    this.lastRackHadSnake = !!(result.meta && result.meta.hasSnake);
-    this.recentRackBaseIds = this.rackPieces.map((piece) => piece.baseId);
   }
 
   checkGameOver() {
