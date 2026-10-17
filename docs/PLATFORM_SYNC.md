@@ -47,3 +47,9 @@ npm test
 `game/VisualTheme.js` 是第 12 个共享生成模块，拥有流光/纸感两套不可变视觉 tokens、主题身份回退和方块绘制色映射，不修改 coreConstants、分数或生成权重。独立主题偏好由共享 utils/storage.js 的 block_puzzle_theme_v1 键管理，旧设置及成绩存档键不变。修改源后仍使用 `npm run sync`；Renderer、LayoutMetrics、输入和平台生命周期继续保持平台独立。首页难度分段直接选中目标档位，结算页可直接返回主页；管理员资格和既有音频事件不变。
 
 Renderer 按实例持有主题；切换时销毁旧 surface、渐变及局部重绘状态，棋盘缓存 key 包含主题。平台 InputManager 通过首页/设置入口调用切换和自身重绘回调，不改变 GameState 或重新应用音频设置。
+
+## 2026-10-17 修复：生成失败兜底与主题偏好恢复
+
+- `shared/js/game/Piece.js`：`createRack` 在难度门槛拒绝全部候选、但棋盘仍存在可落点时，改用 `createRescueFallbackRack` 返回真正可放的方块；`SINGLE_CELL_PROBE` 导出给三端 `GameState.generateRackForPlay` 作为“真实可放性”校验。只有棋盘确实没有空格（无任何可放落点）时才返回失败。三端副本通过 `npm run sync` 生成，不手工编辑。
+- `shared/js/utils/storage.js`：`loadThemePreference` 恢复读取 `block_puzzle_theme_v1`；首次启动或值损坏时仍默认流光（classic）。
+- 一致性守卫：`tests/fixtures/core-vectors.mjs` 的 `versions` 纳入 `web`（部署构建不再被 parity 跳过）；新增 `tests/parity/platform-defaults.test.mjs`（默认授权/工具次数/存档键）、`tests/parity/platform-copy-integrity.test.mjs`（`docs/js` 与 Android assets 逐文件字节一致）、`tests/parity/generation-failure-recovery.test.mjs`（生成失败不得误判结束、满盘仍结束）。

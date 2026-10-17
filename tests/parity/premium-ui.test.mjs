@@ -93,19 +93,20 @@ for (const version of ['web', 'android', 'wechat']) {
   });
 }
 
-test('every launch defaults to Flow regardless of saved theme without changing other keys', async () => {
+test('first launch defaults to Flow, a saved theme is restored, and other keys are untouched', async () => {
   const { THEME_KEY, loadThemePreference, saveThemePreference, loadSettings } = await import('../../shared/js/utils/storage.js');
   for (const value of [undefined, '', 'unknown', null, 42, {}, 'classic', 'soft']) {
+    const expected = value === 'soft' ? 'soft' : 'classic';
     const storage = createMemoryStorage({ block_puzzle_settings_v1: { soundEnabled: false, difficulty: 'master' },
       block_puzzle_best_scores_v1: { easy: 3, normal: 12345, master: 789 }, [THEME_KEY]: value });
     const restore = installWxStorage(storage);
     try {
-      assert.equal(loadThemePreference(), 'classic');
+      assert.equal(loadThemePreference(), expected);
       assert.equal(loadSettings().soundEnabled, false);
       const before = storage.snapshot();
       for (const id of ['classic', 'soft']) {
         saveThemePreference(id); assert.equal(storage.snapshot()[THEME_KEY], id);
-        assert.equal(loadThemePreference(), 'classic');
+        assert.equal(loadThemePreference(), id);
         const after = storage.snapshot(); delete after[THEME_KEY];
         const other = {...before}; delete other[THEME_KEY]; assert.deepEqual(after, other);
       }
@@ -117,7 +118,7 @@ test('every launch defaults to Flow regardless of saved theme without changing o
 });
 
 for (const version of ['web', 'android', 'wechat']) {
-  test(`${version}: theme switches Flow then paper, resets on launch and preserves all business fields`, async () => {
+  test(`${version}: theme switches Flow then paper, restores the saved choice on launch and preserves all business fields`, async () => {
     const storage = createMemoryStorage(); const restore = installWxStorage(storage);
     Object.assign(wx, {onTouchStart(){},onTouchEnd(){},onTouchMove(){},onTouchCancel(){}});
     try {
@@ -141,7 +142,7 @@ for (const version of ['web', 'android', 'wechat']) {
       assert.deepEqual(renderer.homeActionRects,{}); assert.ok(renders>0);
       const after={...state}; delete after.feedbackState; assert.equal(JSON.stringify(after),snapshot);
       const restored = new Renderer({}, {screenWidth:390,screenHeight:844},{menuButton:null,safeArea:null});
-      assert.equal(restored.theme.id,'classic');
+      assert.equal(restored.theme.id,'soft');
       input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'classic');
       state.dragState.isDragging=true; input.handleSettingsTouch({x:10,y:10}); assert.equal(renderer.theme.id,'classic');
       assert.notEqual(getPieceInk('#2DE2E6','soft'),getPieceInk('#2DE2E6','classic'));

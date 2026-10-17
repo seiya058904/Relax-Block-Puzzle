@@ -53,6 +53,12 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
+`Unreleased (main)`
+
+- Theme preference is saved per platform and restored on the next launch; a first launch still starts in Classic Glow (流光). Applies to Web, Android and WeChat.
+- A rack-generation miss no longer ends a round while the board still accepts a placement; the rescue fallback hands back a playable rack.
+- Test guards extended: parity fixtures now cover the Web copy, `docs/js` and the Android asset copy must stay byte-identical, and the generation simulation enforces distribution thresholds in CI.
+
 `v1.0.15`
 
 - Every launch defaults to Classic Glow (流光) across Web, Android and WeChat; Paper Geometry (纸感) is the second theme. Previous theme choices do not override the startup default.
