@@ -23,6 +23,12 @@
   <sub>10 × 10 BOARD &nbsp;·&nbsp; THREE DIFFICULTIES &nbsp;·&nbsp; THREE PLATFORMS &nbsp;·&nbsp; ONE SHARED RULESET</sub>
 </p>
 
+<p align="center">
+  <img src="we%20xin%20xiao%20cheng%20xu-android-apk/docs/favicon.png" width="150" alt="Relax Block Puzzle app icon bundled with the browser version" />
+  <br />
+  <sub>The game's packaged app icon. Open the browser version to see the current board and controls.</sub>
+</p>
+
 ---
 
 > **Easy to understand. Harder to put down.**
@@ -74,7 +80,7 @@ The same core puzzle runs in three environments, with platform-specific controls
 
 ### 🎨 Two Looks, One Game
 
-Choose **Classic Glow / 经典流光 (A)** for a deep-blue board and luminous pieces, or **Paper Geometry / 纸上几何 (B)** for a warm paper palette and muted colors. Classic Glow is the startup theme on every launch, on all three platforms.
+Choose **Classic Glow (Theme A)** for a deep-blue board and luminous pieces, or **Paper Geometry (Theme B)** for a warm paper palette and muted colors. Classic Glow is the startup theme on every launch, on all three platforms.
 
 Switch looks from the home screen or in-game Settings. The change applies immediately and is recorded locally on each platform, but — by the v1.0.15 release rule — every launch still starts in Classic Glow, so a previous choice is not restored when the app reopens. Switching never resets the current board, pieces, score, tools, or audio settings.
 
