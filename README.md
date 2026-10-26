@@ -1,6 +1,12 @@
 <h1 align="center">🧩 Relax Block Puzzle</h1>
 
 <p align="center">
+  <img src="readme-cover.svg" width="100%" alt="Illustration of Relax Block Puzzle's Classic Glow and Paper Geometry 10 by 10 board themes" />
+  <br>
+  <sub>ORIGINAL VECTOR THEME STUDY · ILLUSTRATIVE BOARDS, NOT LIVE GAMEPLAY</sub>
+</p>
+
+<p align="center">
   <strong>Make room for one more move.</strong>
 </p>
 

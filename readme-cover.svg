@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="470" viewBox="0 0 1500 470" role="img" aria-labelledby="t d">
+<title id="t">Relax Block Puzzle — two looks, one puzzle</title>
+<desc id="d">Original vector illustration featuring blue neon and warm-paper conceptual 10 by 10 block boards. These are illustrative arrangements, not gameplay screenshots.</desc>
+<defs>
+<linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0C152B"/><stop offset=".65" stop-color="#182446"/><stop offset="1" stop-color="#33405A"/></linearGradient>
+<linearGradient id="blue"><stop stop-color="#9FF5FF"/><stop offset="1" stop-color="#76A8FF"/></linearGradient>
+<pattern id="darkTiles" width="21" height="21" patternUnits="userSpaceOnUse"><rect width="18" height="18" rx="4" fill="#283B61" stroke="#45628E" stroke-width=".5"/></pattern>
+<pattern id="paperTiles" width="21" height="21" patternUnits="userSpaceOnUse"><rect width="18" height="18" rx="4" fill="#EEE8DC" stroke="#D0C6B5" stroke-width=".5"/></pattern>
+</defs>
+<rect width="1500" height="470" fill="url(#bg)"/>
+<path d="M0 468H1500" stroke="#91C9E9" stroke-opacity=".27"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+<rect x="87" y="58" width="310" height="41" rx="20" fill="#19294A" stroke="#5E719B"/>
+<text x="110" y="85" font-size="17" font-weight="750" letter-spacing="2.6" fill="#93CCE8">THINK  /  PLACE  /  CLEAR</text>
+<text x="76" y="201" font-size="88" font-weight="850" letter-spacing="-3" fill="#F0F7FF">RELAX</text>
+<text x="76" y="293" font-size="74" font-weight="850" letter-spacing="-2" fill="url(#blue)">BLOCK PUZZLE</text>
+<text x="83" y="349" font-size="26" fill="#C2D3E6">One more move. One more line.</text>
+<path d="M86 378H749" stroke="#789DBF" stroke-opacity=".4"/>
+<text x="86" y="415" font-size="17" font-weight="700" letter-spacing="2.5" fill="#8AB4D4">10 × 10  ·  THREE PLATFORMS  ·  TWO THEMES</text>
+</g>
+<g>
+<rect x="926" y="120" width="232" height="232" rx="13" fill="#142849" stroke="#5F93CB" stroke-width="3"/>
+<rect x="940" y="134" width="210" height="210" fill="url(#darkTiles)"/>
+<rect x="944" y="263" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="965" y="263" width="18" height="18" rx="4" fill="#697FF9"/><rect x="986" y="263" width="18" height="18" rx="4" fill="#697FF9"/><rect x="986" y="242" width="18" height="18" rx="4" fill="#697FF9"/><rect x="986" y="221" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1007" y="221" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1028" y="221" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1028" y="242" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1028" y="263" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1049" y="263" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1049" y="284" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1049" y="305" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1070" y="200" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1070" y="221" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1091" y="200" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1091" y="221" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1112" y="200" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1112" y="221" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1112" y="305" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1133" y="305" width="18" height="18" rx="4" fill="#697FF9"/><rect x="1133" y="326" width="18" height="18" rx="4" fill="#51D2FF"/><rect x="1201" y="158" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1201" y="179" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1222" y="158" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1222" y="179" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1243" y="221" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1243" y="242" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1243" y="263" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1264" y="263" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1285" y="263" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1306" y="158" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1306" y="179" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1327" y="158" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1348" y="158" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1348" y="179" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1369" y="284" width="18" height="18" rx="4" fill="#DB977E"/><rect x="1369" y="305" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1369" y="326" width="18" height="18" rx="4" fill="#B39A83"/><rect x="1390" y="284" width="18" height="18" rx="4" fill="#B39A83"/>
+<rect x="1183" y="120" width="232" height="232" rx="13" fill="#CBBEAA" stroke="#F5E7CF" stroke-width="3"/>
+<rect x="1197" y="134" width="210" height="210" fill="url(#paperTiles)"/>
+<path d="M1183 151V321" stroke="#E9DAC3" stroke-width="2"/>
+</g>
+<g font-family="Segoe UI,Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="2" text-anchor="middle">
+<text x="1042" y="389" fill="#8DDFFF">CLASSIC GLOW</text>
+<text x="1298" y="389" fill="#EADACA">PAPER GEOMETRY</text>
+</g>
+</svg>
