@@ -1,7 +1,5 @@
-<h1 align="center">🧩 Relax Block Puzzle</h1>
-
 <p align="center">
-  <img src="readme-cover.svg" width="100%" alt="Illustration of Relax Block Puzzle's Classic Glow and Paper Geometry 10 by 10 board themes" />
+  <img src="readme-cover.svg" width="100%" alt="Relax Block Puzzle" />
   <br>
   <sub>ORIGINAL VECTOR THEME STUDY · ILLUSTRATIVE BOARDS, NOT LIVE GAMEPLAY</sub>
 </p>
@@ -16,13 +14,13 @@
 </p>
 
 <p align="center">
-  <a href="https://seiya058904.github.io/Relax-Block-Puzzle/"><strong>▶ Play in Browser</strong></a>
+  <a href="https://seiya058904.github.io/Relax-Block-Puzzle/"><strong>Play in browser</strong></a>
   &nbsp;·&nbsp;
-  <a href="#play-and-download">📱 Platforms & Downloads</a>
+  <a href="#play-and-download">Platforms and downloads</a>
   &nbsp;·&nbsp;
-  <a href="#how-to-play">🎮 How to Play</a>
+  <a href="#how-to-play">How to play</a>
   &nbsp;·&nbsp;
-  <a href="#for-developers">⚙️ For Developers</a>
+  <a href="#for-developers">For developers</a>
 </p>
 
 <p align="center">
@@ -30,9 +28,11 @@
 </p>
 
 <p align="center">
-  <img src="we%20xin%20xiao%20cheng%20xu-android-apk/docs/favicon.png" width="150" alt="Relax Block Puzzle app icon bundled with the browser version" />
+  <img src="docs/assets/readme-home-390.png" width="260" alt="The Relax Block Puzzle home screen with difficulty tabs and the Start button" />
+  &nbsp;&nbsp;
+  <img src="docs/assets/readme-board-390.png" width="260" alt="A game in progress on the 10 by 10 board with three candidate pieces and the Refresh, Clear, and Undo tools" />
   <br />
-  <sub>The game's packaged app icon. Open the browser version to see the current board and controls.</sub>
+  <sub>The live browser build on a 390×844 phone viewport. The game interface is in Chinese.</sub>
 </p>
 
 ---
@@ -42,20 +42,20 @@
 > There is no falling-block timer to chase. Choose where each shape belongs, clear full rows or columns, and think ahead before your board runs out of room.
 
 <a id="play-and-download"></a>
-## 🎮 Play & Download
+## Play & Download
 
 The same core puzzle runs in three environments, with platform-specific controls, rendering, audio, and lifecycle behavior.
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <h3>🌐 Web — Play Now</h3>
+      <h3>Web — Play Now</h3>
       <p><sub>BROWSER · GITHUB PAGES</sub></p>
       <p>Open the browser version without installing an app. Mouse and touch interactions use the Web platform adapter.</p>
-      <p><strong><a href="https://seiya058904.github.io/Relax-Block-Puzzle/">▶ Launch the Web Game →</a></strong></p>
+      <p><strong><a href="https://seiya058904.github.io/Relax-Block-Puzzle/">Launch the web game →</a></strong></p>
     </td>
     <td width="50%" valign="top">
-      <h3>📱 Android — Debug Preview</h3>
+      <h3>Android — Debug Preview</h3>
       <p><sub>OFFLINE WEBVIEW · VERSION 1.0.15</sub></p>
       <p>Play the locally packaged game in a Kotlin/WebView shell. The available installable APK is a <strong>debug-signed preview</strong>, not a production-signed release.</p>
       <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.15">View Android v1.0.15 →</a></strong></p>
@@ -63,7 +63,7 @@ The same core puzzle runs in three environments, with platform-specific controls
   </tr>
   <tr>
     <td colspan="2" valign="top">
-      <h3>💬 WeChat Mini Game — Source & Preview</h3>
+      <h3>WeChat Mini Game — Source & Preview</h3>
       <p><sub>WECHAT DEVELOPER TOOLS · NATIVE PLATFORM ADAPTER</sub></p>
       <p>The WeChat edition is maintained as a Mini Game project, with its own Canvas, touch, audio, storage, and lifecycle integrations. Open the source in WeChat Developer Tools for compilation and preview; this is <strong>not</strong> a claim of an independently published Mini Game.</p>
       <p><strong><a href="we%20xin%20xiao%20cheng%20xu/">Explore WeChat Source →</a></strong></p>
@@ -75,7 +75,7 @@ The same core puzzle runs in three environments, with platform-specific controls
 > **Android download distinction:** The `v1.0.15` **Release APK is unsigned and cannot be installed as downloaded**. For testing, choose the separately named **Debug preview APK** on the [release page](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.15). Each attachment includes its own SHA-256 checksum file. Debug signing does not make it a production release.
 
 <a id="how-to-play"></a>
-## 🕹️ How to Play
+## How to Play
 
 <p align="center"><code>PLACE A SHAPE &nbsp;→&nbsp; COMPLETE A LINE &nbsp;→&nbsp; CLEAR SPACE &nbsp;→&nbsp; KEEP GOING</code></p>
 
@@ -84,38 +84,38 @@ The same core puzzle runs in three environments, with platform-specific controls
 3. **Clear the board.** Fill a complete row or column to remove it and make space for future shapes. Multiple completed lines can clear together.
 4. **Plan the next set.** After using all three pieces, receive another set and continue for as long as you can make a legal move.
 
-### 🎨 Two Looks, One Game
+### Two Looks, One Game
 
 Choose **Classic Glow (Theme A)** for a deep-blue board and luminous pieces, or **Paper Geometry (Theme B)** for a warm paper palette and muted colors. Classic Glow is the startup theme on every launch, on all three platforms.
 
 Switch looks from the home screen or in-game Settings. The change applies immediately and is recorded locally on each platform, but — by the v1.0.15 release rule — every launch still starts in Classic Glow, so a previous choice is not restored when the app reopens. Switching never resets the current board, pieces, score, tools, or audio settings.
 
-### ✨ Small Rules, More Possibilities
+### Small Rules, More Possibilities
 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <h3>🧠 Space Is Your Strategy</h3>
+      <h3>Space Is Your Strategy</h3>
       <p>Every placement changes what can fit next. Keep options open, plan around awkward shapes, and decide when to clear a line.</p>
     </td>
     <td width="50%" valign="top">
-      <h3>⚡ Lines & Combos</h3>
+      <h3>Lines & Combos</h3>
       <p>Complete rows and columns together, build successive clears, and watch scoring and feedback respond to your choices.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3>🧰 A Few Helpful Tools</h3>
+      <h3>A Few Helpful Tools</h3>
       <p>Refresh the candidate pieces, clear a small area, or undo a placement. Tool availability depends on the chosen difficulty.</p>
     </td>
     <td width="50%" valign="top">
-      <h3>🎵 Built for Short Sessions</h3>
+      <h3>Built for Short Sessions</h3>
       <p>Responsive dragging, light effects, music, sound, vibration settings, and persistent local records make each session easy to revisit.</p>
     </td>
   </tr>
 </table>
 
-## 🔀 One Game, Three Platform Experiences
+## One Game, Three Platform Experiences
 
 The gameplay is shared, but the application is **not three identical copies of the same interface**. Each host keeps the integrations it needs.
 
@@ -131,12 +131,12 @@ The gameplay is shared, but the application is **not three identical copies of t
 > Browser and Android emulator checks do not substitute for testing real phone touch, vibration, sound, safe areas, or the native WeChat runtime. The [validation baseline and acceptance boundaries](docs/TEST_BASELINE.md) explain which environments were actually tested.
 
 <a id="for-developers"></a>
-## ⚙️ For Developers
+## For Developers
 
 The game uses **JavaScript ES modules** for gameplay and **Kotlin/Gradle** for its Android host. Repository-level checks use Node.js's built-in test runner; the three platform versions are kept aligned through explicit synchronization and parity checks.
 
 <details>
-<summary><strong>🛠️ Expand development commands and verification</strong></summary>
+<summary><strong>Expand development commands and verification</strong></summary>
 
 ### Shared logic and verification
 
@@ -182,7 +182,7 @@ docs/                                   Specifications, audits, and test boundar
 
 </details>
 
-## 📚 Documentation & Project Rules
+## Documentation & Project Rules
 
 - **[Unified product specification](docs/UNIFIED_SPEC.md)** — board behavior, scoring, difficulty, power-ups, and cross-platform contracts.
 - **[Platform synchronization](docs/PLATFORM_SYNC.md)** — which modules are authoritative, generated, or platform-specific.
