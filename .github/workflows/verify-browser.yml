@@ -1,6 +1,11 @@
 name: Browser regression
 on:
   pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - '**/readme-*'
   workflow_dispatch:
 permissions:
   contents: read
