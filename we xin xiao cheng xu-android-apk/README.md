@@ -53,7 +53,7 @@ Source code and project files are stored in this repository. APK files should be
 
 ## Version History / 版本历史
 
-`Unreleased (main)`
+`v1.0.16`
 
 - Theme behaviour is unchanged by design (v1.0.15 rule): every launch starts in Classic Glow (流光) on all three platforms. The `block_puzzle_theme_v1` key records the last explicit choice but is not a startup restore source; README wording was corrected to match.
 - A rack-generation miss no longer ends a round while the board still accepts a placement; a deterministic rescue rack that satisfies the current difficulty's constraints is returned instead.

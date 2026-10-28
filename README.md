@@ -56,9 +56,9 @@ The same core puzzle runs in three environments, with platform-specific controls
     </td>
     <td width="50%" valign="top">
       <h3>📱 Android — Debug Preview</h3>
-      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.15</sub></p>
+      <p><sub>OFFLINE WEBVIEW · VERSION 1.0.16</sub></p>
       <p>Play the locally packaged game in a Kotlin/WebView shell. The available installable APK is a <strong>debug-signed preview</strong>, not a production-signed release.</p>
-      <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.15">View Android v1.0.15 →</a></strong></p>
+      <p><strong><a href="https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.16">View Android v1.0.16 →</a></strong></p>
     </td>
   </tr>
   <tr>
@@ -72,7 +72,7 @@ The same core puzzle runs in three environments, with platform-specific controls
 </table>
 
 > [!WARNING]
-> **Android download distinction:** The `v1.0.15` **Release APK is unsigned and cannot be installed as downloaded**. For testing, choose the separately named **Debug preview APK** on the [release page](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.15). Each attachment includes its own SHA-256 checksum file. Debug signing does not make it a production release.
+> **Android download distinction:** The `v1.0.16` **Release APK is unsigned and cannot be installed as downloaded**. For testing, choose the separately named **Debug preview APK** on the [release page](https://github.com/seiya058904/Relax-Block-Puzzle/releases/tag/v1.0.16). Each attachment includes its own SHA-256 checksum file. Debug signing does not make it a production release.
 
 <a id="how-to-play"></a>
 ## 🕹️ How to Play
@@ -161,7 +161,7 @@ cd "we xin xiao cheng xu-android-apk"
 .\gradlew.bat assembleDebug --no-daemon
 ```
 
-The Debug APK is generated under `app/build/outputs/apk/debug/`. Android uses `versionName 1.0.15` / `versionCode 15` for the referenced release. The signed production-release workflow is separate and is not represented by the Debug build.
+The Debug APK is generated under `app/build/outputs/apk/debug/`. Android uses `versionName 1.0.16` / `versionCode 16` for the referenced release. The signed production-release workflow is separate and is not represented by the Debug build.
 
 ### WeChat preview
 
