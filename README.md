@@ -138,6 +138,16 @@ The game uses **JavaScript ES modules** for gameplay and **Kotlin/Gradle** for i
 <details>
 <summary><strong>🛠️ Expand development commands and verification</strong></summary>
 
+### Preview the Web version locally
+
+With Python 3 installed, run from the repository root:
+
+```powershell
+python -m http.server 8000 --bind 127.0.0.1 --directory "we xin xiao cheng xu-android-apk/docs"
+```
+
+Open **http://127.0.0.1:8000/**. Serve this directory over HTTP so its JavaScript modules load correctly. This local origin has its own browser records, separate from the hosted game.
+
 ### Shared logic and verification
 
 From the repository root:
