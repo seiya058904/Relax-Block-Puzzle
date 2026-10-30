@@ -49,27 +49,7 @@ Open `we xin xiao cheng xu/` in WeChat Developer Tools for compile, simulator, p
 
 ## Android CLI / APK Workflow
 
-普通 APK 开发、构建、安装和 UI 测试不需要 Android Studio；从 `we xin xiao cheng xu-android-apk/` 使用上面的仓库 Gradle Wrapper 命令。
-
-- Java 必须为 JDK 17；不要使用 Android Studio 内置 JBR，也不要安装系统级 Gradle。
-- 不要无理由升级 AGP、Gradle、compileSdk 或 Build Tools。
-- 启动标准测试 AVD，并禁止 snapshot、snapshot 保存和 cache：
-
-  ```powershell
-  emulator -avd Codex_Maestro_Android34 -no-snapshot -no-snapshot-save -no-snapstorage -no-cache
-  adb devices
-  adb -s <device-id> shell getprop sys.boot_completed
-  ```
-
-  仅在 `sys.boot_completed` 为 `1` 后继续；除非 AVD 损坏或任务明确要求，不创建其他 AVD。
-- 构建成功后用 `adb -s <device-id> install -r <apk-path>` 安装并启动 App；从 Gradle/Manifest 读取 package/application id，不在此处猜测或写死。
-- UI 测试优先使用 Maestro MCP：`list_devices`、`inspect_screen`、`run`、`take_screenshot`，以及 `click`、`input`、`swipe`、`drag` 和 assertions。Codex Desktop 的 MCP 配置变更后需重启 Desktop。
-- 本项目是 WebView + Canvas 游戏；Canvas 内部元素可能没有完整 accessibility tree。必要时使用坐标级 tap/swipe/drag，并用 screenshot、可见状态和 surrounding UI 验证；不要因缺少语义节点判定 Maestro 失效。
-- 启动失败、WebView/JS 异常或 crash 时，用 ADB/Logcat 过滤当前 App 或错误相关日志；测试完成后执行 `adb -s <device-id> emu kill`，不要保存 Quick Boot snapshot。
-
-Required: JDK 17、项目 Gradle Wrapper 8.7、Android SDK Platform 34、Build Tools 34.0.0、platform-tools/adb、cmdline-tools、Android Emulator、Android 34 Google APIs x86_64 image、`Codex_Maestro_Android34`、Maestro CLI/MCP。
-
-Not required for normal work: Android Studio（除非任务明确需要 Layout Inspector、Android Profiler 或其他 IDE-only tooling）、Android 37、SDK Sources、NDK、CMake、system-wide Gradle、additional AVDs。
+Use JDK 17 and the project Gradle wrapper; preserve the existing Android assets and signing identity. For device and automation instructions, follow `docs/ANDROID_WORKFLOW.md`. Canvas controls may require coordinate interaction and screenshots.
 
 ## Coding Style & Naming
 
@@ -96,3 +76,7 @@ Commit, push, deploy, publish, release/tag creation, database writes, backend/au
 - `npm test`, relevant `npm run verify*` checks, and Android build/manual checks are complete or explicitly reported as skipped.
 - Generated files are synchronized and build outputs remain ignored.
 - Commit/push/release authorization is explicit.
+
+## Android Development
+
+For any Android-related build, debugging, device automation, or testing task, read `docs/ANDROID_WORKFLOW.md` before proceeding. Use the shared Windows toolchain, Mobile MCP, scrcpy and ADB as documented. Prefer physical-device testing for daily work and cloud emulator tests when specifically required. Follow repository-specific instructions and safety requirements.
