@@ -9,7 +9,7 @@ This directory contains the Android WebView wrapper and browser build for Relax 
 - `app/src/main/java/`: Kotlin host; `MainActivity.kt` owns WebView and lifecycle forwarding.
 - `app/src/main/assets/`: Android HTML, JavaScript, browser shim, and full audio.
 - `docs/`: GitHub Pages web entry and web-specific HTML/shim assets.
-- `app/build.gradle.kts`: Android package and `versionCode`/`versionName` (currently `1.0.15` / `15`).
+- `app/build.gradle.kts`: Android package and the authoritative `versionCode`/`versionName`.
 - `release-notes/`: user-facing notes. APKs and toolchains remain local and ignored.
 
 ## Build & Verify
@@ -21,6 +21,8 @@ From the formal workspace root run `npm test`, `npm run verify`, `npm run verify
 ```
 
 The APK is written under `app/build/outputs/apk/debug/`. Manually check WebView, drag input, audio, vibration, layout, and lifecycle behavior when those areas change. There is no standalone Android unit-test suite or root lint/type-check command.
+
+For Android device work, follow the root `docs/ANDROID_WORKFLOW.md`: use the connected physical test phone with Mobile MCP when available, and retain this project's build, signing and data-protection requirements.
 
 ## Agent and Security Rules
 
