@@ -14,11 +14,11 @@ This directory is the WeChat Mini Game platform copy of Relax Block Puzzle. It i
 - `js/game/SoundManager.js`, `js/utils/storage.js`, `js/api/AuthClient.js`: audio, local persistence, and optional authentication.
 - `audio/`: WeChat light audio only; do not replace it with Android/Web full-quality audio.
 
-Shared gameplay modules are generated into platform copies by the root synchronization scripts. Edit `shared/js/` and run the root synchronization check; do not hand-edit generated copies or change gameplay values in one platform only.
+Shared gameplay modules are generated into platform copies by the root synchronization scripts. Edit `shared/js/` and run the root synchronization check; do not hand-edit generated copies or change gameplay values in one platform only. Keep `wx` calls, Canvas initialization, DPR limits and lifecycle handling in the WeChat adapter; do not copy Android/Web assets into this directory.
 
 ## Development & Testing
 
-Open this directory as a Mini Game project in WeChat Developer Tools and use Compile, Preview, or real-device debugging. There is no package manager or local build command in this directory. Manually verify startup, screens, drag pickup and placement, tools, line clears, audio, vibration, safe areas, persistence, and hide/show lifecycle. Do not expose private project settings, backend credentials, admin codes, or user/session data.
+Open this directory as a Mini Game project in WeChat Developer Tools and use Compile, Preview, or real-device debugging. There is no package manager or local build command in this directory. Manually verify startup, screens, drag pickup and placement, tools, line clears, audio, vibration, safe areas, persistence, and hide/show lifecycle. Do not expose private project settings, AppID values, backend credentials, admin/member codes, or user/session data in source, documentation, logs, screenshots or replies.
 
 ## Agent Rules
 

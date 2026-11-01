@@ -6,6 +6,7 @@ This directory contains the Android WebView wrapper and browser build for Relax 
 
 ## Structure
 
+- Android entry: `app/src/main/assets/index.html` → `game.js` → `js/main.js`; Web entry: `docs/index.html` → `game.js` → `js/main.js`. `browser-wx-shim.js` adapts browser storage, input, audio, vibration and Canvas behavior.
 - `app/src/main/java/`: Kotlin host; `MainActivity.kt` owns WebView and lifecycle forwarding.
 - `app/src/main/assets/`: Android HTML, JavaScript, browser shim, and full audio.
 - `docs/`: GitHub Pages web entry and web-specific HTML/shim assets.
@@ -26,4 +27,4 @@ For Android device work, follow the root `docs/ANDROID_WORKFLOW.md`: use the con
 
 ## Agent and Security Rules
 
-Keep shared gameplay, scoring, drag semantics, and feedback timing aligned with the WeChat and Web targets. Do not hand-edit generated shared files, downgrade Android/Web audio, or change platform adapters to force file identity. Do not commit APK/AAB files, `build/`, `.gradle/`, `local.properties`, toolchains, signing material, secrets, credentials, admin/member codes, or local paths. Read and preserve existing changes; make focused diffs. Commit, push, release/tag creation, upload, publish, deploy, signing, backend/auth, and database changes require explicit authorization.
+Keep shared gameplay, scoring, drag semantics, and feedback timing aligned with the WeChat and Web targets. Do not hand-edit generated shared files, downgrade Android/Web audio, or change platform adapters to force file identity. Android/Web HTML and shims may intentionally differ; keep `assets/js/js/` absent from source and APK. Version metadata changes require explicit authorization. Do not commit APK/AAB files, `build/`, `.gradle/`, `local.properties`, toolchains, signing material, secrets, credentials, admin/member codes, or local paths. Read and preserve existing changes; make focused diffs. Commit, push, release/tag creation, upload, publish, deploy, signing, backend/auth, and database changes require explicit authorization.
