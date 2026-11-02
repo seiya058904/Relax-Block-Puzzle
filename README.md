@@ -209,3 +209,7 @@ The repository has no root-level `LICENSE` file granting blanket reuse rights. K
   <sub>ONE BOARD. THREE WAYS TO PLAY.</sub><br>
   <sub>Place thoughtfully. Clear the lines. Enjoy the next move.</sub>
 </p>
+
+## Website analytics
+
+The public website uses Cloudflare Web Analytics for aggregate page visits and performance. The beacon loads only on `seiya058904.github.io`; local previews and offline copies do not load it. No game saves, journal entries, map contents, or form values are passed to the analytics integration. Statistics start after deployment and do not recover earlier traffic. See [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/).
