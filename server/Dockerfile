@@ -13,7 +13,7 @@ ENV NODE_OPTIONS=--use-openssl-ca
 
 COPY package*.json ./
 
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY . .
 
