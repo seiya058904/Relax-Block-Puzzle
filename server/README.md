@@ -146,10 +146,16 @@ POST /api/admin/verify
 
 ## 本地启动
 
+The backend keeps Express 4 compatibility and pins its existing body-parser
+dependency to 1.20.9 for GHSA-27r3-jxmh-p828. The container installs the committed
+lockfile with `npm ci --omit=dev`; changing local files does not update an existing
+cloud container. Run `npm test` in this directory after installing dependencies.
+The tests use synthetic WeChat responses and never contact the real service.
+
 先安装依赖：
 
 ```bash
-npm install
+npm ci
 ```
 
 再启动：
