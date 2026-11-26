@@ -1,87 +1,21 @@
 # Repository Guidelines
 
-## Project Overview
+## Scope & Architecture
+- Unified 3-platform block puzzle: WeChat Mini Game (`we xin xiao cheng xu/`), Android Kotlin/WebView (`we xin xiao cheng xu-android-apk/app/src/main/assets/`, version in `app/build.gradle.kts`), and Web Pages build (`we xin xiao cheng xu-android-apk/docs/` via `.github/workflows/deploy-pages.yml`).
+- **`shared/js/` is the single source of truth** (configured by `config/platform-manifest.json`); never hand-edit generated copies — run `npm run sync`. Keep shared modules platform-independent (no `wx`/DOM/WebView globals); keep audio tiered (WeChat light vs Web/Android full).
+- **Storage & render invariants**: cross-tab/async high-score writes must stay serialized through `wx.withStorageLock` (Web Locks / IndexedDB readwrite, no uncoordinated fallback) with `ScoreManager` `bestScoreGeneration` guard; delayed auth/score writes must wake the existing render loop while preserving idle frame shutdown.
 
-Relax Block Puzzle is a three-platform block-puzzle project: a WeChat Mini Game, an Android WebView APK, and a browser build. Gameplay is plain JavaScript ES modules; the Android shell is Kotlin/Gradle. The WeChat project is opened in WeChat Developer Tools. The browser build is served from `we xin xiao cheng xu-android-apk/docs/` and deployed to GitHub Pages by `.github/workflows/deploy-pages.yml`; Android bundles its web assets under `app/src/main/assets/`.
-
-## Project Structure & Module Organization
-
-- `shared/js/`: source of truth for platform-independent modules. Do not edit generated copies directly.
-- `we xin xiao cheng xu/`: WeChat entry (`game.js`) and platform-specific renderer, input, lifecycle, audio, storage, and authentication code.
-- `we xin xiao cheng xu-android-apk/`: Android project, browser build, release notes, and platform-specific assets. `app/build.gradle.kts` owns Android version metadata.
-- `tests/`: Node built-in test-runner tests for board rules, state, feedback, dragging, layout, resources, and three-platform parity.
-- `config/`: platform manifest and audio/resource mapping.
-- `scripts/`: synchronization, parity, resource-budget, piece-simulation, and APK-boundary checks.
-- `docs/`: frozen product rules, architecture decisions, audit notes, and test baseline.
-
-## Architecture Notes
-
-`shared/js` is copied with a generated marker into the three targets listed in `config/platform-manifest.json`; `npm run sync` is the only normal synchronization path. Platform renderers and input/lifecycle adapters remain independent. WeChat uses light audio/effect settings; Android and Web retain full audio resources. Do not merge platform audio or move `wx`/WebView-specific code into shared modules. Storage keys, scoring, difficulty, drag semantics, and feedback timing are compatibility contracts.
-
-All best-score mutations use the same coordinator; score updates and difficulty reset keep the full read/merge/write inside it, including legacy migration. Native WeChat storage remains synchronous. Browser/WebView adapters supply asynchronous `wx.withStorageLock` through Web Locks or an IndexedDB readwrite transaction; do not write before acquisition or fall back to uncoordinated writes when coordination fails. ScoreManager ignores completions from an obsolete game generation.
-
-Delayed authentication and score-write completion must request the existing render path. Preserve idle frame shutdown and hidden/paused scheduling guards rather than adding a permanent frame loop.
-
-## Build, Test & Development Commands
-
-Run from the repository root:
-
+## Commands & Verification
 ```powershell
-npm test
-npm run test:parity
-npm run verify
-npm run verify:assets
-npm run verify:apk-assets
-npm run simulate:generation -- --samples 10000
+npm run sync && npm test && npm run verify && npm run verify:assets
+npm run verify:apk-assets                       # requires freshly built debug APK
 node tests/browser/high-score.mjs
 node tests/browser/quality.mjs
 ```
+- No root lint, type-check, or formatting script. Browser scripts accept `QA_PLAYWRIGHT_PACKAGE`, `QA_SCREENSHOTS`, `QA_DOCS_ROOT`; Chromium WeChat-host checks never replace real WeChat DevTools or Android device acceptance.
+- Android build (JDK 17 + `ANDROID_HOME`): `.\gradlew.bat assembleDebug --no-daemon` in `we xin xiao cheng xu-android-apk/`. For device/Mobile MCP/ADB/scrcpy workflow, read `docs/ANDROID_WORKFLOW.md` (or load global `android-device-workflow` skill). Preserve signing identity and assets.
+- For touch, audio, vibration, safe-area, lifecycle, WebView, or Canvas changes, verify in WeChat DevTools or on a physical Android device and report any skipped checks honestly.
 
-The browser scripts require Playwright and Chromium; `QA_PLAYWRIGHT_PACKAGE` can select an existing installation and `QA_SCREENSHOTS` selects evidence output. `QA_DOCS_ROOT` defaults to `we xin xiao cheng xu-android-apk/docs` and can select `we xin xiao cheng xu-android-apk/app/src/main/assets` for packaged web assets. Chromium WeChat-host tests supplement Developer Tools/device checks; they do not establish native-device acceptance.
-
-`npm run verify` checks generated parity across all three targets. `verify:assets` checks audio mappings and budgets. `verify:apk-assets` requires a freshly built debug APK. For Android, set local `JAVA_HOME` and `ANDROID_HOME`, then run from `we xin xiao cheng xu-android-apk`:
-
-```powershell
-.\gradlew.bat assembleDebug --no-daemon
-```
-
-Open `we xin xiao cheng xu/` in WeChat Developer Tools for compile, simulator, preview, and device checks. No root lint, type-check, or formatting script is defined.
-
-## Android CLI / APK Workflow
-
-Use JDK 17 and the project Gradle wrapper; preserve the existing Android assets and signing identity. For device and automation instructions, follow `docs/ANDROID_WORKFLOW.md`. Canvas controls may require coordinate interaction and screenshots.
-
-## Coding Style & Naming
-
-Follow adjacent code: two-space JavaScript indentation, semicolons, single-quoted strings, ES modules, `PascalCase` class files, `camelCase` functions/variables, and `UPPER_SNAKE_CASE` constants. Keep rules in `GameState`/model modules, input in `InputManager`, drawing/layout in `Renderer`/`LayoutMetrics`, and persistence in `storage.js`.
-
-## Testing & Verification
-
-Tests use Node's built-in runner and end in `.test.mjs`. Run `npm test` after gameplay, shared-module, rendering-state, or resource changes. Changes affecting touch, audio, vibration, safe areas, lifecycle, WebView, or Canvas also require relevant WeChat Developer Tools and real-device checks. Report skipped manual checks honestly. Review `git status --short`, `git diff`, and generated drift before handoff.
-
-## Commit & Pull Request Guidelines
-
-Use one-purpose, short imperative commits such as `release: prepare Android v1.0.6`. Describe behavior changes, affected platforms, tests, build results, and manual checks. Do not commit APKs, AABs, `build/`, `.gradle/`, `local.properties`, toolchains, caches, release assets, or unrelated files.
-
-## Security & Agent Rules
-
-Never commit or expose environment files, credentials, tokens, passwords, private keys, keystores, connection strings, admin/member codes, or private project configuration. Keep backend secrets server-side; frontend backend configuration must contain public values only. Read relevant files first, state a short plan, preserve existing uncommitted work, and make the smallest reviewable change. Do not invent commands or interfaces, install dependencies, auto-format, or change gameplay rules, values, compatibility behavior, or platform boundaries without authorization. Stop and explain material uncertainty.
-
-Commit, push, deploy, publish, release/tag creation, database writes, backend/auth changes, signing changes, and production configuration changes require explicit user authorization. Before any authorized commit, check status, diff, secrets, generated files, and required tests; state every check not run.
-
-## Pre-Commit Checklist
-
-- `git status --short` and `git diff --stat` show only task files.
-- `git diff --check` passes and no secrets or local paths are staged.
-- `npm test`, relevant `npm run verify*` checks, and Android build/manual checks are complete or explicitly reported as skipped.
-- Generated files are synchronized and build outputs remain ignored.
-- Commit/push/release authorization is explicit.
-
-## Android Development
-
-For any Android-related build, debugging, device automation, or testing task, read `docs/ANDROID_WORKFLOW.md` before proceeding. Use the shared Windows toolchain, Mobile MCP, scrcpy and ADB as documented. Prefer physical-device testing for daily work and cloud emulator tests when specifically required. Follow repository-specific instructions and safety requirements.
-
-## Browser tool selection
-
-- Prefer Ego Browser for exploratory navigation, visual review and interactive checks when available. Use Playwright for repeatable regression, CI, isolation, request interception or other automation requiring its APIs; combine tools when useful. If Ego is unavailable, use a suitable existing browser tool.
-- Keep this repository's required browser commands, versions, profiles and safety boundaries; an exploratory check does not replace required automated tests. Do not alter real user data or production state for testing. Report the tools, coverage and any untested paths.
+## Security & Authorization
+- Never commit or expose `.env*`, credentials, tokens, passwords, keys, keystores, `local.properties`, `project.private.config.json`, admin/member codes, APKs/AABs, or build caches; keep backend secrets server-side.
+- Do not change gameplay semantics, storage keys, compatibility defaults, or dependencies without authorization. Explicit authorization is required before commit, push, WeChat `upload`, deploy, publish, release, tag, `app/build.gradle.kts` version bump, signing, backend/auth, or DB changes.
