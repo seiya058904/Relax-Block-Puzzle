@@ -18,4 +18,4 @@ node tests/browser/quality.mjs
 
 ## Security & Authorization
 - Never commit or expose `.env*`, credentials, tokens, passwords, keys, keystores, `local.properties`, `project.private.config.json`, admin/member codes, APKs/AABs, or build caches; keep backend secrets server-side.
-- Do not change gameplay semantics, storage keys, compatibility defaults, or dependencies without authorization. Explicit authorization is required before commit, push, WeChat `upload`, deploy, publish, release, tag, `app/build.gradle.kts` version bump, signing, backend/auth, or DB changes.
+- Do not change gameplay semantics, storage keys, or compatibility defaults without authorization. Explicit authorization is required before local commits, WeChat `upload`, tags, `app/build.gradle.kts` version bump, signing, backend/auth, or DB changes.
